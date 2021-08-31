@@ -31,6 +31,6 @@ segundo semestre de 2021
 
 ## SME0828-CD - Francisco
 
-<https://meet.google.com/ncb-ktst-zja>
+<https://meet.google.com/tff-ozsp-nbm>
 
 - Qua 18h

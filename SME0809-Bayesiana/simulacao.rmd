@@ -1,0 +1,131 @@
+# SME0809 Aula 3 - Estudo de Simulação
+
+```{r}
+library(effectsize)
+library(tidyverse)
+
+bern <- function(n = 27, p = 11/27, a = 1/2, b = 1/2){
+
+   y <- rep(1, n*p)
+   alpha <- a
+   beta <- b
+   ver <- function(x) x^(n*p)*(1-x)^(n-n*p)
+   
+   
+   a.post <- n*p + alpha
+   b.post <- n - n*p + beta
+   
+   theta <- seq(0,1,0.01)
+   
+   
+   tibble(theta = theta, priori = normalize(dbeta(theta,alpha,beta)), post = normalize(dbeta(theta,a.post,b.post)), ver = normalize(ver(theta)), alpha = a, beta = b, n = n)
+}
+
+poiss <- function(n = 27, yi = rpois(27, 1), a = 1/2, b = 1/2){
+   t <- sum(yi)
+   
+   alpha <- a
+   beta <- b
+   ver <- function(x) (exp((-n*x)) * x^t)/prod(factorial(yi))
+   
+   
+   a.post <- alpha + t
+   b.post <- beta + n
+   
+   theta <- seq(0,2,0.02)
+   
+   
+   tibble(theta = theta, priori = dgamma(theta,alpha,beta), post = dgamma(theta,a.post,b.post), ver = ver(theta), alpha = a, beta = b, n = n)
+}
+   ```
+
+## Diferentes hiperparâmetros
+
+
+
+```{r}
+coeff <- 4e8
+
+rbind(bern(), 
+      bern(a = 5, b = 1),
+      bern(a = 1, b = 3),
+      bern(a = 2, b = 2),
+      bern(a = 2, b = 5),
+      bern(a = 1, b = 5)) %>% ggplot(aes(x = theta)) + geom_line(aes(y = priori, color = "Priori"))+
+  geom_line(aes(y = post, color = "Posteriori")) + geom_line(aes(y = ver*coeff, color = "Verossimilhança")) + xlab(expression(theta)) + facet_wrap(alpha ~ beta, labeller = "label_both")+
+  scale_y_continuous(
+    # Features of the first axis
+    name = "Distribuição",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~.*coeff, name="Second Axis")
+  )+   theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")
+```
+
+
+### Poisson
+
+
+```{r}
+coeff <- 1
+
+p <- NULL
+
+for (i in 1:5) {
+  for (j in 1:5) {
+   p <- rbind(p,poiss(a=i,b=j))
+  }
+}
+
+# rbind(poiss(), 
+#       poiss(a = 5, b = 1),
+#       poiss(a = 1, b = 3),
+#       poiss(a = 2, b = 2),
+#       poiss(a = 2, b = 5),
+#       poiss(a = 1, b = 5))
+
+p %>% ggplot(aes(x = theta)) + geom_line(aes(y = priori, color = "Priori"))+
+  geom_line(aes(y = post, color = "Posteriori")) + geom_line(aes(y = ver/coeff, color = "Verossimilhança")) +
+   xlab(expression(theta)) + facet_grid(alpha ~ beta, scales = "free_x",labeller = "label_both")+
+     scale_y_continuous(
+    # Features of the first axis
+    name = "Distribuição",
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~.*coeff, name="Second Axis")
+    )+   theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")
+```
+
+## Diferentes valores de n
+
+```{r}
+coeff <- 1
+q <- NULL
+  for (i in c(3, 10, 30, 100, 1000, 10000)) {
+   q <- rbind(q,poiss(n = i,rpois(i, 1), a = 4, b = 5))
+  }
+
+
+r <- q%>% ggplot(aes(x = theta)) + geom_line(aes(y = ver*coeff, color = "Verossimilhança")) + facet_wrap(~n)
+
+s <- q%>% ggplot(aes(x = theta)) + geom_line(aes(y = priori, color = "Priori"))+
+   
+  geom_line(aes(y = post, color = "Posteriori")) + geom_line(aes(y = ver, color = "Verossimilhança"), stat = "identity") +
+   xlab(expression(theta)) + 
+  scale_y_continuous(name = "Distribuição")+  
+   theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())+
+   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+   scale_x_continuous(name = expression(theta), limits = c(0,2))+
+   facet_wrap(~n, scales = "free", labeller = "label_both") + ggtitle("Valores de uma Poisson(1) e uma priori Gama(4,5)")
+
+s
+```
+

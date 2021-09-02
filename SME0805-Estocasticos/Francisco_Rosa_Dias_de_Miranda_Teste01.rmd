@@ -1,0 +1,52 @@
+---
+title: "SME0805 - Processos Estocásticos - Teste 1"
+author: "Francisco Rosa Dias de Miranda - 4402962"
+date: "setembro 2021"
+output: pdf_document
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercício 1
+
+A variável aleatória Y segue uma distribuição exponencial com parâmetro $\theta$. Dado Y = y, a variável
+aleatória $X$ tem distribução de Poisson com média $y$.
+
+
+- a) Mostre que $P(X = k) = \frac{\theta}{(1+\theta)^(k+1)}, k = 0, 1, ....$
+
+$$y \sim \exp(\theta) \Rightarrow f_y(y|\theta) = \theta e^{-\theta y}, y >0$$
+
+$$X|Y \sim \text{Poiss}(y) \Rightarrow P(X=k\ |\ Y=y) = \frac{e^{-y}y^k}{k!}, k = 0,1,....$$
+Por definição, a f.d.p. conjunta de $X$ e $Y$ é dada por  $f_{X,Y}(k,y\ |\ \theta) = P(X=k\ |\ Y=y) f_y(y| \theta)$. Para obtermos a distribuição marginal $P(X=k)$, basta resolvermos em y:
+
+
+$$P(X = k) = \int_0^\infty \frac{e^{-y}y^k}{k!} \theta e^{-\theta y} dy = 
+  \frac{\theta}{k!} \int_0^\infty e^{-y(1+\theta)}y^k dy =  
+  \frac{\theta}{k!} \int_0^\infty e^{-u}\left(\frac{u}{(1+\theta)}\right)^k \frac{1}{(1+\theta)} du = $$
+  
+$$\frac{\theta}{k! (1+\theta)^{(k+1)}} \int_0^\infty e^{-u}u^k du = 
+  \frac{\theta\  \Gamma(k+1)}{k! (1+\theta)^{(k+1)}} = \frac{\theta}{(1+\theta)^{(k+1)}}.$$
+
+***
+
+- b) Determine $P(X = k)$ se Y tem distribuição gama.
+
+$$y \sim \text{Gama}(\alpha, \beta) \Rightarrow f_y(y\ |\alpha, \beta) = \frac{\beta^\alpha y^{(\alpha - 1)} e^{\beta y}}{\Gamma(\alpha)}, y >0, \alpha >0, \beta > 0.$$
+
+A distribuição conjunta de $X$ e $Y$ é obtida de forma análoga ao item anterior. Encontramos a distribuição marginal de $X$ calculando:
+
+$$P(X = k) = \int_0^\infty \frac{e^{-y}y^k}{k!} \frac{\beta^\alpha y^{(\alpha - 1)} e^{\beta y}}{\Gamma(\alpha)} dy =
+  \frac{\beta^\alpha}{\Gamma(\alpha)k!} \int_0^\infty y^{k+\alpha - 1} e^{-y (1+ \beta)} dy = 
+$$
+
+$$  \frac{\beta^\alpha}{\Gamma(\alpha)k!} \int_0^\infty \left(\frac{u}{(1+ \beta)}\right)^{k+\alpha - 1} e^{-u} \frac{1}{(1+ \beta)}du =
+\frac{\beta^\alpha\ \Gamma(k + \alpha)}{\Gamma(\alpha)k! (1+ \beta)^{(k+\alpha)}} =
+$$
+
+$$\frac{1}{x!} \left(\frac{\beta}{\beta+1}\right)^\alpha \left(\frac{1}{\beta+1}\right)^k \frac{(\alpha + k - 1)!}{(\alpha- 1)!} = 
+ {\alpha + k -1 \choose k} \left(\frac{\beta}{\beta+1}\right)^\alpha\left(\frac{1}{\beta+1}\right)^k.
+$$
+Note que essa é a f.d.p. de uma distribuição Binomial Negativa. Assim, $X \sim BN(\alpha, \beta)$.

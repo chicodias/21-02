@@ -54,6 +54,9 @@ norm <- function(samp, sigma = 40, mu = 900, tau0 = 20){
 ```
 
 
+$$f(x|\theta) = e^{-x^2}  $$
+
+
 - a) Faça um esboço do gráfico das distribuições prioris dos dois físicos em um mesmo sistema cartesiano.
 
 

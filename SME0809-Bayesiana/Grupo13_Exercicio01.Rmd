@@ -61,10 +61,12 @@ Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
 
 ```{r echo = FALSE, warning = FALSE}
 
-a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A"),
-      norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B"))
+a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
+            norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
+            norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
+            norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
 
-a %>%
+a %>% filter(obs == "100 observações") %>%
   ggplot(aes(x = theta)) +
   geom_line(aes(y = priori, color = cor)) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
@@ -80,44 +82,94 @@ Como $X|\theta \sim N(\theta, 40^2)$ e $\theta \sim N(\mu_0,\tau_0^2)$ então $\
 
 $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \text{e}\ \ \tau_1^{-2}= \tau_0^{-2}+ \sigma^{-2}$$
 
-Assim,
+Assim, para 100 observações temos:
 
-$$\theta_A \sim N(), \ \ \theta_B \sim N() $$
+$$\theta_A \sim N(884.314, 15.3846), \ \ \theta_B \sim N(883.7272, 15.9601) $$
 
-```{r}
+Enquanto que para uma única observação, a posteriori é:
+
+$$\theta_A \sim N(898.4, 320), \ \ \theta_B \sim N(893.6, 1280) $$
+
+
+```{r echo = FALSE, warning = FALSE}
 a %>%
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post, color = cor)) +
-  geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
+  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
      theme(axis.title.y=element_blank()) +
-  ggtitle("Distribuição a posteriori da grandeza estimada pelos físicos")
+  ggtitle("Distribuição a posteriori da grandeza estimada pelos físicos") +
+  facet_wrap(~obs)
 
 ```
 
 
 - c) Faça um esboço do gráfico das distribuições: a priori e a posteriori de cada um dos dois físicos em um mesmo sistema cartesiano.
 
-```{r}
+```{r echo = FALSE, warning = FALSE}
+a %>%
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = post, color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  #geom_line(aes(y = pred, color = "Preditiva")) +
+  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
+  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
+     theme(axis.title.y=element_blank()) +
+  ggtitle("Distribuição da grandeza estimada pelos físicos")+
+  facet_wrap(cor~obs)
+
+```
+
+
+```{r echo = FALSE, warning = FALSE}
+coeff <- 0.03
 a %>%
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post, color = cor, linetype = "Posteriori")) +
   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
-  geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
+  geom_line(aes(y = coeff* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-     theme(axis.title.y=element_blank()) +
+ #    theme(axis.title.y=element_blank()) +
+  scale_y_continuous(name = " ",
+                     sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
   ggtitle("Distribuição da grandeza estimada pelos físicos")+
-  scale_linetype(name = "Distribuição")
+  scale_linetype(name = "Distribuição") +
+  facet_wrap(~obs)
 
 ```
 
 
 - d) Observando o gráfico, qual físico aprendeu mais com o experimento? Justifique.
 
+Aumentos nas precisões a posteriori em relação às precisões a priori com 100 observações:
+
+- para o físico A: precisão($\theta$) passou de $\tau_0^{-2} = 0.0025$ a $\tau_1^{-2} = 0.004225008$ (aumento de 70%).
+- para o físico B: precisão($\theta$) passou de $\tau_0^{-2} = 0.00015625$ a $\tau_1^{-2} = 0.003926$ (aumento de 2500%)
+
+Com 1 observação:
+
+- para o físico A: precisão($\theta$) passou de $\tau_0^{-2} = 0.0025$ a $\tau_1^{-2} = 6.1035*10^{-7}$.
+- para o físico B: precisão($\theta$) passou de $\tau_0^{-2} = 0.00015625$ a $\tau_1^{-2} =  9.7656 *10^{-6}$.
+
 
 - e) Construa uma tabela que contenha o resumo a priori e o resumo a posteriori.
+
+```{r echo = FALSE, warning = FALSE}
+
+tibble(      Fisico = c("A","B"),
+             Media.pri = c(900, 900),
+             Media.pos.100 = c(884.314,883.7272),
+             Media.pos.1 = c(898.4 ,893.6),
+             SD.pri = c(20, 80),
+             SD.pos.100 = c(15.3846, 15.9601),
+             SD.pos.1 = c(320 ,1280)) %>% 
+  knitr::kable()
+
+```
+
 
 
 
@@ -128,8 +180,8 @@ A distribuição preditiva é dada por:
 
 $$X \sim N(\mu_0, \tau_0^2 + \sigma^2) $$
 
-```{r}
-a %>%
+```{r echo = FALSE, warning = FALSE}
+a %>% filter(obs == "100 observações") %>% 
   ggplot(aes(x = theta)) +
   geom_line(aes(y = pred, color = cor, linetype = "Preditiva")) +
   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +

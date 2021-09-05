@@ -81,7 +81,7 @@ a %>% filter(obs == "100 observações") %>%
 
 - b) Encontre a distribuição a posteriori para o físico A e para o físico B.
 
-Como $X|\theta \sim N(\theta, 40^2)$ e $\theta \sim N(\mu_0,\tau_0^2)$ então $\theta|x \sim N(\mu_1, \tau_1)$, sendo
+Como $X|\theta \sim N(\theta, \sigma^2)$ com $\sigma^2$ conhecido e $\theta \sim N(\mu_0,\tau_0^2)$ então $\theta|x \sim N(\mu_1, \tau_1)$, sendo
 
 $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \text{e}\ \ \tau_1^{-2}= \tau_0^{-2}+ \sigma^{-2}$$
 

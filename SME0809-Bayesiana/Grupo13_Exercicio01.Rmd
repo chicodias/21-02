@@ -46,7 +46,9 @@ norm <- function(samp, sigma = 40, mu = 900, tau0 = 20){
           priori = dnorm(theta,mu,tau0),
           post = dnorm(theta,mu.post,sigma.post),
           ver = ver(theta),
-          pred = dnorm(theta,mu.post,tau0+sigma))
+          pred = dnorm(theta,mu.post,tau0+sigma),
+          tau1 = sigma.post,
+          mu1 = mu.post)
 
 }
 

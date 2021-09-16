@@ -1,0 +1,53 @@
+---
+title: "SME0805 - Processos Estocásticos - Teste 5"
+author: "Francisco Rosa Dias de Miranda - 4402962"
+date: "setembro 2021"
+output: pdf_document
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercício 1 
+
+Uma cadeia de Markov com espaço de estado $E = \{0,1,2\}$ e matriz de probabilidade de transição:
+
+$$P = \begin{bmatrix}
+0.5 & 0.2 & 0.3\\
+0 & 0.6 & 0.4\\
+0.4 & 0.1 & 0.5
+\end{bmatrix}$$
+
+Sua distribuição inicial dada por
+
+$$p = 
+\begin{bmatrix}
+  0.3\\
+  0.4\\
+  0.3
+\end{bmatrix}$$
+
+- (a) $P(X_0=0, X_1 = 1, X_2=2)$
+
+$$P(X_0=0, X_1 = 1, X_2=2) = P(X_0=0) P(X_1 = 1| X_0=0) P(X_2=2 | X_1 = 1) = $$
+$$p_0P_{01}P_{12} = 0.3*0.2* 0.4 = 0.024 $$
+   
+   
+- (b) $P(X_2=1, X_3 = 1 | X_1=0)$
+
+$$P(X_2=1, X_3 = 1 | X_1=0) = P(X_2=1| X_1=0) P (X_3 = 1 | X_2=1 ) =$$
+$$P_{01} P_{11} = 0.2 * 0.6 = 0.12$$
+  
+- (c) $P(X_1=1, X_2 = 1 | X_0=0)$
+
+Dado que saímos do estado $t = 0$, as probabilidades de transição não se modificam mais. Portanto:
+
+$$P(X_1=1, X_2 = 1 | X_0=0) = P(X_2=1, X_3 = 1 | X_1=0) = 0.12$$
+
+- (d) $P(X_0=1, X_1 = 0, X_2 = 2 | X_0=1)$
+
+Como as transições de estados são eventos independentes, saber que $X_0$ ocorreu não afeta a probabilidade de $X_1$ e $X_2$ dado $X_0$, pois $P(X_0=1|X_0=1) = 1$. Assim, temos que:
+
+$$P(X_0=1, X_1 = 0, X_2 = 2 | X_0=1) = P(X_1 = 0 | X_0=1) P(X_2 = 2 | X_1 = 0) = $$
+$$P_{10} P_{02} = 0.2 * 0.3 = 0.06$$

@@ -1,0 +1,50 @@
+---
+title: "SME0809 - Inferência Bayesiana"
+author: "Grupo 13 - Francisco Miranda - 4402962 e Heitor Carvalho - 11833351"
+date: "Setembro de 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+* Faça um esboço do gráfico das distribuições a priori dos dois físicos em um mesmo sistema cartesiano.
+
+Temos $\theta_A \sim N(900,20^2)$ e $\theta_B \sim N(900,80^2)$. Assim:
+## Distribuição a priori da grandeza a ser estimada
+```{distribuicoes a priori}
+dados <- c(921.3429 910.8055 879.7302 899.3456 837.7587
+           880.95 830.4974 856.1041 777.5677 983.3444
+           981.048 863.2836 943.1702 904.5064 831.879
+           854.2947 920.2139 839.7896 897.0014 839.3796
+           872.4004 884.6379 892.7966 897.9938 840.228
+           823.2803 903.4257 798.5764 862.5581 938.8837
+           894.951 871.0477 863.9725 857.6077 856.3452
+           906.6818 859.7368 876.7236 868.8648 900.386
+           839.8117 878.5936 866.6935 921.2941 877.8528
+           897.6217 894.6499 830.6403 935.6717 948.9588
+           888.0726 788.6694 877.4076 863.1756 982.6952
+           934.724 898.8038 874.8416 905.8379 843.0447
+           877.0727 894.5569 959.8427 826.6365 907.9904
+           912.9051 912.4662 975.3224 922.8291 934.6569
+           953.236 833.5084 842.0623 885.3881 918.0987
+           842.0927 875.6968 826.3312 870.4634 866.2226
+           845.4767 914.2475 922.4006 832.359 877.5627
+           887.8087 879.4061 925.3103 877.6632 877.3689
+           854.1189 904.5891 882.893 866.3494 892.4554
+           908.3249 873.6439 914.1283 879.8893 843.1085
+)
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

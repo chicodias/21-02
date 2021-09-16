@@ -1,0 +1,83 @@
+---
+title: "SME0809 - Inferência Bayesiana - Distribuição não informativa"
+author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
+date: "Setembro 2021"
+output: pdf_document
+---
+```{r warning=FALSE,message = FALSE}
+# pacotes do R utilizados
+library(tidyverse)
+library(ggpubr)
+```
+
+  
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Seja $Y_1,..., Y_n$ uma a.a de $Y \sim \text{Pois}(\theta)$. Pede-se:
+
+
+- a) encontre a distribuição a *priori* não informativa de Jeffreys
+
+Temos que $$p(y|\theta) = \frac{e^{-\theta} \theta^y }{y!},\ \theta > 0, \ y = 0, 1, 2, ...$$
+
+Primeiramente, vamos obter a log-verossimilhança
+
+$$\begin{aligned} 
+\log(L(\theta)) =
+\log \left(\prod_{i=1}^n p(y_i|\theta) \right) =
+\log \left( \prod_{i=1}^n  \frac{e^{-\theta} \theta^{y_i} }{y_i!} \right)=
+\log \left( \frac{e^{-n \theta} \theta^{\sum_{i=1}^n y_i} }{\prod_{i=1}^n y_i!} \right) = \\
+-n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right)
+\end{aligned} $$
+
+Tomando a segunda derivada, temos que:
+
+$$\begin{aligned} 
+  \frac{\partial^2}{\partial \theta^2}\log(L(\theta)) = 
+  \frac{\partial^2}{\partial \theta^2}\left[-n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right)\right] =
+  \frac{\partial}{\partial \theta}\left[-n + \frac{1}{\theta}\sum_{i=1}^n y_i\right] =\\
+  -\frac1{\theta^{2}} \sum_{i=1}^n y_i
+  \end{aligned}$$
+
+Assim, como $J(\theta) = E\left(- \frac{\partial^2}{\partial \theta^2}\log(L(\theta))\right)$
+
+$$J(\theta) = E\left(\frac1{\theta^{2}} \sum_{i=1}^n y_i \right) = \frac1{\theta^{2}} E\left( \sum_{i=1}^n y_i \right)  = \frac{n\theta}{\theta^2} = \frac{n}{\theta} \propto \frac 1 \theta$$
+
+A distribuição a *priori* de Jeffreys é dada por $\pi(\theta) \propto \sqrt{J(\theta)}$. Logo, $\pi(\theta) \propto \theta^{-1/2}$.
+
+Note que esta *priori* pode ser obtida a partir da conjulgada natural $\text{Gama}(\alpha, \beta)$, com $\alpha = 1/2$ e $\beta \to 0$. Ilustramos o efeito de fixar $\alpha$ e diminuir $\beta$ abaixo:
+
+```{r}
+df <- NULL
+theta <- seq(0, 1, 0.001)
+
+for (i in seq(1, 4, 0.5)) {
+  tmp <- tibble(x = theta,
+                y = dgamma(theta, 1/2, 10^(-i)),
+                beta = as.factor(round(10^(-i), 4)))
+  df <- rbind(df, tmp)
+}
+df %>% ggplot() + geom_line(aes(x = x, y = y, color = beta)) +
+  scale_y_continuous(limits = c(0,1)) + labs(color= expression(beta)) +
+  xlab(expression(theta)) + ylab(expression(p(theta))) +
+  theme_pubr()
+
+```
+
+
+Além disso, $\pi(\theta)$ é uma distribuição imprópria pois $\int_0^{+\infty} \theta^{-1/2}d\theta$ diverge.
+
+  
+- b) A função de verossimilhança na parametrização $\theta$ muda em locação e escala? Justificar graficamente
+
+
+$$L(\theta) = \frac{e^{-n \theta} \theta^{\sum_{i=1}^n y_i} }{\prod_{i=1}^n y_i!} \propto e^{-n\theta}\theta^{\sum_{i=1}^n y_i}$$
+
+
+
+- c) caso a resposta ao item b) seja afirmativa, encontre a escala na qual a função de verossimilhança mude somente em locação. Mostre graficamente.
+
+$$\phi \propto \int \pi(\theta) d\theta$$
+

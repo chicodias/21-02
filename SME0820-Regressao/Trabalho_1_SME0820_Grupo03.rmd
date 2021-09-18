@@ -103,4 +103,13 @@ dados %>%
   
 ## Parte **b)**:
 
+Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
 
+## Parte **c)**:
+  1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
+  2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
+  3. Calcule o valor dos $\hat{Y}$ e o valor dos resíduos para seu modelo, resumo e histograma dos resíduos, e faça uma análise da distribuição destes.
+  4. testes de hipotese para $\beta_0$ e $\beta_1$
+  5. intervalos de confiança
+  6. intervalos de predição
+  7. tabela anova

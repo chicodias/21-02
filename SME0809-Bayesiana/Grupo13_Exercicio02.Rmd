@@ -73,7 +73,7 @@ Além disso, $\pi(\theta)$ é uma distribuição imprópria pois $\int_0^{+\inft
 - b) A função de verossimilhança na parametrização $\theta$ muda em locação e escala? Justificar graficamente
 
 
-$$L(\theta) = \frac{e^{-n \theta} \theta^{\sum_{i=1}^n y_i} }{\prod_{i=1}^n y_i!} \propto e^{-n\theta}\theta^{\sum_{i=1}^n y_i}$$
+$$L(\theta) = \frac{e^{-n \theta} \theta^{\sum_{i=1}^n y_i} }{\prod_{i=1}^n y_i!} \propto e^{-n\theta}\theta^{\sum_{i=1}^n y_i}  \propto e^{\sum_{i=1}^n y_i\log(\theta)-n\theta} $$
 
 
 

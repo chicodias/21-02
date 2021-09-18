@@ -1,0 +1,106 @@
+---
+title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Trabalho I"
+author: 
+  - Brenda da Silva Muniz 11811603
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351-
+  - Mônica Amaral Novelli 11810453
+date: "Setembro 2021"
+output: pdf_document
+---
+
+
+Neste trabalho, nosso objetivo é ajustar um modelo de regressão linear simples ao conjunto de dados fornecido, utilizando linguagem R. Para esta tarefa, descreveremos cada etapa de nosso *pipeline*.
+
+Primeiramente, vamos carregar os módulos utilizados nesta análise. Caso não possua algum dos pacotes, utilize o comando `install_packages("Nome_do_pacote")`.
+
+
+```{r pkgs, warning=FALSE,message = FALSE}
+library(tidyverse)
+library(ggpubr)
+library(corrplot)
+library(DataExplorer)
+library(GGally)
+library(knitr)
+library(data.table)
+
+```
+
+Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
+
+```{r read-load, warning=FALSE,message = FALSE}
+dados <- fread("data-table-B3.csv")
+
+head(dados) %>% kable()
+```
+
+## Parte 0: Limpeza dos dados
+
+Por padrão, o R utiliza o ponto (.) como separador decimal. No caso do arquivo `.csv` fornecido, algumas colunas utilizavam a vírgula, que quando lidas eram identificadas como *strings*. Utilizamos a função `parse_number()` para corrigir isso, e o comando `str()` para mostrar o tipo de cada uma das colunas de nosso dataset.
+
+```{r}
+dados$y <- dados$y %>% parse_number(locale = locale(decimal_mark = ","))
+dados$x1 <-dados$x1 %>% parse_number(locale = locale(decimal_mark = ","))
+dados$x4 <- dados$x4 %>% parse_number(locale = locale(decimal_mark = ","))
+dados$x5 <- dados$x5 %>% parse_number(locale = locale(decimal_mark = ","))
+dados$x8 <- dados$x8 %>% parse_number(locale = locale(decimal_mark = ","))
+dados$x9 <- dados$x9 %>% parse_number(locale = locale(decimal_mark = ","))
+
+str(dados)
+```  
+
+## Parte **a)**: 
+  - Descrição do banco de dados
+  
+Poderíamos também descrever as colunas do banco de dados com auxílio da função `introduce()` do pacote `DataExplorer`. A tabela obtida é exibida abaixo:
+
+```{r describe, fig.cap = "Relações entre as variáveis"}
+
+a <- introduce(dados)
+
+split_data()
+
+a %>% select(rows,
+             discrete_columns, 
+             continuous_columns, 
+             total_observations, 
+             complete_rows, 
+             total_missing_values) %>%
+  kable(
+    col.names = c("Linhas", "Colunas Discretas",
+                  "Colunas Contínuas", "Total de observações",
+                  "Atributos sem NA", "Atributos com NA"))
+
+```
+
+  
+
+  
+  
+  
+  - Definição das variáveis
+  - Análise exploratória inicial
+  
+    
+```{r pairplot, fig.cap = "Correlograma entre as variáveis", warning=FALSE}
+
+ggcorr(dados, geom = "circle")
+
+```
+
+  - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
+  
+```{r scatterplot, fig.cap = "Gráfico de Dispersão de Y com as demais variáveis", warning=FALSE}
+
+dados %>%
+  pivot_longer(cols = !"y") %>% #todas as variaveis como funcao de y
+  ggplot(aes(y = y)) +
+    geom_point(aes(x = value)) +
+    facet_wrap(~name, scales = "free_x") + theme_pubclean()
+
+```
+  - Interpretação de cada gráfico
+  
+## Parte **b)**:
+
+

@@ -8,6 +8,7 @@ output: pdf_document
 # pacotes do R utilizados
 library(tidyverse)
 library(ggpubr)
+library(effectsize) #padronizacao
 ```
 
   
@@ -41,7 +42,7 @@ $$\begin{aligned}
   -\frac1{\theta^{2}} \sum_{i=1}^n y_i
   \end{aligned}$$
 
-Assim, como $J(\theta) = E\left(- \frac{\partial^2}{\partial \theta^2}\log(L(\theta))\right)$
+Assim, como $J(\theta) = E\left(- \frac{\partial^2}{\partial \theta^2}\log(L(\theta))\right)$ então
 
 $$J(\theta) = E\left(\frac1{\theta^{2}} \sum_{i=1}^n y_i \right) = \frac1{\theta^{2}} E\left( \sum_{i=1}^n y_i \right)  = \frac{n\theta}{\theta^2} = \frac{n}{\theta} \propto \frac 1 \theta$$
 
@@ -75,24 +76,28 @@ Além disso, $\pi(\theta)$ é uma distribuição imprópria pois $\int_0^{+\inft
 Já obtivemos em a)
 
 $$\log(L(\theta)) = -n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right) \propto
-
-\sum_{i=1}^n \left( y_i\log(\theta) -\theta \right)$$
+\log(\theta)\sum_{i=1}^n y_i -n\theta $$
 
 
 ```{r}
-Ltheta <- function(theta,sample)(sum(sample)*(log(theta)) - length(sample)*theta)
+Ltheta <- function(theta,y){
+  logl <- sum(y)*log(theta) - length(y)*theta
+  exp( standardize(logl, robust = TRUE))
+}
 
-theta <- 0:20
+theta <- 1:50
 
 
-  a <- seq(1:10) %>% map_dfr( ~tibble( x = theta,
-                                  y = dpois(theta, lambda = .x),
-                                  L = Ltheta(theta, rpois(30, .x)),
-                                  lambda = as.factor(.x)))
-  
+  a <- c(0:3,5, seq(8, 16, 4),25,30, 40, 100) %>%
+    map_dfr( 
+              ~tibble(x = theta,
+                      y = dpois(theta, lambda = .x),
+                      L = Ltheta(theta, rpois(20, .x)),
+                      lambda = as.factor(.x)))
+
   a %>%  ggplot(aes(x = x)) + #geom_line(aes(y = y, color = lambda)) +
     geom_line(aes(y = L, color = lambda), lty=2) +
-  labs(color= expression(beta)) +
+  labs(color= expression(lambda)) +
   xlab(expression(theta)) + ylab(expression(L(theta))) +
   theme_pubr()
 

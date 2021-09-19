@@ -29,55 +29,12 @@ library(data.table)
 Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
 
 ```{r read-load, warning=FALSE,message = FALSE}
-dados <- fread("data-table-B3.csv")
+dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
 
-head(dados) %>% kable()
+head(dados)
 ```
-
-## Parte 0: Limpeza dos dados
-
-Por padrão, o R utiliza o ponto (.) como separador decimal. No caso do arquivo `.csv` fornecido, algumas colunas utilizavam a vírgula, que quando lidas eram identificadas como *strings*. Utilizamos a função `parse_number()` para corrigir isso, e o comando `str()` para mostrar o tipo de cada uma das colunas de nosso dataset.
-
-```{r}
-dados$y <- dados$y %>% parse_number(locale = locale(decimal_mark = ","))
-dados$x1 <-dados$x1 %>% parse_number(locale = locale(decimal_mark = ","))
-dados$x4 <- dados$x4 %>% parse_number(locale = locale(decimal_mark = ","))
-dados$x5 <- dados$x5 %>% parse_number(locale = locale(decimal_mark = ","))
-dados$x8 <- dados$x8 %>% parse_number(locale = locale(decimal_mark = ","))
-dados$x9 <- dados$x9 %>% parse_number(locale = locale(decimal_mark = ","))
-
-str(dados)
-```  
-
 ## Parte **a)**: 
   - Descrição do banco de dados
-  
-Poderíamos também descrever as colunas do banco de dados com auxílio da função `introduce()` do pacote `DataExplorer`. A tabela obtida é exibida abaixo:
-
-```{r describe, fig.cap = "Relações entre as variáveis"}
-
-a <- introduce(dados)
-
-split_data()
-
-a %>% select(rows,
-             discrete_columns, 
-             continuous_columns, 
-             total_observations, 
-             complete_rows, 
-             total_missing_values) %>%
-  kable(
-    col.names = c("Linhas", "Colunas Discretas",
-                  "Colunas Contínuas", "Total de observações",
-                  "Atributos sem NA", "Atributos com NA"))
-
-```
-
-  
-
-  
-  
-  
   - Definição das variáveis
   - Análise exploratória inicial
   
@@ -90,10 +47,10 @@ ggcorr(dados, geom = "circle")
 
   - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
   
-```{r scatterplot, fig.cap = "Gráfico de Dispersão de Y com as demais variáveis", warning=FALSE}
+```{r scatterplot, fig.cap = "Gráfico de Dispersão de Y com as demais variáveis"}
 
 dados %>%
-  pivot_longer(cols = !"y") %>% #todas as variaveis como funcao de y
+  pivot_longer(cols = !"y") %>%
   ggplot(aes(y = y)) +
     geom_point(aes(x = value)) +
     facet_wrap(~name, scales = "free_x") + theme_pubclean()
@@ -112,4 +69,4 @@ Consultar e descrever brevemente os conceitos Data splitting, cross validation, 
   4. testes de hipotese para $\beta_0$ e $\beta_1$
   5. intervalos de confiança
   6. intervalos de predição
-  7. tabela anova
+  7. tabela anova         

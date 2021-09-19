@@ -49,17 +49,17 @@ A distribuição a *priori* de Jeffreys é dada por $\pi(\theta) \propto \sqrt{J
 
 Note que esta *priori* pode ser obtida a partir da conjulgada natural $\text{Gama}(\alpha, \beta)$, com $\alpha = 1/2$ e $\beta \to 0$. Ilustramos o efeito de fixar $\alpha$ e diminuir $\beta$ abaixo:
 
-```{r}
-df <- NULL
-theta <- seq(0, 1, 0.001)
+```{r warning=FALSE}
 
-for (i in seq(1, 4, 0.5)) {
-  tmp <- tibble(x = theta,
-                y = dgamma(theta, 1/2, 10^(-i)),
-                beta = as.factor(round(10^(-i), 4)))
-  df <- rbind(df, tmp)
-}
-df %>% ggplot() + geom_line(aes(x = x, y = y, color = beta)) +
+theta <- seq(0.00001, 1, 0.001)
+
+b <- seq(1, 4, 0.5)
+
+b %>% map_dfr( ~tibble( x = theta,
+                        y = dgamma(theta, 1/2, 10^(-.x)),
+                        beta = as.factor( round( 10^(-.x), 4)))) %>%
+  
+  ggplot() + geom_line(aes(x = x, y = y, color = beta)) +
   scale_y_continuous(limits = c(0,1)) + labs(color= expression(beta)) +
   xlab(expression(theta)) + ylab(expression(p(theta))) +
   theme_pubr()
@@ -72,8 +72,32 @@ Além disso, $\pi(\theta)$ é uma distribuição imprópria pois $\int_0^{+\inft
   
 - b) A função de verossimilhança na parametrização $\theta$ muda em locação e escala? Justificar graficamente
 
+Já obtivemos em a)
 
-$$L(\theta) = \frac{e^{-n \theta} \theta^{\sum_{i=1}^n y_i} }{\prod_{i=1}^n y_i!} \propto e^{-n\theta}\theta^{\sum_{i=1}^n y_i}  \propto e^{\sum_{i=1}^n y_i\log(\theta)-n\theta} $$
+$$\log(L(\theta)) = -n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right) \propto
+
+\sum_{i=1}^n \left( y_i\log(\theta) -\theta \right)$$
+
+
+```{r}
+Ltheta <- function(theta,sample)(sum(sample)*(log(theta)) - length(sample)*theta)
+
+theta <- 0:20
+
+
+  a <- seq(1:10) %>% map_dfr( ~tibble( x = theta,
+                                  y = dpois(theta, lambda = .x),
+                                  L = Ltheta(theta, rpois(30, .x)),
+                                  lambda = as.factor(.x)))
+  
+  a %>%  ggplot(aes(x = x)) + #geom_line(aes(y = y, color = lambda)) +
+    geom_line(aes(y = L, color = lambda), lty=2) +
+  labs(color= expression(beta)) +
+  xlab(expression(theta)) + ylab(expression(L(theta))) +
+  theme_pubr()
+
+```
+
 
 
 

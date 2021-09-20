@@ -9,6 +9,7 @@ output: pdf_document
 library(tidyverse)
 library(ggpubr)
 library(effectsize) #padronizacao
+set.seed(42)
 ```
 
   
@@ -35,12 +36,10 @@ $$\begin{aligned}
 
 Tomando a segunda derivada, temos que:
 
-$$\begin{aligned} 
-  \frac{\partial^2}{\partial \theta^2}\log(L(\theta)) = 
+$$\frac{\partial^2}{\partial \theta^2}\log(L(\theta)) = 
   \frac{\partial^2}{\partial \theta^2}\left[-n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right)\right] =
-  \frac{\partial}{\partial \theta}\left[-n + \frac{1}{\theta}\sum_{i=1}^n y_i\right] =\\
-  -\frac1{\theta^{2}} \sum_{i=1}^n y_i
-  \end{aligned}$$
+  \frac{\partial}{\partial \theta}\left[-n + \frac{1}{\theta}\sum_{i=1}^n y_i\right] =
+  -\frac1{\theta^{2}} \sum_{i=1}^n y_i $$
 
 Assim, como $J(\theta) = E\left(- \frac{\partial^2}{\partial \theta^2}\log(L(\theta))\right)$ então
 
@@ -52,7 +51,7 @@ Note que esta *priori* pode ser obtida a partir da conjulgada natural $\text{Gam
 
 ```{r warning=FALSE}
 
-theta <- seq(0.00001, 1, 0.001)
+theta <- seq(0.0001, 1, 0.0001)
 
 b <- seq(1, 4, 0.5)
 
@@ -73,40 +72,69 @@ Além disso, $\pi(\theta)$ é uma distribuição imprópria pois $\int_0^{+\inft
   
 - b) A função de verossimilhança na parametrização $\theta$ muda em locação e escala? Justificar graficamente
 
-Já obtivemos em a)
+Já obtivemos a função de verossimilhança em a):
 
 $$\log(L(\theta)) = -n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right) \propto
 \log(\theta)\sum_{i=1}^n y_i -n\theta $$
 
+Vamos agora realizar uma implementação e calcular a verossimilhança para diversas amostras aleatórias de tamanho 20 geradas de uma Poisson.
+
+
 
 ```{r}
-Ltheta <- function(theta,y){
-  logl <- sum(y)*log(theta) - length(y)*theta
-  exp( standardize(logl, robust = TRUE))
+Ltheta <- function(theta, y) {
+    exp( sum(y)*log(theta) - length(y)*theta)
 }
 
-theta <- 1:50
+theta <- seq(0,20, 0.01)
 
+df <- NULL
 
-  a <- c(0:3,5, seq(8, 16, 4),25,30, 40, 100) %>%
-    map_dfr( 
-              ~tibble(x = theta,
-                      y = dpois(theta, lambda = .x),
-                      L = Ltheta(theta, rpois(20, .x)),
-                      lambda = as.factor(.x)))
+for (lambda in c(1,4,9,16)) {
 
-  a %>%  ggplot(aes(x = x)) + #geom_line(aes(y = y, color = lambda)) +
-    geom_line(aes(y = L, color = lambda), lty=2) +
-  labs(color= expression(lambda)) +
-  xlab(expression(theta)) + ylab(expression(L(theta))) +
+df <- rbind(df,tibble(
+                          L = normalize(map_dbl(theta, Ltheta, y = rpois(20,lambda))),
+                          theta = theta,
+                          lambda = as_factor(lambda)))
+}
+
+```
+
+O gráfico com a verossimilhança normalizada fica:
+
+```{r}
+df %>%  ggplot(aes(x = theta)) + geom_line(aes(y = L, color = lambda)) +
+  geom_line(aes(y = dgamma(theta, 1/2, 0.01), linetype = "Priori de Jeffreys")) +
+  labs(color= expression(lambda), 
+       title = expression("Verossimilhança normalizada de uma Poisson"~(lambda)),
+       subtitle = "Amostra aléatória com n=20",
+       x = expression(theta),
+       y = expression(L(theta))) +
+  scale_linetype_manual(name = " ", values = "dotted") +
   theme_pubr()
 
 ```
 
 
+Dessa forma, vemos que a função de verossimilhança muda tanto em locação como escala, pois valores grandes de $\lambda$ alocam a distribuição para direita, além de deixá-la mais achatada.
 
 
 - c) caso a resposta ao item b) seja afirmativa, encontre a escala na qual a função de verossimilhança mude somente em locação. Mostre graficamente.
 
-$$\phi \propto \int \pi(\theta) d\theta$$
+$$\phi \propto \int \pi(\theta) d\theta = \int \theta^{-1/2} d\theta = 2\sqrt\theta \Rightarrow
+ \theta \propto \phi^2 $$
+
+
+```{r}
+df %>%  ggplot(aes(x = sqrt(theta))) +
+  geom_line(aes(y = sqrt(L), color = lambda)) +
+  geom_line(aes(y = dgamma(theta, 1/2, 0.001), linetype = "Priori de Jeffreys")) +
+  labs(color= expression(lambda), 
+       title = expression("Verossimilhança normalizada de uma Poisson"~(lambda)),
+       subtitle = "Amostra aléatória com n=20",
+       x = expression(Phi),
+       y = expression(L(Phi))) +
+  scale_linetype_manual(name = " ", values = "dotted") +
+  theme_pubr()
+```
 

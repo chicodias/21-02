@@ -44,6 +44,7 @@ head(dados)
 ggcorr(dados, geom = "circle")
 
 ```
+bla
 
   - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
   

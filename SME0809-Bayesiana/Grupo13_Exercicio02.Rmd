@@ -87,17 +87,14 @@ Ltheta <- function(theta, y) {
 }
 
 theta <- seq(0,20, 0.01)
-
 df <- NULL
 
 for (lambda in c(1,4,9,16)) {
-
-df <- rbind(df,tibble(
+    df <- rbind(df,tibble(
                           L = normalize(map_dbl(theta, Ltheta, y = rpois(20,lambda))),
                           theta = theta,
                           lambda = as_factor(lambda)))
 }
-
 ```
 
 O gráfico com a verossimilhança normalizada fica:
@@ -121,8 +118,8 @@ Dessa forma, vemos que a função de verossimilhança muda tanto em locação co
 
 - c) caso a resposta ao item b) seja afirmativa, encontre a escala na qual a função de verossimilhança mude somente em locação. Mostre graficamente.
 
-$$\phi \propto \int \pi(\theta) d\theta = \int \theta^{-1/2} d\theta = 2\sqrt\theta \Rightarrow
- \theta \propto \phi^2 $$
+$$\phi \propto \int \pi(\theta) d\theta = \int \theta^{-1/2} d\theta = 2\sqrt\theta  \propto
+ \sqrt\theta $$
 
 
 ```{r}

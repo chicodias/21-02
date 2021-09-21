@@ -119,6 +119,8 @@ Dessa forma, vemos que a função de verossimilhança muda tanto em locação co
 $$\phi \propto \int \pi(\theta) d\theta = \int \theta^{-1/2} d\theta = 2\sqrt\theta  \propto
  \sqrt\theta $$
 
+A equação acima expressa a chamada *Lei de Jeffreys* que afirma que a distribuição a priori para um único parâmetro $\theta$ é aproximadamente não informativa se tomada de modo proporcional à raiz quadrada da Informação de Fisher de $\theta$.
+
 
 ```{r}
 df %>%  ggplot(aes(x = sqrt(theta))) +

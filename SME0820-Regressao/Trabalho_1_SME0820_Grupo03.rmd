@@ -9,7 +9,7 @@ date: "Setembro 2021"
 output: pdf_document
 ---
 
-
+bla
 Neste trabalho, nosso objetivo é ajustar um modelo de regressão linear simples ao conjunto de dados fornecido, utilizando linguagem R. Para esta tarefa, descreveremos cada etapa de nosso *pipeline*.
 
 O dataset B.3 contém dados sobre o rendimento de Gasolina, em milhas, de 32 automóveis diferentes. Ajuste o modelo de regressão linear simples que relaciona o rendimento da gasolina (y) (Milhas por litro) e a cilindrada do motor (x1) (polegadas cúbicas). 
@@ -46,6 +46,7 @@ head(dados)
 ggcorr(dados, geom = "circle")
 
 ```
+bla
 
   - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
   

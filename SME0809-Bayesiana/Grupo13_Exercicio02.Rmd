@@ -82,9 +82,7 @@ Vamos agora realizar uma implementação e calcular a verossimilhança para dive
 
 
 ```{r}
-Ltheta <- function(theta, y) {
-    exp( sum(y)*log(theta) - length(y)*theta)
-}
+Ltheta <- function(theta, y)(exp( sum(y)*log(theta) - length(y)*theta))
 
 theta <- seq(0,20, 0.01)
 df <- NULL

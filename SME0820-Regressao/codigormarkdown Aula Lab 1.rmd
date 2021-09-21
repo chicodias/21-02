@@ -1,107 +1,105 @@
 ---
-title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Trabalho I"
-author: 
-  - Brenda da Silva Muniz 11811603
-  - Francisco Rosa Dias de Miranda 4402962
-  - Heitor Carvalho Pinheiro 11833351-
-  - Mônica Amaral Novelli 11810453
-date: "Setembro 2021"
-output: pdf_document
+title: "Aula Lab 1"
+author: "Daniel Camilo Fuentes Guzman"
+date: "17/09/2021"
+output: html_document
 ---
 
-
-Neste trabalho, nosso objetivo é ajustar um modelo de regressão linear simples ao conjunto de dados fornecido, utilizando linguagem R. Para esta tarefa, descreveremos cada etapa de nosso *pipeline*.
-
-O dataset B.3 contém dados sobre o rendimento de Gasolina, em milhas, de 32 automóveis diferentes. Ajuste o modelo de regressão linear simples que relaciona o rendimento da gasolina (y) (Milhas por litro) e a cilindrada do motor (x1) (polegadas cúbicas). 
-
-Primeiramente, vamos carregar os módulos utilizados nesta análise. Caso não possua algum dos pacotes, utilize o comando `install_packages("Nome_do_pacote")`.
-
-
-```{r pkgs, warning=FALSE,message = FALSE}
-library(tidyverse)
-library(ggpubr)
-library(corrplot)
-library(DataExplorer)
-library(GGally)
-library(knitr)
-library(data.table)
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
 
-```{r read-load, warning=FALSE,message = FALSE}
-dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
 
-head(dados)
-```
-## Parte **a)**: 
-  - Descrição do banco de dados
-  - Definição das variáveis
-  - Análise exploratória inicial
-  
 
-```{r pairplot, fig.cap = "Correlograma entre as variáveis", warning=FALSE}
+Primeiramente vamos verificar o diretorio de trabalho atual, vamos selecionar o diretorio de trabalho desejado e logo carregar o Dataset asignado para as atividades.
 
-ggcorr(dados, geom = "circle")
+## Diretorio de Trabalho
 
+***Verificando o Diretorio de Trabalho***
+```{r Dir}
+getwd()
 ```
 
-  - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
-  
-```{r scatterplot, fig.cap = "Gráfico de Dispersão de Y com as demais variáveis"}
 
-dados %>%
-  pivot_longer(cols = !"y") %>%
-  ggplot(aes(y = y)) +
-    geom_point(aes(x = value)) +
-    facet_wrap(~name, scales = "free_x") + theme_pubclean()
-
-```
-  - Interpretação de cada gráfico
-  
-## Parte **b)**:
-
-Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
-
-## Parte **c)**:
-  1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
-  2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
-  
-```{r}
-fit <- lm(y ~ x1, data = dados, )
-
-summary(fit)
-anova(fit)
-dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
-    geom_smooth(method='lm', formula= y~x)
-
-```
-  
-  
-  3. Calcule o valor dos $\hat{Y}$ e o valor dos resíduos para seu modelo, resumo e histograma dos resíduos, e faça uma análise da distribuição destes.
-  4. testes de hipotese para $\beta_0$ e $\beta_1$
-  
-  5. intervalos de confiança
-```{r}
-confint(fit, level = 0.99)
-```
-  
-  
-  6. intervalos de predição
-```{r}
-#predict(fit, newdata = new.dat, interval = 'prediction')
-```
-  
-
-algumas variaveis que precisamos
-```{r}
-y <- dados$y
-x1 <- dados$x1
-n <- length(y)
+***Selecionando Diretorio de Trabalho***
+```{r Diretorio}
+setwd('C:/Users/camig/OneDrive/Documentos/R/Gabarito tarefa 1')
 ```
 
-# Galera daqui ppra baixo só colei o markdown do danilo
+
+
+***Carregando o Dataset***
+  
+```{r dados}
+data <- read.table("data-aula1-lab.csv", header = TRUE, sep = ";", dec = ",")
+head(data)
+```
+
+Note que este dataset corresponde a McDonald e Ayers (1978) onde  apresentam dados de um estudo anterior que examinou a possível ligação entre poluição do ar e mortalidade. A descrição dos dados é a seguinte:
+
+**MORT** = mortalidade total ajustada por idade por todas as causas, em mortes por $100.000$ habitantes.
+
+**PRECIP** = precipitação média anual. (em polegadas).
+
+**EDUC** = número médio de anos escolares concluídos para pessoas de $25$ anos ou mais.
+
+**NONWHITE** = porcentagem da população de $1960$ que não é branca.
+
+**NOX** = potencial relativo de poluição de óxidos de nitrogênio.
+
+**SO2** = potencial relativo de poluição do dióxido de enxofre.     "Potencial relativo de poluição" é o produto das toneladas emitidas cada dia por quilômetro quadrado eum fator de correção das dimensões e exposição o SMSA.
+
+```{r resumodados}
+summary(data)
+```
+Agora precisarmos definir no data set qual coluna vai corresponder a nosso target  ou variavél resposta $(Y)$ e qual vai ser nosso preditor linear ou variavél explicativa $(X)$. Nesse caso, 
+```{r features}
+y <- data$MORT
+x1 <- data$PRECIP
+dados <- data.frame(cbind(x1, y))
+```
+
+```{r dimdata}
+dim(data)
+dimfeature=c(dim(data))
+n=dimfeature[1]
+n
+```
+
+# Gráficos 
+***Gráfico de Dispersão Mortalidade vs precip***
+```{r gradispervaryex}
+plot(x1,y, main = "Gráfico de dispersão \n Mortalidade vs X1", 
+     ylim = c(750,1150), xlim = c(9,65))
+```
+
+***Box-plot de y***
+```{r boxploty}
+boxplot(dados$y, main = "Box plot da variavel y", col = "red")
+```
+
+***Box-plot de x1***
+```{r boxplotx1}
+boxplot(dados$x1, main = "Box plot da variavel x1", col = "blue")
+```
+
+
+***Histograma de y***
+```{r histogy}
+hist(y, main = "Histograma da variável Mortalidade", col = "red",
+     xlim = c(700, 1200), ylim = c(0, 20), 
+     ylab = "Frequencia", xlab = "Mortes")
+```     
+
+***Histograma de x1***
+```{r histogx1}
+hist(x1, main = "Histograma da variável precipitação média anual", col = "blue",
+     xlim = c(0, 70), ylim = c(0, 40), 
+     ylab = "Frequencia", xlab = "Mortes")
+```  
+
+
 
 
 Calcule $Sxx, Syy, Sxy$.
@@ -158,7 +156,7 @@ cbind(beta0est,beta1est)
 
 **Gráfico Reta Ajustada**
 ```{r grafajuste}
-plot(x1,y , #ylim = c(750,1150), xlim = c(9,65),
+plot(x1,y , ylim = c(750,1150), xlim = c(9,65),
      main = expression(paste("Reta ajustada com ", 
                              hat(beta)[0],"=821,7546", 
                              " e ", hat(beta)[1],"=3,174")),
@@ -233,7 +231,7 @@ summary(res)
 ***Histograma dos Resíduos***
 ```{r historesiduos}
 hist(res, main = "Histograma dos Resíduos", col = "green",
-    # xlim = c(-151, 130), ylim = c(0, 30), 
+     xlim = c(-151, 130), ylim = c(0, 30), 
      ylab = "Frequencia", xlab = "Resíduos")
 ```  
 ```{r qqplotresidu}
@@ -315,9 +313,7 @@ Ou seja, rejeitamos a hípotese que o valor do
 intercepto $\beta_0 = 0$.
 
 
-#**vou editar a partir daqui**
 
-  
 ## ***Intervalos de Confiança*** 
 
 Intervalos de Confiança para $(\beta_0,\beta_1,\sigma^2)$ e $E(Y)$.
@@ -329,11 +325,9 @@ b1_max <- beta1est-t1*dp_b1
 IC_b1_est <- cbind(b1_min, b1_max)
 IC_b1_est
 ```
- (y) (Milhas por litro) e a  (x1) (polegadas cúbicas)
 
-**Interpretação:** Cada incremento em polegada cúbica na cilindrada do motor
-aumenta o consumo em milhas por litro em -0.0473, com uma margem de erro de aproximadamente 0.009
-para mais ou para menos.
+**Interpretação:** Para cada Precip aumenta $3,17$ mortes com 
+uma margem de erro de $1,4$ mortes para mais ou para menos. 
 
 ***Calculando intervalo de Confiança para $\beta_0$***
 ```{r icbeta0}
@@ -342,8 +336,6 @@ b0_max <- beta0est-t1*dp_b0
 IC_b0_est <- cbind(b0_min, b0_max)
 IC_b0_est
 ```
-
-
 
 ***Calculando intervalo de confiança para $\sigma^2$***
 
@@ -512,7 +504,7 @@ if(t0_b1^2 > f1.2){
 
 ***Anova usando funções do R***
 ```{r funanovar}
-Anovamodel <- aov(y ~ x1, data = dados)
+Anovamodel <- aov(MORT ~ PRECIP, data = data)
 Anovamodel
 ```
 
@@ -528,6 +520,7 @@ shapiro.test(resid(Anovamodel))
 A hipótese nula do Teste de Shapiro-Wilk é de que não há diferença entre a nossa distribuição dos dados e a distribuição normal. O valor-p maior do que 0.05 nos dá uma confiança estatística para afirmar que as distribuição dos nossos resíduos não difere da distribuição normal.
 
 Dessa forma nossos dados satisfazem todas as premissas da ANOVA e portanto, o resultado da nossa ANOVA são válidos.
+
 
 
 

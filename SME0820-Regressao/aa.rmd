@@ -1,0 +1,469 @@
+---
+title: "Modeling and prediction for movies"
+output: 
+html_document: 
+fig_height: 4
+highlight: pygments
+theme: spacelab
+---
+  
+## Setup
+  
+### Load packages
+  
+```{r load-packages, message = FALSE}
+library(tidyverse)
+library(statsr)
+library(forcats)
+library(GGally)
+library(ggExtra)
+library(ggpubr)
+library(gridExtra)
+library(janitor)
+library(ggmosaic)
+library(cdparcoord)
+library(SignifReg)
+```
+
+### Load data
+
+```{r load-data}
+load("movies.Rdata")
+```
+
+* * *
+  
+## Part 1: Data
+  
+
+According to the Codebook, this data set is comprised of 651 randomly sampled movies produced and released before 2016. Each row is a movie and each column a characteristic of it. As it is a *simple random sample*, we can apply inference methods into it, allowing us to make assumptions and generalizations about the population of interest only with the data we have in here. That is the reason why the randomness of data is so important.
+
+Without this condition, we could not make any use of the hypothesis tests required to check the significance of the variables in our linear regression model. However, as it is a observacional study, in which individual are observed and certain outcomes are measured, the data cannot be utilized to estabilish causal relations between the variables.
+
+* * *
+  
+## Part 2: Research question
+  
+Determining what makes a movie popular is not an easy task. The answer for this question has been
+researched by many authors along the time, because of its relevance to the movie industry. Usually, it is very expensive to make a good movie. According to a report published by Phys.Org, "it costs around \$65 million to produce a major studio movie, plus another \$35 million for marketing and distribution, so getting it right is crucial."
+
+In this study, we are interested in identifying the key atributes in a movie that determines its popularity. For that, we will use the IMdB`s audience score as response variable. But, we must be aware this way we are highlighting only some key atributes and reffering them as a popularity metric for movies, and for sure the answer for a question such this is pretty complex.
+
+According to Preetha Rajan, ‘our taste in movies is highly idiosyncratic and at odds with critics’. So, we must keep on mind that there are lots of possible answers to how can we compute the popularity of a movie. Said that, the research question is:
+
+**Is a movie´s IMdB audience score associated with attributes of that movie such as its genre, number of votes and ratings the movie received online, critics score, Oscar nominations and wins and whether or not the movie is in the Top 200 Box Office?**
+  
+It will be interesting to see the kinds of insights that can be derieved from the data set being considered for this project, and what will be the findings derieved from the developed multiple linear regression model.
+
+```{r select-data}
+# Step 1: Selection of relevant variables. The selected variables are audience_score, genre, critics_score, critics_rating, audience rating, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box and imdb_rating and imdb_num_votes.
+
+# We will only use the variables that do not contain null values.
+
+dt <- movies[complete.cases(movies),] %>% select(title,audience_score, imdb_rating, genre, critics_score, critics_rating, audience_rating, best_pic_nom, best_pic_win, best_actor_win, best_actress_win, best_dir_win, top200_box,imdb_rating,imdb_num_votes)
+
+```
+
+* * *
+  
+## Part 3: Exploratory data analysis
+
+The goal here is to get a general idea of how your sample behaves. In order to do this, we will try to answer, trought some EDA techniques, questions like: what is the most common genre? How are the distributions of the numeric variables? Are they affected by other cathegorical variables, for example if a movie has won the Oscar?
+
+  + Numeric variables
+    - audience_score (response variable)
+    - critics_score
+    - imdb_num_votes
+    - imdb_rating
+
+  + Categoric variables
+    - genre
+    - critics_rating
+    - audience rating
+    - best_pic_nom 
+    - best_pic_win
+    - best_actor_win
+    - best_actress_win
+    - best_dir_win
+    - top200_box
+
+#### Categorical variables
+
+
+```{r freq-tbl-genre}
+
+# frequency table for movie genre
+dt %>% tabyl(genre, sort = T) %>% arrange(desc(n)) 
+
+```
+
+As we can see, we have many levels on the variable genre. Mostly of the movies in the sample are Dramas (almost the half). Now, let`s check the behaviour of the other categorical variables:
+
+```{r barplots}
+# bar plot for top200_box
+p1 <- dt %>% ggplot(aes(top200_box)) + geom_bar() + theme_pubr()
+
+# bar plot for best_pic_nom
+p2 <- dt %>% ggplot(aes(best_pic_nom)) + geom_bar() + theme_pubr()
+
+# bar plot for best_pic_win
+p3 <- dt %>% ggplot(aes(best_pic_win)) + geom_bar() + theme_pubr()
+
+# bar plot for best_actor_win
+p4 <- dt %>% ggplot(aes(best_actor_win)) + geom_bar() + theme_pubr()
+
+# bar plot for best_actress_win
+p5 <- dt %>% ggplot(aes(best_actress_win)) + geom_bar() + theme_pubr()
+
+# bar plot for best_dir_win
+p6 <- dt %>% ggplot(aes(best_dir_win)) + geom_bar() + theme_pubr()
+
+# bar plot for critics_rating
+p7 <- dt %>% ggplot(aes(critics_rating)) + geom_bar() + theme_pubr()
+
+# bar plot for audience_rating
+p8 <- dt %>% ggplot(aes(audience_rating)) + geom_bar() + theme_pubr()
+
+# plotting the views
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
+
+grid.arrange(p5, p6, p7, p8, ncol=2)
+```
+
+
+```{r frequency-tables}
+dt %>% tabyl(top200_box, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(best_pic_nom, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(best_pic_win, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(best_actor_win, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(best_actress_win, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(best_dir_win, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(critics_rating, sort = T) %>% arrange(desc(n)) 
+
+dt %>% tabyl(audience_rating, sort = T) %>% arrange(desc(n)) 
+
+```
+
+From the plots and tables above, the data set seems to consist predominantly of drama films, with lower ratings from critics but favourable among audiences. Also, the majority of the movies neither were nominated for an Oscar nor figure in the Top 200 Box list.
+
+
+#### Numeric variables:
+
+```{r distributions}
+
+# boxplots
+q1 <- dt %>% ggplot(aes(audience_score)) + geom_boxplot() + theme_pubr()
+q2 <- dt %>% ggplot(aes(critics_score)) + geom_boxplot() + theme_pubr()
+q3 <- dt %>% ggplot(aes(imdb_rating)) + geom_boxplot() + theme_pubr()
+q4 <- dt %>% ggplot(aes(imdb_num_votes)) + geom_boxplot() + theme_pubr()
+
+# histograms (bins according to Sturges Rule)
+q5 <- dt %>% ggplot(aes(audience_score)) + geom_histogram(bins = nclass.Sturges(dt$audience_score)) + theme_pubr()
+q6 <- dt %>% ggplot(aes(critics_score))  + geom_histogram(bins = nclass.Sturges(dt$critics_score)) + theme_pubr()
+q7 <- dt %>% ggplot(aes(imdb_rating)) + geom_histogram(bins = nclass.Sturges(dt$imdb_rating)) + theme_pubr()
+q8 <- dt %>% ggplot(aes(imdb_num_votes)) + geom_histogram(bins = nclass.Sturges(dt$audience_score)) + theme_pubr()
+
+
+grid.arrange(q1, q2, q3, q4, q5, q6, q7, q8, ncol = 4)
+
+```
+
+From the histograms above, it is interesting to notice the audience score seeming concentrated in the 70-90 range. This audience score range is definitely towards the right tail of the distribution.
+
+### Relations between the variables
+
+````{r violin-plots}
+
+p1 <- dt %>% ggplot(aes(audience_score,best_pic_nom)) + geom_violin() + coord_flip()
+p2 <- dt %>% ggplot(aes(audience_score,best_pic_win)) + geom_violin() + coord_flip()
+p3 <- dt %>% ggplot(aes(audience_score,best_actor_win)) + geom_violin() + coord_flip()
+p4 <- dt %>% ggplot(aes(audience_score,best_actress_win)) + geom_violin() + coord_flip()
+p5 <- dt %>% ggplot(aes(audience_score,best_dir_win)) + geom_violin() + coord_flip()
+p6 <- dt %>% ggplot(aes(audience_score,top200_box)) + geom_violin() + coord_flip()
+
+
+grid.arrange(p1,p2,p3,p4,p5,p6,ncol=3)
+
+```
+
+The violin plots show us movies that have either been nominated or won the best picture Oscar or figure in Top 200 Box seem to receive, in average, higher audience scores. Therefore, having an Oscar winner in the cast or direction does not seem to significantly change the distribution of the audience score.
+
+It is interessant to notice that even best picture Oscar winners having higher scores in average, they represent only around 1% of the sample.
+
+```{r rating-score-relation}
+# reordering critics_rating
+dt <- reOrder(dt,'critics_rating',
+   c('Rotten','Fresh','Certified Fresh'))
+
+# parallel coordinates plot
+dt %>% select(audience_rating, audience_score, imdb_rating, critics_score, critics_rating) %>% discparcoord(k = 30)
+```
+From this parallel coordinates plot, it is possible to notice the relation between _score and _rating variables. If the audience_score of a movie is higher than 60 its audience_rating is labeled Upright, and if its rating_score is lower than 60 the critics_rating will be Rotten. 
+
+This fact is very important, because, as these variables enconde the same information, we should make a decision and use either scores or ratings. Then, the decision is to exclude the ratings from the model and keeping only the scores. 
+
+
+```{r message = FALSE}
+
+nums <- tibble(dt$audience_score,dt$critics_score, dt$imdb_rating, dt$imdb_num_votes)
+
+summary(nums)
+nums %>% ggpairs()
+
+```
+
+The strong positive linear correlations between audience_score, critics_score and imdb_rating are indicators that critics_score and imdb_rating might serve as good predictors of audience score.
+
+However, as these variables are collinear, adding more than one of them would not add much value to the model, so that must be tested empirically.
+
+In the other hand, as imdb_num_votes has a weak positive linear relationship with audience_score, it also indicates the lack of a good predicting power in that variable.
+
+* * *
+
+## Part 4: Modeling
+
+The first step here is to split your data set into a training and test sets. According to Preetha Rajan, "a training set is the segment of the original data set that you can use to train your model and find its parameters. A test set is the segment of the data that you can use to test your trained model and see how well it generalises, in terms of making predictions utilizing the developed modelling framework on ‘unseen’ data."
+
+
+```{r sampling}
+# Split the data set into training and test set.
+set.seed(123)
+
+nsamples <- floor(0.90*nrow(dt))
+
+train_ind <- sample(seq_len(nrow(dt)), size = nsamples)
+train_90 <- dt[train_ind, ]
+test_10 <- dt[-train_ind, ]
+```
+
+### Choosing the parcimonious model via backwards selection
+
+#### P-Value criterion
+
+We start with a full model that is a model with all possible co-variants or predictors included, and then we drop the single variable with the highest P-Value  at a time until a parsimonious model is reached.
+
+```{r backwards-model-1}
+
+fit1 <- lm(formula = audience_score ~ critics_score + genre + best_pic_nom + best_actor_win + best_actress_win + best_dir_win + top200_box + imdb_num_votes, data = train_90)
+
+summary(fit1)
+
+```
+
+Then, we drop the predictor with the highest p-value (best_dir_win).
+
+```{r backwards-model-2}
+
+fit2 <- lm(formula = audience_score ~ critics_score + genre + best_pic_nom + best_actor_win + best_actress_win + top200_box + imdb_num_votes, data = train_90)
+
+summary(fit2)
+```
+
+As our R-Squared still increasing a bit, we now drop the variable best_actor_win.
+
+```{r model-3}
+fit3 <- lm(formula = audience_score ~ critics_score + genre + best_pic_nom + best_actress_win + top200_box + imdb_num_votes, data = train_90)
+
+summary(fit3)
+
+```
+
+Now, we drop the variable best_actress_win from the model.
+
+```{r model-4}
+
+fit4 <- lm(formula = audience_score ~ critics_score + genre + best_pic_nom + top200_box + imdb_num_votes, data = train_90)
+
+summary(fit4)
+
+```
+
+We will drop now the variable top200_box
+
+```{r model-5}
+
+fit5 <- lm(formula = audience_score ~ critics_score + genre + best_pic_nom + imdb_num_votes, data = train_90)
+
+summary(fit5)
+
+```
+
+Now we drop best_pic_nom
+
+```{r model-6}
+
+fit6 <- lm(formula = audience_score ~ critics_score + genre + imdb_num_votes, data = train_90)
+
+summary(fit6)
+
+```
+
+As your R-Squared decreases, we might want to keep the variable best_pic_nom.
+So, according to R-Squared criterion, we reached to the parcimonious model via backwards selection with P-Value criterion.
+
+Let`s try with imdb_rating instead of critics_score
+
+```{r}
+fitr1 <- lm(formula = audience_score ~ imdb_rating + genre + best_pic_nom + best_actor_win + best_actress_win + best_dir_win + top200_box + imdb_num_votes, data = train_90)
+
+summary(fitr1)
+
+# Drop top200_box
+fitr2 <- lm(formula = audience_score ~ imdb_rating + genre + best_pic_nom + best_actor_win + best_actress_win + best_dir_win + imdb_num_votes, data = train_90)
+
+summary(fitr2)
+
+# Drop best actor_win
+fitr3 <- lm(formula = audience_score ~ imdb_rating + genre + best_pic_nom+ best_actress_win + best_dir_win + imdb_num_votes, data = train_90)
+
+summary(fitr3)
+
+# Drop imdb_num_votes
+fitr4 <- lm(formula = audience_score ~ imdb_rating + genre + best_pic_nom + best_actor_win + best_actress_win + best_dir_win, data = train_90)
+
+summary(fitr4)
+
+# Chosen parcimonious model: fitr3
+```
+
+### Choosing the parcimonious model via forwards selection
+
+#### Adjusted R-Squared criterion
+
+Here, we start with an almost empty model, then we drop variables one at a time, on the basis of P-values criterion and Adjusted R-Squared, until a parsimonious model is reached.
+
+```{r forwards-model-r-squared}
+
+fit.r1 <- lm(audience_score ~ critics_score, data = train_90)
+
+summary(fit.r1)
+
+fit.r2 <- fit.r1 %>% add1SignifReg(scope = ~.-genre-imdb_rating-best_pic_nom-best_pic_win-best_actor_win-best_actress_win-best_dir_win-top200_box-imdb_num_votes, criterion = "r-adj")
+
+summary(fit.r2)
+
+fit.r3 <- fit.r2 %>% add1SignifReg(scope = ~.-genre-best_pic_nom-best_pic_win-best_actor_win-best_actress_win-best_dir_win-top200_box-imdb_num_votes, criterion = "r-adj")
+
+summary(fit.r3)
+
+fit.r4 <- fit.r3 %>% add1SignifReg(scope = ~.-best_pic_nom-best_pic_win-best_actor_win-best_actress_win-best_dir_win-top200_box-imdb_num_votes, criterion = "r-adj")
+
+summary(fit.r4)
+```
+
+Here, from the starting formula audience_rating ~ critics_score we reached the parcimonious model with Adjusted R-Squared criterion.
+
+#### P-values criterion
+
+```{r forwards-model-pvalues}
+
+fit.p1 <- lm(audience_score ~ imdb_rating, data = train_90)
+
+summary(fit.p1)
+
+fit.p2 <- fit.p1 %>% add1SignifReg(scope = ~.-genre-best_pic_nom-best_actor_win-best_actress_win-best_dir_win-top200_box-imdb_num_votes, criterion = "p-value")
+
+summary(fit.p2)
+
+fit.p3 <- fit.p2 %>% add1SignifReg(scope = ~.-best_pic_nom-best_pic_win-best_actor_win-best_actress_win-best_dir_win-top200_box-imdb_num_votes, criterion = "p-value")
+
+summary(fit.p3)
+# parcimonious model reached
+```
+
+Here, we started with the formula audience score ~ imdb_rating and reached the parcimonious model with p-values criterion.
+
+Model chosen: fit.p3
+
+Now that we have the final parcimonious model,  prior to interpreting the model coefficients and making predictions, the next step are the model diagnostics, where we check whether certain critical conditions hold in order for the method of Ordinary Least Squares.
+
+```{r residuals-hist}
+hist(fit.p3$residuals)
+
+e1071::skewness(fit.p3$residuals)
+```
+From the histogram, it seems the nearly normal residuals with mean zero condition has been satisfied enough.
+
+
+```{r residuals-plot}
+plot(fit.p3$residuals)+
+abline(h=0, lt=3)
+```
+
+The residuals seems to be random scattered around zero, another condition that has to be met.
+
+```{r residuals-qqline}
+{qqnorm(fit.p3$residuals)
+qqline(fit.p3$residuals)}
+```
+
+Looking at the normal probability plot as well, except for at the upper tail area, we're not seeing huge deviations from the mean. So I think we can say that this condition seems to be fairly satisfied.
+
+```{r}
+plot(fit.p3$residuals~fit.p3$fitted.values, main="Scatter Plot Depicting Residuals vs. Fitted Values of Audience Score", ylab="Residuals", xlab="Fitted Values - Audience Score") +
+abline(h=0, lt=3)
+```
+
+Judging from the above scatterplot, the residuals seem pretty randomly scattered about the zero line. There is neither a tendency for negative residuals at smaller fitted values of the dependent variable nor a tendency for positive residuals at larger fitted values of the dependent variable. There is also neither a tendency for clustered residuals at smaller fitted values of the dependent variable nor a tendency for widely scattered residuals at larger fitted values of the dependent variable.
+
+
+```{r summary-final-model}
+
+summary(fit.p3)
+```
+### Interpretation of the coefficients
+
+This developed model explais 76% of the variation in audience score by the chosen final predictors movie genre, imdb rating and critics score.
+
+The genre of the movie and the ratings the movie received trough IMDB. We began with the model where the audience score was only explained by imdb raing, then through the process of forward selection, where the P-Value criterion was used, we ended up with a parsimonious model with two predictors of audience score.
+
+1. IMdB Score slope coefficent interpretation: for each 1-point increases in imdb_rating, we can expect on average, the audience score for that movie will increase by 16.20 points, holding everything else constant.
+
+2. Genre slope coefficients interpretation: I am aware that there are many statistically insignificant levels of the explanatory variable genre, but I am not removing this from the model as there are some levels that are statistically significant predictors of audience score. As per the slope coefficients, the most popular genres seem to be Documentaries, Musicals, Animation and Drama. This seems to reflect the findings from the EDA process depicted earlier. So for example, holding everything else, moving from a movie that is not a documentary to a movie that is a documentary, we can expect on an average that the audience score will increase by 3.13 points. Genres such as Horror and SCi-Fi seem less popular with audiences. For example, holding everything else, moving from a movie that is not a horror movie to a movie that is a horror movie, we can expect on an average that the audience score will decrease by 3.2 points.
+
+
+* * *
+  
+## Part 5: Prediction
+
+We are going to use the model created earlier(fit.p3) to predict the audience scores for 62 movies in the test set. We had earlier allocated 90% of the data towards the training set and 10% of the data towards the test set. First we create a new dataframe for this movie.
+
+```{r predict}
+
+prmovies <- test_10 %>% select(title,imdb_rating, genre, critics_score)  
+
+predictions <- predict(fit.p3, prmovies[,-1], interval="prediction", level=0.95)
+
+
+test <- tibble(title = test_10$title,
+               audience_score = test_10$audience_score,
+               fit = predictions[,1],
+               lower = predictions[,2],
+               upper = predictions[,3]) %>%
+  mutate(onRange = audience_score > lower & audience_score < upper, diff = audience_score - fit)
+
+test  %>% tabyl(onRange)
+
+hist(test$diff)
+
+```
+
+Then, you model predicted correctly 59 out of a 62 inside a 95% confidence interval, and the new data, like the residuals, seems to be normally distributed with mean zero.
+
+
+* * *
+  
+## Part 6: Conclusion
+  
+The chosen model framework demonstrates that it is possible to predict a movie’s popularity, as measured by audience score with only two predictors - imdb_rating and genre. Interestingly, a movie’s genre also plays a role as a predictor of a movie’s popularity. 
+
+The potential shortcoming is that the model’s predictive power is limited because the sample data is not representative. Therefore, a larger number of observations to capture more variability in the population data in our testing data set is required to have a better measure of the model’s accuracy.
+
+Another aspect that needs to be noted here is that the data set in question can also include numerical metrics of box office success such as the revenue that the movie generated both in the US and Overseas. Information regarding the number of screens where the movie is released could also be a potential predictor of box office success. Studies in future could consider a much larger data set of movies in order to include not just movies that have been released in the last 10-40 years or so, but also include the so-called classics and it will be interesting to see the variation in revenue across newer releases and the classics. 

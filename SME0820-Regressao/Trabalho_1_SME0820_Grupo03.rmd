@@ -39,13 +39,59 @@ head(dados)
   - Descrição do banco de dados
   - Definição das variáveis
   - Análise exploratória inicial
+```{r summary}
+summary(dados)
+```
+
+  Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
+  **Dimensão dos dados**
   
+```{r dimdata}
+
+dim(dados)
+
+```
+## Análise Exploratória Básica
+
+**Gráfico da Dispersão entre x1 (cilindrada do motor) e y (rendimento da gasolina)**
+
+```{r scatter}
+ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + geom_smooth(method = "lm", se = FALSE) +
+  ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
+  theme_classic() +
+  theme(plot.title = element_text(size = 20, hjust = .5)) 
+  
+  
+```
+Perceba que existe uma clara relação linear entre as duas variáveis, representada pela linha azul. Conforme as cilindradas do motor aumentam, o rendimento tende a diminuir.
+
+```{r violinplot x}
+dados %>% 
+  ggplot(aes(x = "", y = dados$x1)) +
+    geom_boxplot(color = "blue") + 
+    stat_summary(fun.y = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
+    geom_jitter(color="black", size=1, alpha=.9) +
+    theme(plot.title = element_text(size = 15, hjust = .5)) + 
+      
+    ggtitle("Boxplot da Variável (X1)") + 
+    xlab("") + ylab("Cilíndradas por Polegada Cúbica")
+  
+  
+```
+Podemos perceber a partir do boxplot acima e da função summary que 50% dos carros tem menos de 318 cilíndradas.
+
+```{r histx1}
+
+```
+
 
 ```{r pairplot, fig.cap = "Correlograma entre as variáveis", warning=FALSE}
 
 ggcorr(dados, geom = "circle")
 
 ```
+
+
 bla
 
   - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
@@ -64,6 +110,10 @@ dados %>%
 ## Parte **b)**:
 
 Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
+
+3. Overfitting: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
+
+4. Underfitting: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
 
 ## Parte **c)**:
   1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$

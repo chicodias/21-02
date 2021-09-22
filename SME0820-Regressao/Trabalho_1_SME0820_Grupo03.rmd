@@ -56,20 +56,18 @@ dim(dados)
 **Gráfico da Dispersão entre x1 (cilindrada do motor) e y (rendimento da gasolina)**
 
 ```{r scatter}
-ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + geom_smooth(method = "lm", se = FALSE) +
+ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + geom_smooth(method = "lm") +
   ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
   theme_classic() +
   theme(plot.title = element_text(size = 20, hjust = .5)) 
-  
-  
 ```
 Perceba que existe uma clara relação linear entre as duas variáveis, representada pela linha azul. Conforme as cilindradas do motor aumentam, o rendimento tende a diminuir.
 
-```{r violinplot x}
+```{r boxplot x1}
 dados %>% 
   ggplot(aes(x = "", y = dados$x1)) +
     geom_boxplot(color = "blue") + 
-    stat_summary(fun.y = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
+    stat_summary(fun = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
     geom_jitter(color="black", size=1, alpha=.9) +
     theme(plot.title = element_text(size = 15, hjust = .5)) + 
       
@@ -80,9 +78,58 @@ dados %>%
 ```
 Podemos perceber a partir do boxplot acima e da função summary que 50% dos carros tem menos de 318 cilíndradas.
 
-```{r histx1}
-
+```{r boxplot y}
+dados %>% 
+  ggplot(aes(x = "", y = dados$y)) +
+    geom_boxplot(color = "blue") + 
+    stat_summary(fun = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
+    geom_jitter(color="black", size=1, alpha=.9) +
+    theme(plot.title = element_text(size = 15, hjust = .5)) + 
+      
+    ggtitle("Boxplot da Variável (Y)") + 
+    xlab("") + ylab("Rendimento do motor (mi/L")
 ```
+Pelo boxplot acima não fica claro qual seria a distribuição de y, porém, podemos ver que existem 4 outliers bem claros.Vamos identificar seus valores.
+
+```{r}
+dados %>%
+  ggplot(aes( x=dados$y)) +
+    geom_histogram(color = "black", fill = "lightblue") + # xlab("Rendimento") + ylab("Frequência") +
+    geom_vline(aes(xintercept=mean(dados$y)), color = "red", linetype = "solid") +
+    geom_vline(aes(xintercept=median(dados$y)), color = "black", linetype = "solid") +
+    labs(title = "Histograma da variável Y (Rendimento do Motor em milhas por L)") +
+    scale_x_continuous("Rendimento", limits = c(10,37,1), breaks = c(10:37)) +
+    ylab("Frequência") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme_classic()
+```
+O histograma acima representa a distribuição da variável y. As linhas verticais vermelha e preta representam, respectivamente, a média e a mediana.
+
+
+```{r}
+dados %>% filter(dados$y > 29.4)
+```
+A partir do histogrma e da tabela acima, concluimos que os 4 outliers referem-se aos valores: 30.4, 31.9, 34.7, e 36.5
+
+
+Vamos verificar a distribuição da variável x1
+
+```{r histx1}
+dados %>%
+  ggplot(aes( x=dados$x1)) +
+    geom_histogram(color = "black", fill = "lightgreen") + # xlab("Rendimento") + ylab("Frequência") +
+    geom_vline(aes(xintercept=mean(dados$x1)), color = "red", linetype = "solid") +
+    geom_vline(aes(xintercept=median(dados$x1)), color = "black", linetype = "solid") +
+    labs(title = "Histograma da variável X1 (Cilindradas por Polegada Cúbica)") +
+    scale_x_continuous("Cilindradas", breaks = c(100,150,200,250,300,350,400,450,500)) +
+    scale_y_continuous("Frequência", breaks = c(0:8), limits = c(0,6)) +
+  #limits = c(85,500,1)) +
+    ylab("Frequência") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme_classic2()
+```
+
+
 
 
 ```{r pairplot, fig.cap = "Correlograma entre as variáveis", warning=FALSE}
@@ -111,7 +158,7 @@ dados %>%
 
 Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
 
-3. Overfitting: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
+3. Overfitting: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização no conjunto de teste. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
 
 4. Underfitting: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
 

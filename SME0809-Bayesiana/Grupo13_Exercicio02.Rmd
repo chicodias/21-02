@@ -4,23 +4,13 @@ author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
 date: "Setembro 2021"
 output: pdf_document
 ---
-```{r warning=FALSE,message = FALSE}
-# pacotes do R utilizados
-library(tidyverse)
-library(ggpubr)
-library(effectsize) #padronizacao
-set.seed(42)
-```
-
-  
 ```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+Seja $Y_1,..., Y_n$ uma amostra aleatória de $Y \sim \text{Pois}(\theta)$. Pede-se:
 
-Seja $Y_1,..., Y_n$ uma a.a de $Y \sim \text{Pois}(\theta)$. Pede-se:
 
-
-- a) encontre a distribuição a *priori* não informativa de Jeffreys
+## (a) encontre a distribuição a *priori* não informativa de Jeffreys
 
 Temos que $$p(y|\theta) = \frac{e^{-\theta} \theta^y }{y!},\ \theta > 0, \ y = 0, 1, 2, ...$$
 
@@ -47,32 +37,41 @@ $$J(\theta) = E\left(\frac1{\theta^{2}} \sum_{i=1}^n y_i \right) = \frac1{\theta
 
 A distribuição a *priori* de Jeffreys é dada por $\pi(\theta) \propto \sqrt{J(\theta)}$. Logo, $\pi(\theta) \propto \theta^{-1/2}$.
 
+A equação acima expressa a chamada *Lei de Jeffreys* que afirma que a distribuição a *priori* para um único parâmetro $\theta$ é aproximadamente não informativa se tomada de modo proporcional à raiz quadrada da Informação de Fisher de $\theta$.
+
 Note que esta *priori* pode ser obtida a partir da conjulgada natural $\text{Gama}(\alpha, \beta)$, com $\alpha = 1/2$ e $\beta \to 0$. Ilustramos o efeito de fixar $\alpha$ e diminuir $\beta$ abaixo:
 
+```{r warning=FALSE,message = FALSE}
+# pacotes do R utilizados
+library(tidyverse)
+library(ggpubr)
+library(effectsize)
+set.seed(42)
+```
+
 ```{r warning=FALSE}
-
 theta <- seq(0.0001, 1, 0.0001)
-
-b <- seq(1, 4, 0.5)
-
-b %>% map_dfr( ~tibble( x = theta,
-                        y = dgamma(theta, 1/2, 10^(-.x)),
-                        beta = as.factor( round( 10^(-.x), 4)))) %>%
+  seq(1, 4, 0.5) %>%
+  map_dfr( ~tibble( x = theta,
+                    y = dgamma(theta, 1/2, 10^(-.x)),
+                    beta = as.factor( round( 10^(-.x), 4)))) %>%
   
   ggplot() + geom_line(aes(x = x, y = y, color = beta)) +
-  scale_y_continuous(limits = c(0,1)) + labs(color= expression(beta)) +
-  xlab(expression(theta)) + ylab(expression(p(theta))) +
+  scale_y_continuous(limits = c(0,1)) +
+  labs( title = expression("Densidades de uma Gama("~alpha~","~beta~") com"~alpha~"= 1/2"),
+       color= expression(beta),
+       x = expression(theta),
+       y = expression(p(theta))) +
   theme_pubr()
-
 ```
 
 
 Além disso, $\pi(\theta)$ é uma distribuição imprópria pois $\int_0^{+\infty} \theta^{-1/2}d\theta$ diverge.
 
   
-- b) A função de verossimilhança na parametrização $\theta$ muda em locação e escala? Justificar graficamente
+## (b) A função de verossimilhança na parametrização $\theta$ muda em locação e escala? Justificar graficamente
 
-Já obtivemos a função de verossimilhança em a):
+Já obtivemos a função de verossimilhança em (a):
 
 $$\log(L(\theta)) = -n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i=1}^n y_i!\right) \propto
 \log(\theta)\sum_{i=1}^n y_i -n\theta $$
@@ -80,25 +79,24 @@ $$\log(L(\theta)) = -n\theta + \sum_{i=1}^n y_i\log(\theta) - \log\left(\prod_{i
 Vamos agora realizar uma implementação e calcular a verossimilhança para diversas amostras aleatórias de tamanho 20 geradas de uma Poisson.
 
 
-
 ```{r}
-Ltheta <- function(theta, y)(exp( sum(y)*log(theta) - length(y)*theta))
-
-theta <- seq(0,20, 0.01)
-df <- NULL
-
-for (lambda in c(1,4,9,16)) {
-    df <- rbind(df,tibble(
-                          L = normalize(map_dbl(theta, Ltheta, y = rpois(20,lambda))),
-                          theta = theta,
-                          lambda = as_factor(lambda)))
-}
+  Ltheta <- function(theta, y)( exp( sum(y)*log(theta) - length(y)*theta))
+  
+  theta <- seq(0,24, 0.01)
+  df <- NULL
+  
+  for (lambda in c(1, 4, 9, 16)) {
+      df <- rbind(df, tibble(
+                    L = normalize(map_dbl(theta, Ltheta, y = rpois(20,lambda))),
+                    theta = theta,
+                    lambda = as_factor(lambda)))
+  }
 ```
 
 O gráfico com a verossimilhança normalizada fica:
 
-```{r}
-df %>%  ggplot(aes(x = theta)) + geom_line(aes(y = L, color = lambda)) +
+```{r warning=FALSE}
+ggplot(df, aes(x = theta)) + geom_line(aes(y = L, color = lambda)) +
   geom_line(aes(y = dgamma(theta, 1/2, 0.01), linetype = "Priori de Jeffreys")) +
   labs(color= expression(lambda), 
        title = expression("Verossimilhança normalizada de uma Poisson"~(lambda)),
@@ -106,32 +104,33 @@ df %>%  ggplot(aes(x = theta)) + geom_line(aes(y = L, color = lambda)) +
        x = expression(theta),
        y = expression(L(theta))) +
   scale_linetype_manual(name = " ", values = "dotted") +
+  scale_x_continuous(limits = c(0, 20))+
   theme_pubr()
-
 ```
 
 
-Dessa forma, vemos que a função de verossimilhança muda tanto em locação como escala, pois valores grandes de $\lambda$ alocam a distribuição para direita, além de deixá-la mais achatada.
+Dessa forma, vemos que a função de verossimilhança muda tanto em locação como escala, pois valores grandes de $\lambda$ alocam a distribuição para direita, além de achatá-la.
 
 
-- c) caso a resposta ao item b) seja afirmativa, encontre a escala na qual a função de verossimilhança mude somente em locação. Mostre graficamente.
+## (c) caso a resposta ao item b) seja afirmativa, encontre a escala na qual a função de verossimilhança mude somente em locação. Mostre graficamente.
 
-$$\phi \propto \int \pi(\theta) d\theta = \int \theta^{-1/2} d\theta = 2\sqrt\theta  \propto
+$$\phi \propto \int \pi(\theta) d\theta = \int \theta^{-1/2} d\theta = 2\sqrt\theta + k \propto
  \sqrt\theta $$
 
-A equação acima expressa a chamada *Lei de Jeffreys* que afirma que a distribuição a priori para um único parâmetro $\theta$ é aproximadamente não informativa se tomada de modo proporcional à raiz quadrada da Informação de Fisher de $\theta$.
-
+Podemos visualizar o resultado de realizarmos a transformação $\phi = \sqrt\theta$ no gráfico abaixo:
 
 ```{r}
-df %>%  ggplot(aes(x = sqrt(theta))) +
+ggplot(df, aes(x = sqrt(theta))) +
   geom_line(aes(y = sqrt(L), color = lambda)) +
   geom_line(aes(y = dgamma(theta, 1/2, 0.001), linetype = "Priori de Jeffreys")) +
   labs(color= expression(lambda), 
        title = expression("Verossimilhança normalizada de uma Poisson"~(lambda)),
        subtitle = "Amostra aléatória com n=20",
        x = expression(Phi),
-       y = expression(L(Phi))) +
+       y = expression(L(theta))) +
   scale_linetype_manual(name = " ", values = "dotted") +
   theme_pubr()
 ```
 
+Dessa forma, podemos observar que a verossimilhança normalizada na escala $\phi$ 
+apenas se desloca horizontalmente para valores diferentes de $\lambda$, sem achatar-se.

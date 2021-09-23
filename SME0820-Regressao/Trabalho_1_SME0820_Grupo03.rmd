@@ -252,7 +252,13 @@ y_pred <-  b0_est + b1_est*x1
 res <- y - y_pred
 ```
 
-  Histograma:
+  Utilizando o comando *summary*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
+  
+```{r}
+summary(res)
+```
+  
+  Também podemos construir um histograma, que facilitará a visualização do comportamento dos resíduos.
 
 ```{r}
 # Histograma
@@ -267,17 +273,11 @@ ggplot(dados, aes(x = res)) +
   theme_classic()
 ```
 
-  Resumo: a fazer
-  Análise do histograma/resíduos: a fazer
+ Desse modo, temos que a análise dos resíduos é --------
 
-```{r}
-summary(res)
-```
   4. testes de hipotese para $\beta_0$ e $\beta_1$
 
-  A COMPLETAR/MODIFICAR
-
-  Para realizarmos nossos testes de hipóteses, primeiro precisamos estimar o parâmetro $\sigma^2$ do nosso modelo, uma vez que ele não é dado. Tal estimador não viesado é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, de modo que:
+  Para realizarmos nossos testes de hipóteses, é necessário o estimador do parâmetro $\sigma^2$ do nosso modelo, uma vez que ele não é dado. Tal estimador não viesado é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, calculada no item 3 de modo que:
 
 ```{r}
 # Soma do quadrado da regressão:
@@ -294,17 +294,21 @@ QMres <- SQres/(n-2)
 
 ```
 
+  A partir disso, podemos prosseguir com nossos testes de hipóteses para $\beta_1$ e $\beta_0$, com decisão de rejeitar ou não $H_0$, uma vez que este representa o parâmetro se igualar a 0 estatisticamente caso não seja rejeitado, descrevendo a significância da contribuição do mesmo. 
+  
   * Testagem se $\beta_1 = 0$:
 
-  $\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$
+  $\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$, com isso, definimos:
 
 ```{r}
 dp_b1 <- (sqrt(QMres/Sxx))
 t0_b1 <- b1_est/dp_b1
 ```
 
-  Pelo enunciado, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero.
-
+  Pelo enunciado, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero. 
+  A partir disso, definimos $\alpha$ e dois quantis, de modo que *t1* é o quantil $\frac{\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$, enquanto *t2* é o quantil $\frac{1-\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$.
+  Com esses dados, podemos construir nosso programa de decisão que retornará caso $H_0$ seja rejeitado.
+  
 ```{r}
 alpha <- 0.05
 t1 <- qt(alpha/2,n-2)
@@ -313,13 +317,13 @@ t2 <- qt(1-alpha/2,n-2)
 if(t0_b1 < t1 || t0_b1>t2){
   cat("Rejeita-se H0")
 }
-
 ```
+  
   Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de zero.
 
   * Testagem se $\beta_0 = 0$:
 
-  $\beta_0$ possuí distribuição Normal com média $\beta_0$ e variância $\sigma^2((\frac{1}{n})+\frac{\bar{X}}{S_{xx}}))$
+  $\beta_0$ possuí distribuição Normal com média $\beta_0$ e variância $\sigma^2((\frac{1}{n})+\frac{\bar{X}}{S_{xx}}))$, com isso, definimos:
 
 ```{r}
 dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
@@ -327,7 +331,7 @@ dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
 t0_b0 <- b0_est/dp_b0
 ```
 
-  Em um processo semelhante à testagem de $\beta_1$, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero.
+  Em um processo semelhante à testagem de $\beta_1$, com $\alpha$= 5% e os mesmos quantis, também é possível a constrção de nossa função de decisão. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero.
 
 ```{r}
 alpha <- 0.05

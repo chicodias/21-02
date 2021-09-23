@@ -1,6 +1,6 @@
 ---
 title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Trabalho I"
-author: 
+author:
   - Brenda da Silva Muniz 11811603
   - Francisco Rosa Dias de Miranda 4402962
   - Heitor Carvalho Pinheiro 11833351-
@@ -12,7 +12,7 @@ output: pdf_document
 bla
 Neste trabalho, nosso objetivo é ajustar um modelo de regressão linear simples ao conjunto de dados fornecido, utilizando linguagem R. Para esta tarefa, descreveremos cada etapa de nosso *pipeline*.
 
-O dataset B.3 contém dados sobre o rendimento de Gasolina, em milhas, de 32 automóveis diferentes. Ajuste o modelo de regressão linear simples que relaciona o rendimento da gasolina (y) (Milhas por litro) e a cilindrada do motor (x1) (polegadas cúbicas). 
+O dataset B.3 contém dados sobre o rendimento de Gasolina, em milhas, de 32 automóveis diferentes. Ajuste o modelo de regressão linear simples que relaciona o rendimento da gasolina (y) (Milhas por litro) e a cilindrada do motor (x1) (polegadas cúbicas).
 
 Primeiramente, vamos carregar os módulos utilizados nesta análise. Caso não possua algum dos pacotes, utilize o comando `install_packages("Nome_do_pacote")`.
 
@@ -35,7 +35,7 @@ dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
 
 head(dados)
 ```
-## Parte **a)**: 
+## Parte **a)**:
   - Descrição do banco de dados
   - Definição das variáveis
   - Análise exploratória inicial
@@ -45,7 +45,7 @@ summary(dados)
 
   Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
   **Dimensão dos dados**
-  
+
 ```{r dimdata}
 
 dim(dados)
@@ -59,37 +59,26 @@ dim(dados)
 ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + geom_smooth(method = "lm") +
   ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
   theme_classic() +
-  theme(plot.title = element_text(size = 20, hjust = .5)) 
+  theme(plot.title = element_text(size = 20, hjust = .5))
 ```
 Perceba que existe uma clara relação linear entre as duas variáveis, representada pela linha azul. Conforme as cilindradas do motor aumentam, o rendimento tende a diminuir.
 
 ```{r boxplot x1}
-dados %>% 
+dados %>%
   ggplot(aes(x = "", y = dados$x1)) +
-    geom_boxplot(color = "blue") + 
+    geom_boxplot(color = "blue") +
     stat_summary(fun = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
     geom_jitter(color="black", size=1, alpha=.9) +
-    theme(plot.title = element_text(size = 15, hjust = .5)) + 
-      
-    ggtitle("Boxplot da Variável (X1)") + 
+    theme(plot.title = element_text(size = 15, hjust = .5)) +
+
+    ggtitle("Boxplot da Variável (X1)") +
     xlab("") + ylab("Cilíndradas por Polegada Cúbica")
-  
-  
+
+
 ```
 Podemos perceber a partir do boxplot acima e da função summary que 50% dos carros tem menos de 318 cilíndradas.
 
 ```{r boxplot y}
-dados %>% 
-  ggplot(aes(x = "", y = dados$y)) +
-    geom_boxplot(color = "blue") + 
-    stat_summary(fun = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
-    geom_jitter(color="black", size=1, alpha=.9) +
-    theme(plot.title = element_text(size = 15, hjust = .5)) + 
-      
-    ggtitle("Boxplot da Variável (Y)") + 
-    xlab("") + ylab("Rendimento do motor (mi/L")
-```
-Pelo boxplot acima não fica claro qual seria a distribuição de y, porém, podemos ver que existem 4 outliers bem claros.Vamos identificar seus valores.
 
 ```{r}
 dados %>%
@@ -142,7 +131,7 @@ ggcorr(dados, geom = "circle")
 bla
 
   - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
-  
+
 ```{r scatterplot, fig.cap = "Gráfico de Dispersão de Y com as demais variáveis"}
 
 dados %>%
@@ -153,47 +142,69 @@ dados %>%
 
 ```
   - Interpretação de cada gráfico
-  
+
 ## Parte **b)**:
 
 Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
+
+1. Data Splitting: Data Splitting ou também “divisão de dados” é uma abordagem para proteger dados confidenciais de acesso não autorizado, criptografando os dados e armazenando diferentes partes de um arquivo em servidores diferentes. Quando os dados divididos são acessados, as partes são recuperadas, combinadas e descriptografadas.
+
+2. Cross Validation: Cross Validation ou também “validação cruzada” é uma técnica muito utilizada para avaliar o desempenho de modelos de aprendizado de máquina. Consiste, basicamente, em particionar os dados em conjuntos, onde um conjunto é utilizado para treino e outro para teste e avaliação do desempenho do modelo. A utilização correta da técnica tem altas chances de detectar se um modelo está sobreajustado aos seus dados de treinamento, ou seja, sofrendo overfitting. Vale ressaltar que existem vários métodos de aplicação da validação cruzada.
 
 3. Overfitting: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização no conjunto de teste. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
 
 4. Underfitting: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
 
 5. Missing data: Missing data, muitas vezes referido como missing values (com tradução literal: valores que faltam), é um conceito utilizado para quando alguma(s) observação(ões) no conjunto de dados está(ão) vazia(s), causando ambuiguidade e falta de precisão para a análise do mesmo.
-Na análise multivariada, temos uma relação proporcional da quantidade de variáveis a serem relacionadas com a falta de rigor causada pelos missing values. 
+Na análise multivariada, temos uma relação proporcional da quantidade de variáveis a serem relacionadas com a falta de rigor causada pelos missing values.
 
-6. Encoding data: Encoding data (de tradução literal: dados codificados) é o nome dado para o processo de converter dados para um formato específico, assegurando sua transmissão e otimizando o modelo. Seu processo inverso - ou seja, a decodificação - refere-se a extrair as informações da forma convertida. 
+6. Encoding data: Encoding data (de tradução literal: dados codificados) é o nome dado para o processo de converter dados para um formato específico, assegurando sua transmissão e otimizando o modelo. Seu processo inverso - ou seja, a decodificação - refere-se a extrair as informações da forma convertida.
 
 ## Parte **c)**:
   1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
-  
-```{r}
-# Adicionando aqui pq os itens 3 e 4 dependem disso, é parte do código do monitor mesmo, só avisar se mudar os nomes das variáveis ;) - Monica
 
+ ### Calculando o valor de Sxx
+ #Sxx <- sum(x1^2) - n*(mean(x1))^2
+
+```{r}
+attach(dados)
 xbarra=mean(x1)
 x1-xbarra
 (x1-xbarra)^2
 Sxx=sum((x1-xbarra)^2)
+```
 
+ ### Calculando o valor de Syy
+ #Syy <- sum(y^2) - n*(mean(y))^2
+
+```{r}
 ybarra=mean(y)
 y-ybarra
 (y-ybarra)^2
 Syy=sum((y-ybarra)^2)
-
-Sxy=sum((x1-xbarra)*(y-ybarra))
-
-cbind(Sxx,Syy,Sxy)
-
-b1_est <- Sxy/Sxx
-
-b0_est <- mean(y) - b1_est*mean(x1)
-
 ```
+
+ ### Calculando o valor de Sxy
+ #Sxy <- sum(x1*y) - n*(mean(x1)*mean(y))
+```{r}
+Sxy=sum((x1-xbarra)*(y-ybarra))
+cbind(Sxx,Syy,Sxy)
+```
+
   2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
-  
+
+A FINALIZAR
+ # Estimacao dos parametros
+ # Calculando o valor do coeficiente angular beta1
+```{r}
+b1_est <- Sxy/Sxx
+```
+
+ # Calculando o valor do intercepto beta0
+```{r}
+b0_est <- mean(y) - b1_est*mean(x1)
+```
+
 ```{r}
 fit <- lm(y ~ x1, data = dados, )
 
@@ -203,10 +214,10 @@ dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
     geom_smooth(method='lm', formula= y~x)
 
 ```
-  
-  
+
+
   3. Calcule o valor dos $\hat{Y}$ e o valor dos resíduos para seu modelo, resumo e histograma dos resíduos, e faça uma análise da distribuição destes.
-  
+
   O cálculo de $\hat{Y}$ pode ser realizado utilizando o modelo de regressão linear simples, em que a variabilidade de interesse é dada em função de uma única covariável - no caso, *x1*. No R, podemos expressar $\hat{Y}$ como sendo:
 
 ```{r}
@@ -233,7 +244,7 @@ ggplot(dados, aes(x = res)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme_classic()
 ```
-  
+
   Resumo: a fazer
   Análise do histograma/resíduos: a fazer
 
@@ -241,12 +252,12 @@ ggplot(dados, aes(x = res)) +
 summary(res)
 ```
   4. testes de hipotese para $\beta_0$ e $\beta_1$
-  
+
   A COMPLETAR/MODIFICAR
-  
+
   Para realizarmos nossos testes de hipóteses, primeiro precisamos estimar o parâmetro $\sigma^2$ do nosso modelo, uma vez que ele não é dado. Tal estimador não viesado é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, de modo que:
-  
-```{r} 
+
+```{r}
 # Soma do quadrado da regressão:
 SQreg <- b1_est*Sxy
 
@@ -260,19 +271,19 @@ SQres <- SQtotal - SQreg
 QMres <- SQres/(n-2)
 
 ```
-  
+
   * Testagem se $\beta_1 = 0$:
-  
+
   $\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$
-  
-```{r} 
+
+```{r}
 dp_b1 <- (sqrt(QMres/Sxx))
 t0_b1 <- b1_est/dp_b1
 ```
-  
-  Pelo enunciado, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero. 
-  
-```{r} 
+
+  Pelo enunciado, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero.
+
+```{r}
 alpha <- 0.05
 t1 <- qt(alpha/2,n-2)
 t2 <- qt(1-alpha/2,n-2)
@@ -282,20 +293,20 @@ if(t0_b1 < t1 || t0_b1>t2){
 }
 
 ```
-  Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de zero. 
-  
+  Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de zero.
+
   * Testagem se $\beta_0 = 0$:
-  
+
   $\beta_0$ possuí distribuição Normal com média $\beta_0$ e variância $\sigma^2((\frac{1}{n})+\frac{\bar{X}}{S_{xx}}))$
-  
-```{r} 
+
+```{r}
 dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
 
 t0_b0 <- b0_est/dp_b0
 ```
 
-  Em um processo semelhante à testagem de $\beta_1$, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero. 
-  
+  Em um processo semelhante à testagem de $\beta_1$, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero.
+
 ```{r}
 alpha <- 0.05
 t1 <- qt(alpha/2,n-2)
@@ -307,20 +318,20 @@ if(t0_b1 < t1 || t0_b1>t2){
 
 ```
 
-Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de zero. 
-  
+Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de zero.
+
 
   5. intervalos de confiança
 ```{r}
 confint(fit, level = 0.99)
 ```
-  
-  
+
+
   6. intervalos de predição
 ```{r}
 #predict(fit, newdata = new.dat, interval = 'prediction')
 ```
-  
+
 
 algumas variaveis que precisamos
 ```{r}
@@ -371,7 +382,7 @@ cbind(Sxx,Syy,Sxy)
 
 
 
-##Ajuste do modelo de regressão linear simples e gráfico  da reta ajustada 
+##Ajuste do modelo de regressão linear simples e gráfico  da reta ajustada
 
 Note que na aula $3$ temos feito passo a passo do ajuste do modelos mediante o método de minimos quadrados (ajustar um modelo significa mesmo estimar seus parâmetros). Nosso modelo liear simples é da forma:
 $$Y=\beta_0+\beta_1X+\xi$$ onde aplicando a técnica de mínimos quadrados teremos estimadores para nossos parâmetros dados pelas seguintes expressões:
@@ -387,8 +398,8 @@ cbind(beta0est,beta1est)
 **Gráfico Reta Ajustada**
 ```{r grafajuste}
 plot(x1,y , #ylim = c(750,1150), xlim = c(9,65),
-     main = expression(paste("Reta ajustada com ", 
-                             hat(beta)[0],"=821,7546", 
+     main = expression(paste("Reta ajustada com ",
+                             hat(beta)[0],"=821,7546",
                              " e ", hat(beta)[1],"=3,174")),
      xlab = "Precip", ylab = "Mortalidade")
 curve(beta0est + beta1est*x, add = T, col = 'red')
@@ -436,9 +447,9 @@ cbind(beta0est, beta1est, SigmaQuadradoEst)
 
 
 
-## Resíduos 
+## Resíduos
 
-O valor dos $\widehat{Y}$'s e o valor dos resíduos para o seu modelo, faça um resumo e Histograma dos resíduos e faça análise da distribuição destes. 
+O valor dos $\widehat{Y}$'s e o valor dos resíduos para o seu modelo, faça um resumo e Histograma dos resíduos e faça análise da distribuição destes.
 
 Para sabermos os resíduos do nosso modelo vamos calcular o valor predito primeiro.
 
@@ -448,7 +459,7 @@ y_pred <- beta0est + beta1est*x1
 ```
 
 ```{r ypredi}
-# Ou ainda 
+# Ou ainda
 y_pred <- mean(y) + beta1est*(x1 - mean(x1))
 ```
 
@@ -461,7 +472,7 @@ summary(res)
 ***Histograma dos Resíduos***
 ```{r historesiduos}
 hist(res, main = "Histograma dos Resíduos", col = "green",
-    # xlim = c(-151, 130), ylim = c(0, 30), 
+    # xlim = c(-151, 130), ylim = c(0, 30),
      ylab = "Frequencia", xlab = "Resíduos")
 ```  
 ```{r qqplotresidu}
@@ -470,7 +481,7 @@ qqline(res, col = "blue")
 ```
 
 
-## Teste de Hipótese 
+## Teste de Hipótese
 
 Obteremos os teste de hipóteses para $\beta_0$ e $\beta_1$ com a decisão de rejeitar ou não $H_0$.
 
@@ -480,7 +491,7 @@ Sera que $\beta_0 = 0$ estatísticamente? E sera que $\beta_1=0$ estatísticamen
 
 Testando se $\beta_1 = 0$, Lembrando que $\beta_1$ estimado tem distribuição Normal com media $\beta_1$ e variância$=(\sigma^2/Sxx)$.
 
-Como nâo temos o valor de $\sigma^2$ temos que estima-lo. 
+Como nâo temos o valor de $\sigma^2$ temos que estima-lo.
 
 $H_0: \beta_1 = 0$  vs $H_1: \beta_1$ não eh zero $(\beta_1\neq 0)$.
 
@@ -506,11 +517,11 @@ if(t0_b1 < t1 || t0_b1>t2){
 ```
 
 
-Como podemos ver pelo teste, rejeitamos $H_0$. Ou seja, rejeitamos a hípotese que o valor do coeficiente $\beta_1 = 0$. 
+Como podemos ver pelo teste, rejeitamos $H_0$. Ou seja, rejeitamos a hípotese que o valor do coeficiente $\beta_1 = 0$.
 
 ***Teste de Hipótese para $\beta_0$***
 
-Testando se $\beta_0 = 0$. Lembrando que $\beta_0$ estimado tem Distribuição Normal com média $\beta_0$ e variância$=(\sigma^2*((1/n)+ \overline{X}/Sxx))$ como não temos o valor de $\sigma^2$ temos que estima-lo. 
+Testando se $\beta_0 = 0$. Lembrando que $\beta_0$ estimado tem Distribuição Normal com média $\beta_0$ e variância$=(\sigma^2*((1/n)+ \overline{X}/Sxx))$ como não temos o valor de $\sigma^2$ temos que estima-lo.
 
 $H_0: \beta_0 = 0$  vs $H_1: \beta_0$ não eh zero $(\beta_0\neq 0)$
 ```{r nvotest}
@@ -519,7 +530,7 @@ dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
 t0_b0 <- beta0est/dp_b0
 ```
 
-Rejeitamos $H_0$ se t0_b0 $< t_1$ ou t0_b0 $>t_2$, em que 
+Rejeitamos $H_0$ se t0_b0 $< t_1$ ou t0_b0 $>t_2$, em que
 $t_1$ eh o quantil $\alpha/2$ da Distribuição $t$ com $(n-2)$ G.L.
 $t_2$ eh o quantil $1-\alpha/2$ da Distribuicao $t$ com $(n-2)$ G.L.
 útilizando $\alpha = 5\%$
@@ -538,15 +549,15 @@ if(t0_b0 < t1 || t0_b0>t2){
 ```
 
 
-Como podemos ver pelo teste, rejeitamos $H_0$. 
-Ou seja, rejeitamos a hípotese que o valor do 
+Como podemos ver pelo teste, rejeitamos $H_0$.
+Ou seja, rejeitamos a hípotese que o valor do
 intercepto $\beta_0 = 0$.
 
 
 #**vou editar a partir daqui**
 
-  
-## ***Intervalos de Confiança*** 
+
+## ***Intervalos de Confiança***
 
 Intervalos de Confiança para $(\beta_0,\beta_1,\sigma^2)$ e $E(Y)$.
 
@@ -596,16 +607,16 @@ IC_sig_est
 
 **Calculando intervalo de confiança para a esperança de y**
 
-(valor medio da variavel resposta para um valor 
+(valor medio da variavel resposta para um valor
 particular da cov., MIy|X0).
 
 **Lembrando:**
 
-1. O valor médio da variavél resposta é dado um $X_0$. 
-2. $\overline{Y}$ tem Distribuição Normal. 
+1. O valor médio da variavél resposta é dado um $X_0$.
+2. $\overline{Y}$ tem Distribuição Normal.
 com média $\beta_0+\beta_1*\overline{X}$ e variância $\sigma^2/n$.
 3. $\beta_1$ tem Distribuição Normal com média $\beta_1$ e variância
-$\sigma^2/Sxx$. 
+$\sigma^2/Sxx$.
 4. A Esperança de $Y|X_0$ é Normal.
 5. a Variância de $MIy|X_0$ é $\sigma^2*(1/n + ((X_0-\overline{X}^2)/Sxx)$,
  $t_1 =$ quantil da dist. $t(\alpha/2,n-2)$,
@@ -632,14 +643,14 @@ IC_v_medio
 ```
 
 E se quisessemos predizer a mortalidade baseado em um novo valor
-da variavel explicativa utilizada. Qual seria o intervalo 
+da variavel explicativa utilizada. Qual seria o intervalo
 que em $95\%$ das vezes iria conter o verdadeiro valor predito
 considerando a nova informação de $x_1$ ?
-(Ou seja, qual seria o Intervalo de Confiança para o valor 
-predito de $Y$ baseado no novo valor da variavèl $x_1$ com $95\%$ 
+(Ou seja, qual seria o Intervalo de Confiança para o valor
+predito de $Y$ baseado no novo valor da variavèl $x_1$ com $95\%$
 de confiança).
 
-## ***Intervalo de predição*** 
+## ***Intervalo de predição***
 
 O intervalo de predição para até $5$ valores diferentes de $X_0$.
 
@@ -676,14 +687,14 @@ IC_Y0_est
 ```
 
 
-## ***Análise de Variâcia*** 
+## ***Análise de Variâcia***
 
 A Análise de Variâcia com todos os valores (Graus de Liberdade, SQTotal, SQRes, SQReg, QMRes, QMReg e F).
 
 ***ANOVA***
 
  Teria outra forma de testarmos a significancia da regressão ?
- Sim! Outra forma seria pela Análise de Variância (ANOVA), nesse 
+ Sim! Outra forma seria pela Análise de Variância (ANOVA), nesse
  caso testariamos se $\beta_1 = 0$.
 
 **Soma do quadrado da Regressão**
@@ -711,7 +722,7 @@ QMreg
 
 **Lembre-se que QMres eh o estimador de sigma^2 e QMres=SQres/(n-2)**
 ```{r faanova}
-F_0 <- QMreg/QMres 
+F_0 <- QMreg/QMres
 F_0
 ```
 
@@ -756,6 +767,3 @@ shapiro.test(resid(Anovamodel))
 A hipótese nula do Teste de Shapiro-Wilk é de que não há diferença entre a nossa distribuição dos dados e a distribuição normal. O valor-p maior do que 0.05 nos dá uma confiança estatística para afirmar que as distribuição dos nossos resíduos não difere da distribuição normal.
 
 Dessa forma nossos dados satisfazem todas as premissas da ANOVA e portanto, o resultado da nossa ANOVA são válidos.
-
-
-

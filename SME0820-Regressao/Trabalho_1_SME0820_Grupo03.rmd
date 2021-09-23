@@ -163,7 +163,7 @@ Na análise multivariada, temos uma relação proporcional da quantidade de vari
 ## Parte **c)**:
   1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
 
- ### Calculando o valor de Sxx
+ # Calculando o valor de Sxx
  #Sxx <- sum(x1^2) - n*(mean(x1))^2
 
 ```{r}
@@ -174,7 +174,7 @@ x1-xbarra
 Sxx=sum((x1-xbarra)^2)
 ```
 
- ### Calculando o valor de Syy
+ # Calculando o valor de Syy
  #Syy <- sum(y^2) - n*(mean(y))^2
 
 ```{r}
@@ -184,7 +184,7 @@ y-ybarra
 Syy=sum((y-ybarra)^2)
 ```
 
- ### Calculando o valor de Sxy
+ # Calculando o valor de Sxy
  #Sxy <- sum(x1*y) - n*(mean(x1)*mean(y))
 ```{r}
 Sxy=sum((x1-xbarra)*(y-ybarra))
@@ -193,7 +193,6 @@ cbind(Sxx,Syy,Sxy)
 
   2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
 
-A FINALIZAR
  # Estimacao dos parametros
  # Calculando o valor do coeficiente angular beta1
 ```{r}
@@ -205,13 +204,36 @@ b1_est <- Sxy/Sxx
 b0_est <- mean(y) - b1_est*mean(x1)
 ```
 
-```{r}
-fit <- lm(y ~ x1, data = dados, )
+ # Calculando O estimador de sigma^2 nao viesado.
+ Tal estimador é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, de modo que:
 
+```{r}
+# Soma do quadrado da regressão:
+SQreg <- b1_est*Sxy
+
+# Soma do quadrado total:
+SQtotal <- sum((y-mean(y))^2)
+
+# Diferença entre a soma do quadrado da regressão e a soma do quadrado total:
+SQres <- SQtotal - SQreg
+
+# Soma do quadrado dos resíduos:
+QMres <- SQres/(n-2)
+
+```
+```{r}
+#gráfico reta ajustada
 summary(fit)
 anova(fit)
 dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
-    geom_smooth(method='lm', formula= y~x)
+  geom_smooth(method='lm', formula= y~x)
+
+#Arredondando b0 e b1
+round(b0_est, 4)
+round(b1_est, 4)
+
+#Consequentemente, a reta ajustada é:
+$$\widehat{Y}_i=1224.043-0.7769*X_i$$
 
 ```
 
@@ -407,6 +429,13 @@ curve(beta0est + beta1est*x, add = T, col = 'red')
 
 Consequentemente, a reta ajustada é
 $$\widehat{Y}_i=821.7546+3.174002*X_i$$
+
+gráfico simples da reta ajustada usando b0 e b1
+```{r grafajuste}
+plot(x1,y)
+curve(b0_est + b1_est*x, add = T, col = 'red')
+```
+
 
 ***Estimando $\sigma^2$***
 

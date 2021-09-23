@@ -169,6 +169,29 @@ Na análise multivariada, temos uma relação proporcional da quantidade de vari
 
 ## Parte **c)**:
   1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
+  
+```{r}
+# Adicionando aqui pq os itens 3 e 4 dependem disso, é parte do código do monitor mesmo, só avisar se mudar os nomes das variáveis ;) - Monica
+
+xbarra=mean(x1)
+x1-xbarra
+(x1-xbarra)^2
+Sxx=sum((x1-xbarra)^2)
+
+ybarra=mean(y)
+y-ybarra
+(y-ybarra)^2
+Syy=sum((y-ybarra)^2)
+
+Sxy=sum((x1-xbarra)*(y-ybarra))
+
+cbind(Sxx,Syy,Sxy)
+
+b1_est <- Sxy/Sxx
+
+b0_est <- mean(y) - b1_est*mean(x1)
+
+```
   2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
   
 ```{r}
@@ -183,8 +206,110 @@ dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
   
   
   3. Calcule o valor dos $\hat{Y}$ e o valor dos resíduos para seu modelo, resumo e histograma dos resíduos, e faça uma análise da distribuição destes.
+  
+  O cálculo de $\hat{Y}$ pode ser realizado utilizando o modelo de regressão linear simples, em que a variabilidade de interesse é dada em função de uma única covariável - no caso, *x1*. No R, podemos expressar $\hat{Y}$ como sendo:
+
+```{r}
+y_pred <-  b0_est + b1_est*x1
+```
+
+  Os resíduos se dão pelo desvio entre as observações e os valores preditos, sendo uma medida de variabilidade na variável resposta onde qualquer desvio relativo a suposição dos erros deveria aparecer. Analisá-los nos permite um discernimento maior em relação a quão adequado é o modelo. Fazendo uso do cálculo de *y_pred* feito anteriormente, salvamos nossos resíduos em uma variável *res* abaixo.
+
+```{r}
+res <- y - y_pred
+```
+
+  Histograma:
+
+```{r}
+# Histograma
+n_res <- length(res)
+
+ggplot(dados, aes(x = res)) +
+  ylab("Frequência") +
+  geom_histogram(color = "black", fill = "#FF69B4", bins=n_res)+
+  labs(title = "Histograma dos resíduos")+
+  scale_x_continuous("Resíduos", limits = c(-8,8,1), breaks = c(-8:8))+
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_classic()
+```
+  
+  Resumo: a fazer
+  Análise do histograma/resíduos: a fazer
+
+```{r}
+summary(res)
+```
   4. testes de hipotese para $\beta_0$ e $\beta_1$
   
+  A COMPLETAR/MODIFICAR
+  
+  Para realizarmos nossos testes de hipóteses, primeiro precisamos estimar o parâmetro $\sigma^2$ do nosso modelo, uma vez que ele não é dado. Tal estimador não viesado é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, de modo que:
+  
+```{r} 
+# Soma do quadrado da regressão:
+SQreg <- b1_est*Sxy
+
+# Soma do quadrado total:
+SQtotal <- sum((y-mean(y))^2)
+
+# Diferença entre a soma do quadrado da regressão e a soma do quadrado total:
+SQres <- SQtotal - SQreg
+
+# Soma do quadrado dos resíduos:
+QMres <- SQres/(n-2)
+
+```
+  
+  * Testagem se $\beta_1 = 0$:
+  
+  $\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$
+  
+```{r} 
+dp_b1 <- (sqrt(QMres/Sxx))
+t0_b1 <- b1_est/dp_b1
+```
+  
+  Pelo enunciado, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero. 
+  
+```{r} 
+alpha <- 0.05
+t1 <- qt(alpha/2,n-2)
+t2 <- qt(1-alpha/2,n-2)
+
+if(t0_b1 < t1 || t0_b1>t2){
+  cat("Rejeita-se H0")
+}
+
+```
+  Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de zero. 
+  
+  * Testagem se $\beta_0 = 0$:
+  
+  $\beta_0$ possuí distribuição Normal com média $\beta_0$ e variância $\sigma^2((\frac{1}{n})+\frac{\bar{X}}{S_{xx}}))$
+  
+```{r} 
+dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
+
+t0_b0 <- b0_est/dp_b0
+```
+
+  Em um processo semelhante à testagem de $\beta_1$, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero. 
+  
+```{r}
+alpha <- 0.05
+t1 <- qt(alpha/2,n-2)
+t2 <- qt(1-alpha/2,n-2)
+
+if(t0_b1 < t1 || t0_b1>t2){
+  cat("Rejeita-se H0")
+}
+
+```
+
+Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de zero. 
+  
+
   5. intervalos de confiança
 ```{r}
 confint(fit, level = 0.99)

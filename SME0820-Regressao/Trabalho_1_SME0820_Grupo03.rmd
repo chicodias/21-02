@@ -162,6 +162,11 @@ Consultar e descrever brevemente os conceitos Data splitting, cross validation, 
 
 4. Underfitting: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
 
+5. Missing data: Missing data, muitas vezes referido como missing values (com tradução literal: valores que faltam), é um conceito utilizado para quando alguma(s) observação(ões) no conjunto de dados está(ão) vazia(s), causando ambuiguidade e falta de precisão para a análise do mesmo.
+Na análise multivariada, temos uma relação proporcional da quantidade de variáveis a serem relacionadas com a falta de rigor causada pelos missing values. 
+
+6. Encoding data: Encoding data (de tradução literal: dados codificados) é o nome dado para o processo de converter dados para um formato específico, assegurando sua transmissão e otimizando o modelo. Seu processo inverso - ou seja, a decodificação - refere-se a extrair as informações da forma convertida. 
+
 ## Parte **c)**:
   1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
   2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada

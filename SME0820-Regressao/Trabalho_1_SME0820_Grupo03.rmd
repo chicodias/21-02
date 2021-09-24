@@ -397,7 +397,7 @@ if(t0_b1 < t1 || t0_b1>t2){
 Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de zero.
 
 
-  5. intervalos de confiança
+ 5. intervalos de confiança
 
 ## ***Intervalos de Confiança***
 
@@ -410,11 +410,10 @@ b1_max <- b1_est-t1*dp_b1
 IC_b1_est <- cbind(b1_min, b1_max)
 IC_b1_est
 ```
- (y) (Milhas por litro) e a  (x1) (polegadas cúbicas)
+
 
 **Interpretação:** Cada incremento em polegada cúbica na cilindrada do motor
-aumenta o consumo em milhas por litro em -0.0473, com uma margem de erro de aproximadamente 0.009
-para mais ou para menos.
+aumenta o consumo em milhas por litro em -0.0643, com uma margem de erro de aproximadamente 0.014 para mais ou para menos.
 
 ***Calculando intervalo de Confiança para $\beta_0$***
 ```{r icbeta0}
@@ -449,8 +448,7 @@ IC_sig_est
 
 **Calculando intervalo de confiança para a esperança de y**
 
-(valor medio da variavel resposta para um valor
-particular da cov., MIy|X0).
+Aqui, calculamos o valor médio da variável resposta para para um valor particular da covariável $\mu(y|x_0)$.
 
 **Lembrando:**
 
@@ -465,8 +463,7 @@ $\sigma^2/Sxx$.
  $t_2 =$ quantil da dist. $t(1-\alpha/2,n-2)$,
  $\alpha = 0,05$.
 
-**Exemplo:**
-Nesse exemplo usaremos $X_0$ como sendo o proprio $\overline{X}$.
+Usaremos $X_0$ como sendo o proprio $\overline{X}$.
 ```{r x0exbarra}
 X0 <- mean(x1) # poderia ser outro valor
 v_medio <- (mean(y)+b1_est* (X0-mean(x1)) )
@@ -481,17 +478,15 @@ IC_v_medio <- cbind(v_medio_min, v_medio_max)
 IC_v_medio
 ```
 
-E se quisessemos predizer a mortalidade baseado em um novo valor
-da variavel explicativa utilizada. Qual seria o intervalo
-que em $95\%$ das vezes iria conter o verdadeiro valor predito
-considerando a nova informação de $x_1$ ?
-(Ou seja, qual seria o Intervalo de Confiança para o valor
-predito de $Y$ baseado no novo valor da variavèl $x_1$ com $95\%$
-de confiança).
-
 ## ***Intervalo de predição***
 
-O intervalo de predição para até $5$ valores diferentes de $X_0$.
+Se quisessemos predizer a mortalidade baseado em um novo valor
+da variavel explicativa utilizada. Qual seria o intervalo
+que em $99\%$ das vezes iria conter o verdadeiro valor predito
+considerando a nova informação de $x_1$?
+
+Calcularemos o intervalo de predição com $99\%$ de confiança para a nossa amostra de teste.
+
 
 ***Intervalos de predição***
 
@@ -507,9 +502,9 @@ $t_2 =$ quantil da dist. $t(1-\alpha/2,n-2)$.
 
 $\alpha = 0,05$.
 
-***Exemplo***
+
 ```{r exem1}
-x1_novo <- 12  
+x1_novo <- teste$x1  
 #x1_novo <- c(12,20,48,51,57,62)
 Y0_est <- b0_est + b1_est*x1_novo
 auxiliar_y0 <- sqrt(QMres*(1+ 1/n + (x1_novo - mean(x1)) /Sxx ))
@@ -521,9 +516,10 @@ Y0_est_max <- Y0_est - t1*auxiliar_y0
 ```
 
 ```{r ixexem}
-IC_Y0_est <- cbind(Y0_est_min, Y0_est_max)
-IC_Y0_est
+IC_Y0_est <- tibble(Y0_est_min, Y0_est_max, y = teste$y)
+IC_Y0_est %>% kable(caption = "Intervalo de predição para amostra de teste")
 ```
+Como podemos ver, o valor de $y$ real estava dentro do intervalo para as quatro observações.
 
 
 ## ***Análise de Variâcia***
@@ -532,8 +528,7 @@ A Análise de Variâcia com todos os valores (Graus de Liberdade, SQTotal, SQRes
 
 ***ANOVA***
 
- Teria outra forma de testarmos a significancia da regressão ?
- Sim! Outra forma seria pela Análise de Variância (ANOVA), nesse
+Vamos testar a significancia da regressão através da Análise de Variância (ANOVA), nesse
  caso testariamos se $\beta_1 = 0$.
 
 **Soma do quadrado da Regressão**
@@ -577,32 +572,27 @@ if(F_0 > f1){
 }
 ```
 
-**ou poderiamos ter calculado**
-```{r alternaanova}
-f1.2 <- pf(t0_b1^2, df1 = 1, df2 = n-2, lower.tail = F)
-```
+***Usando funções do R***
 
-```{r desalteraanova}
-if(t0_b1^2 > f1.2){
-  cat("Rejeita-se H0")
-}
+```{r}
+fit <- lm(y~x1)
+summary(fit)
 ```
+Podemos ver que obtivemos coeficientes similares em nosso modelo.
 
-***Anova usando funções do R***
-```{r funanovar}
-Anovamodel <- aov(y ~ x1, data = dados)
-Anovamodel
+```{r}
+anova(fit)
 ```
-
-```{r resumofunanovar}
-summary(Anovamodel)
-```
+Podemos notar que todos os resultados são similares ao já obtidos.
 
 ***Normalidade dos resíduos***
 ```{r normalidadtestresd}
+
+Anovamodel <- aov(y ~ x1, data = dados)
+
 shapiro.test(resid(Anovamodel))
 ```
 
-A hipótese nula do Teste de Shapiro-Wilk é de que não há diferença entre a nossa distribuição dos dados e a distribuição normal. O valor-p maior do que 0.05 nos dá uma confiança estatística para afirmar que as distribuição dos nossos resíduos não difere da distribuição normal.
+A hipótese nula do Teste de Shapiro-Wilk é de que não há diferença entre a nossa distribuição dos dados e a distribuição normal. O valor-p maior do que 0.01 nos dá uma confiança estatística para afirmar que as distribuição dos nossos resíduos não difere da distribuição normal.
 
-Dessa forma nossos dados satisfazem todas as premissas da ANOVA e portanto, o resultado da nossa ANOVA são válidos.
+Dessa forma nossos dados satisfazem todas as premissas da ANOVA e portanto, o resultado da nossa ANOVA são válidos, confirmando nossa premissa de que os resíduos possuem distribuição normal.

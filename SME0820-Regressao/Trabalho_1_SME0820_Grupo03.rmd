@@ -29,10 +29,12 @@ library(data.table)
 
 Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
 
-```{r read-load, warning=FALSE,message = FALSE, fig.cap= "Cinco primeiras observações do dataset"}
+```{r read-load, warning=FALSE,message = FALSE}
 dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
+```
 
-head(dados) %>% kable()
+```{r}
+head(dados) %>% kable(caption = "Cinco primeiras observações do dataset")
 ```
 Vamos separar nossa base em treino e teste, onde guardaremos 4 observações para realizar a previsão mais tarde. 
 
@@ -55,17 +57,15 @@ n <- length(y)
   - Definição das variáveis
   - Análise exploratória inicial
   
-```{r summary, fig.cap = "Sumário das variáveis utilizadas"}
-summary(dados %>% select(y,x1)) %>% kable()
+```{r summary}
+summary(dados %>% select(y,x1)) %>% kable(caption = "Sumário das variáveis utilizadas")
 ```
 
   Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
   **Dimensão dos dados**
 
 ```{r dimdata}
-
 dim(dados)
-
 ```
 ## Análise Exploratória Básica
 

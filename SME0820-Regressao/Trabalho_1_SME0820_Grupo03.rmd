@@ -286,7 +286,7 @@ Utilizando o comando *summary*, podemos observar as principais medidas descritiv
 summary(res)
 ```
   
-Também podemos construir um histograma, que facilitará a visualização do comportamento dos resíduos.
+Também podemos construir um histograma, assim como um gráfico quantil-quantil, que facilitará a visualização do comportamento dos resíduos.
 
 ```{r}
 # Histograma
@@ -304,12 +304,13 @@ ggplot(tibble(res), aes(x = res)) +
 ```
 
 ```{r qqplotresidu}
-qqnorm(res)
-qqline(res, col = "blue")
+# Q-Q
+qqnorm(res, main = "Q-Q Plot da Normal com os resíduos", ylab =" Quantis dos resíduos ", xlab = " Quantis da Normal ")
+qqline(res, col = "#FF69B4")
 ```
 
 
-Desse modo, temos que a análise dos resíduos é --------
+Desse modo, é possível observar que os resíduos tendem a se aproximar cada vez mais da normal. Posteriormente, a normalidade dos resíduos será abordada com mais precisão.
 
   4. testes de hipotese para $\beta_0$ e $\beta_1$
 

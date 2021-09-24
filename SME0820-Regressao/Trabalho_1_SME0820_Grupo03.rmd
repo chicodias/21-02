@@ -3,7 +3,7 @@ title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Trabalh
 author:
   - Brenda da Silva Muniz 11811603
   - Francisco Rosa Dias de Miranda 4402962
-  - Heitor Carvalho Pinheiro 11833351-
+  - Heitor Carvalho Pinheiro 11833351
   - Mônica Amaral Novelli 11810453
 date: "Setembro 2021"
 output: pdf_document
@@ -29,19 +29,19 @@ library(data.table)
 
 Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
 
-```{r read-load, warning=FALSE,message = FALSE}
-dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ",")) %>% select(y, x1)
+```{r read-load, warning=FALSE,message = FALSE, fig.cap= "Cinco primeiras observações do dataset"}
+dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
 
-head(dados)
+head(dados) %>% kable()
 ```
-Vamos separar nossa base em treino e teste, aonde guardaremos 4 observações 
+Vamos separar nossa base em treino e teste, onde guardaremos 4 observações para realizar a previsão mais tarde. 
 
 ```{r}
 set.seed(42)
 smp <- sample(32, 4)
 
-treino <- dados[-smp,]
-teste <- dados[smp,]
+treino <- dados[-smp,] %>% select(y, x1)
+teste <- dados[smp,] %>% select(y, x1)
 
 y <- treino$y
 x1 <- treino$x1
@@ -54,8 +54,9 @@ n <- length(y)
   - Descrição do banco de dados
   - Definição das variáveis
   - Análise exploratória inicial
-```{r summary}
-summary(dados)
+  
+```{r summary, fig.cap = "Sumário das variáveis utilizadas"}
+summary(dados %>% select(y,x1)) %>% kable()
 ```
 
   Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
@@ -73,7 +74,7 @@ dim(dados)
 ```{r scatter}
 ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + #geom_smooth(method = "lm") +
   ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
-  theme_classic() +
+  theme_pubclean() +
   theme(plot.title = element_text(size = 20, hjust = .5))
 ```
 Perceba que existe uma clara relação linear entre as duas variáveis, representada pela linha azul. Conforme as cilindradas do motor aumentam, o rendimento tende a diminuir.
@@ -93,13 +94,13 @@ dados %>%
 ```
 Podemos perceber a partir do boxplot acima e da função summary que 50% dos carros tem menos de 318 cilíndradas.
 
-```{r}
+```{r fig.cap = "Histograma do Rendimento do Motor"}
 dados %>%
   ggplot(aes( x=dados$y)) +
     geom_histogram(color = "black", fill = "lightblue", bins = 24) + # xlab("Rendimento") + ylab("Frequência") +
     geom_vline(aes(xintercept=mean(dados$y)), color = "red", linetype = "solid") +
     geom_vline(aes(xintercept=median(dados$y)), color = "black", linetype = "solid") +
-    labs(title = "Histograma da variável Y (Rendimento do Motor em milhas por L)") +
+    labs(title = "Histograma da variável Y ( em milhas por L)") +
     scale_x_continuous("Rendimento", limits = c(10,37,1), breaks = c(10:37)) +
     ylab("Frequência") +
     theme(plot.title = element_text(hjust = 0.5)) +
@@ -119,16 +120,17 @@ Vamos verificar a distribuição da variável x1
 ```{r histx1}
 dados %>%
   ggplot(aes( x=dados$x1)) +
-    geom_histogram(color = "black", fill = "lightgreen", bins = 15) + # xlab("Rendimento") + ylab("Frequência") +
-    geom_vline(aes(xintercept=mean(dados$x1)), color = "red", linetype = "solid") +
-    geom_vline(aes(xintercept=median(dados$x1)), color = "black", linetype = "solid") +
+    geom_histogram(aes(y=..density..), color = "black", fill = "lightgreen", bins = 15) + # xlab("Rendimento") + ylab("Frequência") +
+    geom_vline(aes(xintercept=mean(dados$x1), color = "Média"), linetype = "solid") +
+    geom_vline(aes(xintercept=median(dados$x1), color = "Mediana"), linetype = "solid") +
     labs(title = "Histograma da variável X1 (Cilindradas por Polegada Cúbica)") +
     scale_x_continuous("Cilindradas", breaks = c(100,150,200,250,300,350,400,450,500)) +
-    scale_y_continuous("Frequência", breaks = c(0:8), limits = c(0,6)) +
+    scale_y_continuous("Frequência relativa") +
+  scale_color_manual(name=" ", values = c("red", "black"))+
   #limits = c(85,500,1)) +
     ylab("Frequência") +
     theme(plot.title = element_text(hjust = 0.5)) +
-    theme_classic2()
+    theme_pubclean()
 ```
 
 ## Parte **b)**:
@@ -225,14 +227,17 @@ QMres <- SQres/(n-2)
 ```{r}
 
 dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
-  geom_smooth(method='lm', formula= y~x)
+  geom_smooth(method='lm', formula= y~x) +
+  theme_pubclean()
 
+```
+
+```{r}
 #Arredondando b0 e b1
 round(b0_est, 4)
 round(b1_est, 4)
-
-
 ```
+
 Consequentemente, a reta ajustada é:
 $$\widehat{Y}_i=1224.043-0.7769X_i$$
 
@@ -262,15 +267,27 @@ Também podemos construir um histograma, que facilitará a visualização do com
 ```{r}
 # Histograma
 n_res <- length(res)
+normalDist<- rnorm(length(res), mean =  mean(res), sd= sd(res))
+dat<- data.frame(error = res, norm = normalDist)
 
-ggplot(dados, aes(x = res)) +
+
+ggplot(tibble(res), aes(x = res)) +
   ylab("Frequência") +
-  geom_histogram(color = "black", fill = "#FF69B4", bins=12)+
+  geom_histogram(aes(y=..density..), color = "black", fill = "#FF69B4", bins=12, position="identity")+
   labs(title = "Histograma dos resíduos")+
+  geom_density(data = dat) +
   scale_x_continuous("Resíduos", limits = c(-8,8,1), breaks = c(-8:8))+
   theme(plot.title = element_text(hjust = 0.5)) +
   theme_classic()
+
+
 ```
+
+```{r qqplotresidu}
+qqnorm(res)
+qqline(res, col = "blue")
+```
+
 
 Desse modo, temos que a análise dos resíduos é --------
 
@@ -378,8 +395,8 @@ Intervalos de Confiança para $(\beta_0,\beta_1,\sigma^2)$ e $E(Y)$.
 
 ***Calculando intervalo de Confiança para $\beta_1$***
 ```{r icbeta1}
-b1_min <- beta1est-t2*dp_b1
-b1_max <- beta1est-t1*dp_b1
+b1_min <- b1_est-t2*dp_b1
+b1_max <- b1_est-t1*dp_b1
 IC_b1_est <- cbind(b1_min, b1_max)
 IC_b1_est
 ```
@@ -391,8 +408,8 @@ para mais ou para menos.
 
 ***Calculando intervalo de Confiança para $\beta_0$***
 ```{r icbeta0}
-b0_min <- beta0est-t2*dp_b0
-b0_max <- beta0est-t1*dp_b0
+b0_min <- b0_est-t2*dp_b0
+b0_max <- b0_est-t1*dp_b0
 IC_b0_est <- cbind(b0_min, b0_max)
 IC_b0_est
 ```
@@ -443,7 +460,7 @@ Nesse exemplo usaremos $X_0$ como sendo o proprio $\overline{X}$.
 ```{r x0exbarra}
 X0 <- mean(x1) # poderia ser outro valor
 
-v_medio <- (mean(y)+beta1est* (X0-mean(x1)) )
+v_medio <- (mean(y)+b1_est* (X0-mean(x1)) )
 
 auxiliar <- sqrt(QMres*(1/n + (X0 - mean(x1)) /Sxx ))
 ```
@@ -487,7 +504,7 @@ $\alpha = 0,05$.
 ```{r exem1}
 x1_novo <- 12  
 #x1_novo <- c(12,20,48,51,57,62)
-Y0_est <- beta0est + beta1est*x1_novo
+Y0_est <- b0_est + b1_est*x1_novo
 auxiliar_y0 <- sqrt(QMres*(1+ 1/n + (x1_novo - mean(x1)) /Sxx ))
 ```
 
@@ -514,7 +531,7 @@ A Análise de Variâcia com todos os valores (Graus de Liberdade, SQTotal, SQRes
 
 **Soma do quadrado da Regressão**
 ```{r saqreganova}
-SQreg <- beta1est*Sxy
+SQreg <- b1_est*Sxy
 SQreg
 ```
 
@@ -526,7 +543,7 @@ SQtotal
 
 **Soma do quadrado do resíduo**
 ```{r asqresanova}
-SQres <- sum((y-mean(y))^2) - beta1est*Sxy
+SQres <- sum((y-mean(y))^2) - b1_est*Sxy
 SQres
 ```
 

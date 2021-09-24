@@ -9,10 +9,9 @@ date: "Setembro 2021"
 output: pdf_document
 ---
 
-bla
 Neste trabalho, nosso objetivo é ajustar um modelo de regressão linear simples ao conjunto de dados fornecido, utilizando linguagem R. Para esta tarefa, descreveremos cada etapa de nosso *pipeline*.
 
-O dataset B.3 contém dados sobre o rendimento de Gasolina, em milhas, de 32 automóveis diferentes. Ajuste o modelo de regressão linear simples que relaciona o rendimento da gasolina (y) (Milhas por litro) e a cilindrada do motor (x1) (polegadas cúbicas).
+O dataset B.3 contém dados sobre o rendimento de Gasolina, em milhas, de 32 automóveis diferentes. Ajuste o modelo de regressão linear simples que relaciona o rendimento da gasolina (y) (Milhas por litro) e a cilindrada do motor (x1) (polegadas cúbicas). Use sempre Significância: 99%.
 
 Primeiramente, vamos carregar os módulos utilizados nesta análise. Caso não possua algum dos pacotes, utilize o comando `install_packages("Nome_do_pacote")`.
 
@@ -31,10 +30,26 @@ library(data.table)
 Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
 
 ```{r read-load, warning=FALSE,message = FALSE}
-dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
+dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ",")) %>% select(y, x1)
 
 head(dados)
 ```
+Vamos separar nossa base em treino e teste, aonde guardaremos 4 observações 
+
+```{r}
+set.seed(42)
+smp <- sample(32, 4)
+
+treino <- dados[-smp,]
+teste <- dados[smp,]
+
+y <- treino$y
+x1 <- treino$x1
+
+n <- length(y)
+
+```
+
 ## Parte **a)**:
   - Descrição do banco de dados
   - Definição das variáveis
@@ -56,7 +71,7 @@ dim(dados)
 **Gráfico da Dispersão entre x1 (cilindrada do motor) e y (rendimento da gasolina)**
 
 ```{r scatter}
-ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + geom_smooth(method = "lm") +
+ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + #geom_smooth(method = "lm") +
   ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
   theme_classic() +
   theme(plot.title = element_text(size = 20, hjust = .5))
@@ -78,12 +93,10 @@ dados %>%
 ```
 Podemos perceber a partir do boxplot acima e da função summary que 50% dos carros tem menos de 318 cilíndradas.
 
-```{r boxplot y}
-
 ```{r}
 dados %>%
   ggplot(aes( x=dados$y)) +
-    geom_histogram(color = "black", fill = "lightblue") + # xlab("Rendimento") + ylab("Frequência") +
+    geom_histogram(color = "black", fill = "lightblue", bins = 24) + # xlab("Rendimento") + ylab("Frequência") +
     geom_vline(aes(xintercept=mean(dados$y)), color = "red", linetype = "solid") +
     geom_vline(aes(xintercept=median(dados$y)), color = "black", linetype = "solid") +
     labs(title = "Histograma da variável Y (Rendimento do Motor em milhas por L)") +
@@ -106,7 +119,7 @@ Vamos verificar a distribuição da variável x1
 ```{r histx1}
 dados %>%
   ggplot(aes( x=dados$x1)) +
-    geom_histogram(color = "black", fill = "lightgreen") + # xlab("Rendimento") + ylab("Frequência") +
+    geom_histogram(color = "black", fill = "lightgreen", bins = 15) + # xlab("Rendimento") + ylab("Frequência") +
     geom_vline(aes(xintercept=mean(dados$x1)), color = "red", linetype = "solid") +
     geom_vline(aes(xintercept=median(dados$x1)), color = "black", linetype = "solid") +
     labs(title = "Histograma da variável X1 (Cilindradas por Polegada Cúbica)") +
@@ -117,31 +130,6 @@ dados %>%
     theme(plot.title = element_text(hjust = 0.5)) +
     theme_classic2()
 ```
-
-
-
-
-```{r pairplot, fig.cap = "Correlograma entre as variáveis", warning=FALSE}
-
-ggcorr(dados, geom = "circle")
-
-```
-
-
-bla
-
-  - Graficos de dispersão $Y$ versus $X_i$, $i = 1, ..., 11.$
-
-```{r scatterplot, fig.cap = "Gráfico de Dispersão de Y com as demais variáveis"}
-
-dados %>%
-  pivot_longer(cols = !"y") %>%
-  ggplot(aes(y = y)) +
-    geom_point(aes(x = value)) +
-    facet_wrap(~name, scales = "free_x") + theme_pubclean()
-
-```
-  - Interpretação de cada gráfico
 
 ## Parte **b)**:
 
@@ -161,21 +149,25 @@ Na análise multivariada, temos uma relação proporcional da quantidade de vari
 6. Encoding data: Encoding data (de tradução literal: dados codificados) é o nome dado para o processo de converter dados para um formato específico, assegurando sua transmissão e otimizando o modelo. Seu processo inverso - ou seja, a decodificação - refere-se a extrair as informações da forma convertida.
 
 ## Parte **c)**:
+
   1. Calcular $S_{XX}$,$S_{YY}$ e $S_{XY}$
 
- # Calculando o valor de Sxx
- #Sxx <- sum(x1^2) - n*(mean(x1))^2
+
+Calculando o valor de $S_{xx}$
+
+$$S_{XX} =  \sum_{i=1}^n (x -\bar{x})^2$$
 
 ```{r}
-attach(dados)
 xbarra=mean(x1)
 x1-xbarra
 (x1-xbarra)^2
 Sxx=sum((x1-xbarra)^2)
 ```
 
- # Calculando o valor de Syy
- #Syy <- sum(y^2) - n*(mean(y))^2
+
+### Calculando o valor de $S_{yy}$
+
+$$S_{YY} =  \sum_{i=1}^n (y - \bar{y})^2$$
 
 ```{r}
 ybarra=mean(y)
@@ -184,8 +176,10 @@ y-ybarra
 Syy=sum((y-ybarra)^2)
 ```
 
- # Calculando o valor de Sxy
- #Sxy <- sum(x1*y) - n*(mean(x1)*mean(y))
+### Calculando o valor de $S_{xy}$
+
+$$S_{XY} =  \sum_{i=1}^n (x - \bar{x})(y - \bar{y})$$
+
 ```{r}
 Sxy=sum((x1-xbarra)*(y-ybarra))
 cbind(Sxx,Syy,Sxy)
@@ -193,19 +187,25 @@ cbind(Sxx,Syy,Sxy)
 
   2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
 
- # Estimacao dos parametros
- # Calculando o valor do coeficiente angular beta1
+## Estimacao dos parametros
+
+$$\beta_1 = S_{XY}/S_{XX}$$
+
+### Calculando o valor do coeficiente angular $\beta_1$
+
 ```{r}
 b1_est <- Sxy/Sxx
 ```
 
- # Calculando o valor do intercepto beta0
+### Calculando o valor do intercepto $\beta_0$
+
 ```{r}
 b0_est <- mean(y) - b1_est*mean(x1)
 ```
 
- # Calculando O estimador de sigma^2 nao viesado.
- Tal estimador é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, de modo que:
+### Calculando o estimador de $\sigma^2$ não viesado.
+
+Tal estimador é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, de modo que:
 
 ```{r}
 # Soma do quadrado da regressão:
@@ -221,10 +221,9 @@ SQres <- SQtotal - SQreg
 QMres <- SQres/(n-2)
 
 ```
+
 ```{r}
-#gráfico reta ajustada
-summary(fit)
-anova(fit)
+
 dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
   geom_smooth(method='lm', formula= y~x)
 
@@ -232,10 +231,10 @@ dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
 round(b0_est, 4)
 round(b1_est, 4)
 
-#Consequentemente, a reta ajustada é:
-$$\widehat{Y}_i=1224.043-0.7769*X_i$$
 
 ```
+Consequentemente, a reta ajustada é:
+$$\widehat{Y}_i=1224.043-0.7769X_i$$
 
 
   3. Calcule o valor dos $\hat{Y}$ e o valor dos resíduos para seu modelo, resumo e histograma dos resíduos, e faça uma análise da distribuição destes.
@@ -246,19 +245,19 @@ $$\widehat{Y}_i=1224.043-0.7769*X_i$$
 y_pred <-  b0_est + b1_est*x1
 ```
 
-  Os resíduos se dão pelo desvio entre as observações e os valores preditos, sendo uma medida de variabilidade na variável resposta onde qualquer desvio relativo a suposição dos erros deveria aparecer. Analisá-los nos permite um discernimento maior em relação a quão adequado é o modelo. Fazendo uso do cálculo de *y_pred* feito anteriormente, salvamos nossos resíduos em uma variável *res* abaixo.
+Os resíduos se dão pelo desvio entre as observações e os valores preditos, sendo uma medida de variabilidade na variável resposta onde qualquer desvio relativo a suposição dos erros deveria aparecer. Analisá-los nos permite um discernimento maior em relação a quão adequado é o modelo. Fazendo uso do cálculo de *y_pred* feito anteriormente, salvamos nossos resíduos em uma variável *res* abaixo.
 
 ```{r}
 res <- y - y_pred
 ```
 
-  Utilizando o comando *summary*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
+Utilizando o comando *summary*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
   
 ```{r}
 summary(res)
 ```
   
-  Também podemos construir um histograma, que facilitará a visualização do comportamento dos resíduos.
+Também podemos construir um histograma, que facilitará a visualização do comportamento dos resíduos.
 
 ```{r}
 # Histograma
@@ -266,18 +265,18 @@ n_res <- length(res)
 
 ggplot(dados, aes(x = res)) +
   ylab("Frequência") +
-  geom_histogram(color = "black", fill = "#FF69B4", bins=n_res)+
+  geom_histogram(color = "black", fill = "#FF69B4", bins=12)+
   labs(title = "Histograma dos resíduos")+
   scale_x_continuous("Resíduos", limits = c(-8,8,1), breaks = c(-8:8))+
   theme(plot.title = element_text(hjust = 0.5)) +
   theme_classic()
 ```
 
- Desse modo, temos que a análise dos resíduos é --------
+Desse modo, temos que a análise dos resíduos é --------
 
   4. testes de hipotese para $\beta_0$ e $\beta_1$
 
-  Para realizarmos nossos testes de hipóteses, é necessário o estimador do parâmetro $\sigma^2$ do nosso modelo, uma vez que ele não é dado. Tal estimador não viesado é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, calculada no item 3 de modo que:
+Para realizarmos nossos testes de hipóteses, é necessário o estimador do parâmetro $\sigma^2$ do nosso modelo, uma vez que ele não é dado. Tal estimador não viesado é obtido através da soma do quadrado dos resíduos, definido pela variável *QMres*, calculada no item 3 de modo que:
 
 ```{r}
 # Soma do quadrado da regressão:
@@ -294,19 +293,19 @@ QMres <- SQres/(n-2)
 
 ```
 
-  A partir disso, podemos prosseguir com nossos testes de hipóteses para $\beta_1$ e $\beta_0$, com decisão de rejeitar ou não $H_0$, uma vez que este representa o parâmetro se igualar a 0 estatisticamente caso não seja rejeitado, descrevendo a significância da contribuição do mesmo. 
+A partir disso, podemos prosseguir com nossos testes de hipóteses para $\beta_1$ e $\beta_0$, com decisão de rejeitar ou não $H_0$, uma vez que este representa o parâmetro se igualar a 0 estatisticamente caso não seja rejeitado, descrevendo a significância da contribuição do mesmo. 
   
   * Testagem se $\beta_1 = 0$:
 
-  $\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$, com isso, definimos:
+$\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$, com isso, definimos:
 
 ```{r}
 dp_b1 <- (sqrt(QMres/Sxx))
 t0_b1 <- b1_est/dp_b1
 ```
 
-  Pelo enunciado, é dado que $\alpha$= 5%. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero. 
-  A partir disso, definimos $\alpha$ e dois quantis, de modo que *t1* é o quantil $\frac{\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$, enquanto *t2* é o quantil $\frac{1-\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$.
+  Pelo enunciado, é dado que $\alpha= 5\%$. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero. 
+  A partir disso, definimos $\alpha$ e dois quantis, de modo que *t1* é o quantil $\frac{\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$, enquanto *t2* é o quantil $\frac{1-\alpha}{2}$ da distribuicao $t$ com grau de liberdade $n -2$.
   Com esses dados, podemos construir nosso programa de decisão que retornará caso $H_0$ seja rejeitado.
   
 ```{r}
@@ -318,8 +317,20 @@ if(t0_b1 < t1 || t0_b1>t2){
   cat("Rejeita-se H0")
 }
 ```
+Para $\alpha= 1\%$:
   
-  Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de zero.
+```{r}
+alpha <- 0.01
+t1 <- qt(alpha/2,n-2)
+t2 <- qt(1-alpha/2,n-2)
+
+if(t0_b1 < t1 || t0_b1>t2){
+  cat("Rejeita-se H0")
+}
+```
+
+
+Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de zero.
 
   * Testagem se $\beta_0 = 0$:
 
@@ -331,10 +342,22 @@ dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
 t0_b0 <- b0_est/dp_b0
 ```
 
-  Em um processo semelhante à testagem de $\beta_1$, com $\alpha$= 5% e os mesmos quantis, também é possível a constrção de nossa função de decisão. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero.
+  Em um processo semelhante à testagem de $\beta_1$, com $\alpha$= 5% e os mesmos quantis, também é possível a construção de nossa função de decisão. Se H0 não for rejeitado, temos que $\beta_0$ é estatisticamente igual a zero.
 
 ```{r}
 alpha <- 0.05
+t1 <- qt(alpha/2,n-2)
+t2 <- qt(1-alpha/2,n-2)
+
+if(t0_b1 < t1 || t0_b1>t2){
+  cat("Rejeita-se H0")
+}
+
+```
+Para $\alpha= 0.01$
+
+```{r}
+alpha <- 0.01
 t1 <- qt(alpha/2,n-2)
 t2 <- qt(1-alpha/2,n-2)
 
@@ -348,247 +371,6 @@ Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de z
 
 
   5. intervalos de confiança
-```{r}
-confint(fit, level = 0.99)
-```
-
-
-  6. intervalos de predição
-```{r}
-#predict(fit, newdata = new.dat, interval = 'prediction')
-```
-
-
-algumas variaveis que precisamos
-```{r}
-y <- dados$y
-x1 <- dados$x1
-n <- length(y)
-```
-
-# Galera daqui ppra baixo só colei o markdown do danilo
-
-
-Calcule $Sxx, Syy, Sxy$.
-
-Note que as expressões para $Sxx, Syy$ e $Sxy$ foram apresentadas na Aula $3$ e são dadas por:
-
-$Sxx=\sum_{i=1}^n(X_i-\overline{X})^2=\sum_{i=1}^nX_i^2-n\overline{X}^2$,
-
-$Syy=\sum_{i=1}^n(Y_i-\overline{Y})^2=\sum_{i=1}^nY_i^2-n\overline{Y}^2$,
-
-$Sxy=\sum_{i=1}^n(X_i-\overline{X})(Y_i-\overline{Y})=\sum_{i=1}^n(X_iY_i)-n\overline{X}\overline{Y}=\sum_{i=1}^n(X_i-\overline{X})Y_i$
-
-Vamos cacular primeiramente $\overline{X}$, logo subtraimos ele da variavél, elevamos ao quadrado cada termo e sumarmos para obter.   
-```{r Sxx}
-xbarra=mean(x1)
-x1-xbarra
-(x1-xbarra)^2
-Sxx=sum((x1-xbarra)^2)
-Sxx
-```
-
-```{r Syy}
-ybarra=mean(y)
-y-ybarra
-(y-ybarra)^2
-Syy=sum((y-ybarra)^2)
-Syy
-```
-
-```{r Sxy}
-Sxy=sum((x1-xbarra)*(y-ybarra))
-Sxy
-```
-
-```{r Ssumsresults}
-cbind(Sxx,Syy,Sxy)
-```
-
-
-
-
-##Ajuste do modelo de regressão linear simples e gráfico  da reta ajustada
-
-Note que na aula $3$ temos feito passo a passo do ajuste do modelos mediante o método de minimos quadrados (ajustar um modelo significa mesmo estimar seus parâmetros). Nosso modelo liear simples é da forma:
-$$Y=\beta_0+\beta_1X+\xi$$ onde aplicando a técnica de mínimos quadrados teremos estimadores para nossos parâmetros dados pelas seguintes expressões:
-$\widehat{\beta_0}=\overline{Y}-\widehat{\beta_1}\overline{X}\\\widehat{\beta_1}=\dfrac{Sxy}{Sxx}$. Portanto,
-
-```{r betasest}
-beta1est=(Sxy)/(Sxx)
-beta0est=ybarra-(beta1est*xbarra)
-cbind(beta0est,beta1est)
-```
-
-
-**Gráfico Reta Ajustada**
-```{r grafajuste}
-plot(x1,y , #ylim = c(750,1150), xlim = c(9,65),
-     main = expression(paste("Reta ajustada com ",
-                             hat(beta)[0],"=821,7546",
-                             " e ", hat(beta)[1],"=3,174")),
-     xlab = "Precip", ylab = "Mortalidade")
-curve(beta0est + beta1est*x, add = T, col = 'red')
-```
-
-Consequentemente, a reta ajustada é
-$$\widehat{Y}_i=821.7546+3.174002*X_i$$
-
-gráfico simples da reta ajustada usando b0 e b1
-```{r grafajuste}
-plot(x1,y)
-curve(b0_est + b1_est*x, add = T, col = 'red')
-```
-
-
-***Estimando $\sigma^2$***
-
-O estimador de $\sigma^2$ não viesado eh obtido pelo quadrado médio do resíduo (QMres) apresentado passo a passo na aula $5$. Para termos QMreg precisamos do SQres.
-
-**SQreg**
-```{r sqreg}
-SQreg <- beta1est*Sxy
-SQreg
-```
-
-**SQtotal**
-```{r sqtotal}
-SQtotal <- sum((y-mean(y))^2)
-SQtotal
-```
-
-**SQRes = SQtotal - SQreg**
-```{r sqres}
-SQres <- SQtotal - SQreg
-SQres
-```
-
-**MQres**
-```{r mqres}
-#estimador nao viesado de sigma^2
-QMres <- SQres/(n-2)
-SigmaQuadradoEst<-QMres
-SigmaQuadradoEst
-```
-
-
-```{r estimativ}
-#Estimativas para Beta0, Beta1 e Sigma^2
-cbind(beta0est, beta1est, SigmaQuadradoEst)
-
-```
-
-
-
-## Resíduos
-
-O valor dos $\widehat{Y}$'s e o valor dos resíduos para o seu modelo, faça um resumo e Histograma dos resíduos e faça análise da distribuição destes.
-
-Para sabermos os resíduos do nosso modelo vamos calcular o valor predito primeiro.
-
-```{r valpredito}
-# valor predito
-y_pred <- beta0est + beta1est*x1
-```
-
-```{r ypredi}
-# Ou ainda
-y_pred <- mean(y) + beta1est*(x1 - mean(x1))
-```
-
-***Resíduos***
-```{r residuos}
-res <- y - y_pred
-res
-summary(res)
-```
-***Histograma dos Resíduos***
-```{r historesiduos}
-hist(res, main = "Histograma dos Resíduos", col = "green",
-    # xlim = c(-151, 130), ylim = c(0, 30),
-     ylab = "Frequencia", xlab = "Resíduos")
-```  
-```{r qqplotresidu}
-qqnorm(res)
-qqline(res, col = "blue")
-```
-
-
-## Teste de Hipótese
-
-Obteremos os teste de hipóteses para $\beta_0$ e $\beta_1$ com a decisão de rejeitar ou não $H_0$.
-
-Sera que $\beta_0 = 0$ estatísticamente? E sera que $\beta_1=0$ estatísticamente?. Para isso precisamos calcular o estimador de $\sigma^2$ (Utilizando $\alpha=5\%$).
-
-***Teste de Hipótese para $\beta_1$***
-
-Testando se $\beta_1 = 0$, Lembrando que $\beta_1$ estimado tem distribuição Normal com media $\beta_1$ e variância$=(\sigma^2/Sxx)$.
-
-Como nâo temos o valor de $\sigma^2$ temos que estima-lo.
-
-$H_0: \beta_1 = 0$  vs $H_1: \beta_1$ não eh zero $(\beta_1\neq 0)$.
-
-```{r estimabetas}
-dp_b1 <- (sqrt(QMres/Sxx))
-t0_b1 <- beta1est/dp_b1
-```
-
-
-Rejeitamos $H_0$ se t0_b1 $< t_1$ ou t0_b1 $> t_2$, em que $t_1$ eh o quantil $\alpha/2$ da Distribuição $t$ com $n-2$ G.L. e $t_2$ eh o quantil $1-\alpha/2$ da Distribuição $t$ com $n-2$ G.L. útilizando $\alpha = 5\%$.
-
-```{r quantilst}
-alpha <- 0.05
-t1 <- qt(alpha/2,n-2)
-t2 <- qt(1-alpha/2,n-2)
-```
-
-*Regra de Decisão*
-```{r decisao}
-if(t0_b1 < t1 || t0_b1>t2){
-  cat("Rejeita-se H0")
-}
-```
-
-
-Como podemos ver pelo teste, rejeitamos $H_0$. Ou seja, rejeitamos a hípotese que o valor do coeficiente $\beta_1 = 0$.
-
-***Teste de Hipótese para $\beta_0$***
-
-Testando se $\beta_0 = 0$. Lembrando que $\beta_0$ estimado tem Distribuição Normal com média $\beta_0$ e variância$=(\sigma^2*((1/n)+ \overline{X}/Sxx))$ como não temos o valor de $\sigma^2$ temos que estima-lo.
-
-$H_0: \beta_0 = 0$  vs $H_1: \beta_0$ não eh zero $(\beta_0\neq 0)$
-```{r nvotest}
-dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
-
-t0_b0 <- beta0est/dp_b0
-```
-
-Rejeitamos $H_0$ se t0_b0 $< t_1$ ou t0_b0 $>t_2$, em que
-$t_1$ eh o quantil $\alpha/2$ da Distribuição $t$ com $(n-2)$ G.L.
-$t_2$ eh o quantil $1-\alpha/2$ da Distribuicao $t$ com $(n-2)$ G.L.
-útilizando $\alpha = 5\%$
-
-```{r quantts}
-alpha <- 0.05
-t1 <- qt(alpha/2,n-2)
-t2 <- qt(1-alpha/2,n-2)
-```
-
-*Regra de Decisão*
-```{r desnov}
-if(t0_b0 < t1 || t0_b0>t2){
-  cat("Rejeita-se H0")
-}
-```
-
-
-Como podemos ver pelo teste, rejeitamos $H_0$.
-Ou seja, rejeitamos a hípotese que o valor do
-intercepto $\beta_0 = 0$.
-
-
-#**vou editar a partir daqui**
-
 
 ## ***Intervalos de Confiança***
 
@@ -645,7 +427,7 @@ particular da cov., MIy|X0).
 
 **Lembrando:**
 
-1. O valor médio da variavél resposta é dado um $X_0$.
+1. O valor médio da variável resposta é dado um $X_0$.
 2. $\overline{Y}$ tem Distribuição Normal.
 com média $\beta_0+\beta_1*\overline{X}$ e variância $\sigma^2/n$.
 3. $\beta_1$ tem Distribuição Normal com média $\beta_1$ e variância

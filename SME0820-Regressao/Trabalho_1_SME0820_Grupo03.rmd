@@ -35,7 +35,7 @@ dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
 ```{r}
 head(dados) %>% kable(caption = "Cinco primeiras observações do dataset")
 ```
-Vamos separar nossa base em treino e teste, onde guardaremos 4 observações para realizar a previsão mais tarde. 
+Vamos separar nossa base em treino e teste, onde guardaremos 4 observações para realizar a previsão mais tarde.
 
 ```{r}
 set.seed(42)
@@ -51,15 +51,15 @@ n <- length(y)
   - Descrição do banco de dados
   - Definição das variáveis
   - Análise exploratória inicial
-  
+
 ```{r summary}
 summary(dados %>% select(y,x1)) %>% kable(caption = "Sumário das variáveis utilizadas")
 ```
 
   Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
-  
+
   **Dimensão dos dados**
-  
+
 ```{r fig.cap= "Dimensão dos Dados"}
 dim(dados) %>% kable(caption = "Dimensão dos dados")
 ```
@@ -103,7 +103,7 @@ dados %>%
     ggtitle("Boxplot da Variável (Y)") +
     xlab("") + ylab("Rendimento por motor em milhas por litro")
 ```
-Pelo boxplot acima percebemos que os dados da variável y parecem seguir uma distribuição Normal - o que será confirmado com a análise de um histograma. Ainda, destaca-se quatro outliers, cujo rendimento é superior a $30~mi/L$. 
+Pelo boxplot acima percebemos que os dados da variável y parecem seguir uma distribuição Normal - o que será confirmado com a análise de um histograma. Ainda, destaca-se quatro outliers, cujo rendimento é superior a $30~mi/L$.
 
 ```{r fig.cap = "Histograma do Rendimento do Motor"}
 dados %>%
@@ -156,7 +156,7 @@ getmode <- function(v) {
    uniqv <- unique(v)
    uniqv[which.max(tabulate(match(v, uniqv)))]
 }
-   
+
 mode_x1 = getmode(dados$x1)
 print(mode_x1)
 ```
@@ -249,12 +249,25 @@ SQres <- SQtotal - SQreg
 # Soma do quadrado dos resíduos:
 QMres <- SQres/(n-2)
 ```
+### Calculando o Coeficiente de Determinação $R^2$ para realizar a interpretação gráfica
+
+$$ R^2 = SQ_{reg}/SQ_{total} $$
 
 ```{r}
-dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
-  geom_smooth(method='lm', formula= y~x) +
-  theme_pubclean()
+
+Coef_Det = SQreg/SQtotal
+
 ```
+
+##Gráfico de Dispersão entre x1 (cilindrada do motor) e y (rendimento da gasolina) com a reta ajustada
+```{r}
+dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
+  geom_smooth(method='lm',formula= y~x) +
+  ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
+```
+Interpretação gráfica: Conforme revelado no resultado do coeficiente de determinação, o qual mostra a proporção em que a variação do rendimento de gasolina é explicada pelas cilindradas do motor, cujo resultado foi de aproximadamente 0.7833, apresenta um valor próximo de 1, indicando assim uma boa correlação linear entre as variáveis dado que segundo esta análise, aproximadamente 78,33% da variação do rendimento de gasolina é explicada pelas cilindradas do motor.
 
 ```{r}
 #Arredondando b0 e b1
@@ -281,11 +294,11 @@ res <- y - y_pred
 ```
 
 Utilizando o comando *summary*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
-  
+
 ```{r}
 summary(res)
 ```
-  
+
 Também podemos construir um histograma, assim como um gráfico quantil-quantil, que facilitará a visualização do comportamento dos resíduos.
 
 ```{r}
@@ -327,8 +340,8 @@ SQres <- SQtotal - SQreg
 QMres <- SQres/(n-2)
 ```
 
-A partir disso, podemos prosseguir com nossos testes de hipóteses para $\beta_1$ e $\beta_0$, com decisão de rejeitar ou não $H_0$, uma vez que este representa o parâmetro se igualar a 0 estatisticamente caso não seja rejeitado, descrevendo a significância da contribuição do mesmo. 
-  
+A partir disso, podemos prosseguir com nossos testes de hipóteses para $\beta_1$ e $\beta_0$, com decisão de rejeitar ou não $H_0$, uma vez que este representa o parâmetro se igualar a 0 estatisticamente caso não seja rejeitado, descrevendo a significância da contribuição do mesmo.
+
   * Testagem se $\beta_1 = 0$:
 
 $\beta_1$ possuí distribuição Normal com média $\beta_1$ e variância $\sigma^2/S_{xx}$, com isso, definimos:
@@ -338,10 +351,10 @@ dp_b1 <- (sqrt(QMres/Sxx))
 t0_b1 <- b1_est/dp_b1
 ```
 
-  Pelo enunciado, é dado que $\alpha= 5\%$. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero. 
+  Pelo enunciado, é dado que $\alpha= 5\%$. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero.
   A partir disso, definimos $\alpha$ e dois quantis, de modo que *t1* é o quantil $\frac{\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$, enquanto *t2* é o quantil $\frac{1-\alpha}{2}$ da distribuicao $t$ com grau de liberdade $n -2$.
   Com esses dados, podemos construir nosso programa de decisão que retornará caso $H_0$ seja rejeitado.
-  
+
 ```{r}
 alpha <- 0.05
 t1 <- qt(alpha/2,n-2)
@@ -351,7 +364,7 @@ if(t0_b1 < t1 || t0_b1>t2){
 }
 ```
 Para $\alpha= 1\%$:
-  
+
 ```{r}
 alpha <- 0.01
 t1 <- qt(alpha/2,n-2)

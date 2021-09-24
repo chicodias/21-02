@@ -24,9 +24,10 @@ library(DataExplorer)
 library(GGally)
 library(knitr)
 library(data.table)
+library(papeR)
 ```
 
-Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
+Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 6 primeiras observações.
 
 ```{r read-load, warning=FALSE,message = FALSE}
 dados <- read_csv("data-table-B3.csv", locale = locale(decimal_mark = ","))
@@ -56,7 +57,7 @@ n <- length(y)
 summary(dados %>% select(y,x1)) %>% kable(caption = "Sumário das variáveis utilizadas")
 ```
 
-  Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
+  Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature $x1$.
 
   **Dimensão dos dados**
 
@@ -71,15 +72,15 @@ ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + #geom_smooth(method
   theme_pubclean() +
   theme(plot.title = element_text(size = 20, hjust = .5))
 ```
-A partir do gráfico de dispersão acima parece que existe uma relação linear entre as variáveis $X_1$ e $Y$. Vamos verificar tal relação a partir do coeficiente de Pearson $\rho$.
+A partir do gráfico de dispersão acima parece que existe uma relação linear entre as variáveis $x_1$ e $y$. Vamos verificar tal relação a partir do coeficiente de Pearson $\rho$.
 
-**Teste de Correlação de Pearson entre as variáveis $X_1$ e $Y$**
+**Teste de Correlação de Pearson entre as variáveis $x_1$ e $y$**
 
 ```{r fig.cap="Coeficiente de Pearson para as variáveis $X_1$ e $Y$"}
 cor.test(dados$x1, dados$y)
 ```
 
-O teste de correlação de Person resultou em um $\rho = -~0.87$ o que indica uma forte correlação entre as variáveis. Nosso objetivo é estimar a influência de $X_1$ sobre $Y$, ou seja, como $Y$ varia em relação às variações em $X_1$.
+O teste de correlação de Person resultou em um $\rho = -~0.87$ o que indica uma forte correlação entre as variáveis. Nosso objetivo é estimar a influência de $x_1$ sobre $y$, ou seja, como $y$ varia em relação às variações em $x_1$.
 
 ```{r fig.cap="Boxplot do regressor $X_1$"}
 dados %>%
@@ -103,7 +104,7 @@ dados %>%
     ggtitle("Boxplot da Variável (Y)") +
     xlab("") + ylab("Rendimento por motor em milhas por litro")
 ```
-Pelo boxplot acima percebemos que os dados da variável y parecem seguir uma distribuição Normal - o que será confirmado com a análise de um histograma. Ainda, destaca-se quatro outliers, cujo rendimento é superior a $30~mi/L$.
+Pelo boxplot acima, percebemos que os dados da variável y parecem seguir uma distribuição Normal - o que será confirmado com a análise de um histograma. Ainda, destaca-se quatro outliers, cujo rendimento é superior a $30~mi/L$.
 
 ```{r fig.cap = "Histograma do Rendimento do Motor"}
 dados %>%
@@ -119,19 +120,19 @@ dados %>%
     theme(plot.title = element_text(hjust = 0.5)) +
     theme_pubclean()
 ```
-O histograma acima representa a distribuição da variável y. Fica claro, portanto, que os dados da variável resposta se assemelham a uma distribuição normal, não fossem os outliers.
+O histograma acima representa a distribuição da variável y. Fica claro, portanto, que os dados da variável resposta se assemelham a uma distribuição normal, apesar dos outliers.
 
 
 ```{r}
 dados %>%
   select(y,x1) %>%
   filter(y>30) %>%
-  kable(caption = "Tabela com os 4 outliers presentes nos valores de Y")
+  kable(caption = "Tabela com os 4 outliers presentes nos valores de y")
 ```
 A partir do histograma e da tabela acima, concluimos que os 4 outliers referem-se aos valores: $30.4$, $31.9$, $34.7$, e $36.5$.
 
 
-Vamos verificar a distribuição da variável $X_1$
+Vamos verificar a distribuição da variável $x_1$
 
 ```{r fig.cap= "Histograma das cilíndradas por polegada cúbica"}
 dados %>%
@@ -148,9 +149,9 @@ dados %>%
     theme(plot.title = element_text(hjust = 0.5)) +
     theme_pubclean()
 ```
-O histograma da variável $X_1$ não apresenta uma distribuição bem definida, entretanto, destaca-se maior frequência para os valores em torno de $350$ cilíndradas.
+O histograma da variável $x_1$ não apresenta uma distribuição bem definida, entretanto, destaca-se maior frequência para os valores em torno de $350$ cilíndradas.
 
-**Moda dos valores de $X_1$**
+**Moda dos valores de $x_1$**
 ```{r fig.cap="Valor da moda de $X_1$"}
 getmode <- function(v) {
    uniqv <- unique(v)
@@ -160,18 +161,18 @@ getmode <- function(v) {
 mode_x1 = getmode(dados$x1)
 print(mode_x1)
 ```
-De fato, a moda para os valores de $X_1$ é $350$.
+De fato, a moda para os valores de $x_1$ é $350$.
 
 
 ## Parte **b)**:
 
-Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
+Consultar e descrever brevemente os conceitos de data splitting, cross validation, overfitting, underfitting, missing data e encoding data.
 
 1. **Data Splitting**: Data Splitting ou também “divisão de dados” é uma abordagem para proteger dados confidenciais de acesso não autorizado, criptografando os dados e armazenando diferentes partes de um arquivo em servidores diferentes. Quando os dados divididos são acessados, as partes são recuperadas, combinadas e descriptografadas.
 
-2. **Cross Validation**: Cross Validation ou também “validação cruzada” é uma técnica muito utilizada para avaliar o desempenho de modelos de aprendizado de máquina. Consiste, basicamente, em particionar os dados em conjuntos, onde um conjunto é utilizado para treino e outro para teste e avaliação do desempenho do modelo. A utilização correta da técnica tem altas chances de detectar se um modelo está sobreajustado aos seus dados de treinamento, ou seja, sofrendo overfitting. Vale ressaltar que existem vários métodos de aplicação da validação cruzada.
+2. **Cross Validation**: Cross Validation ou também “validação cruzada” é uma técnica muito utilizada para avaliar o desempenho de modelos de aprendizado de máquina. Consiste, basicamente, em particionar os dados em conjuntos, onde um conjunto é utilizado para treino e outro para teste e avaliação do desempenho do modelo. A utilização correta da técnica tem altas chances de detectar se um modelo está sobreajustado aos seus dados de treinamento, ou seja, sofrendo *overfitting*. Vale ressaltar que existem vários métodos de aplicação da validação cruzada.
 
-3. **Overfitting**: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização no conjunto de teste. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
+3. **Overfitting**: *Overfitting* ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização no conjunto de teste. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
 
 4. **Underfitting**: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
 
@@ -219,7 +220,7 @@ cbind(Sxx,Syy,Sxy)
 
   2. Ajustar um modelo de regressão linear simples, apresentar a estimativa de $\beta_0, \beta_1$ e $\sigma^2$ e fazer um gráfico com a reta ajustada
 
-## Estimacao dos parametros
+## Estimação dos parâmetros
 
 $$\beta_1 = S_{XY}/S_{XX}$$
 
@@ -249,11 +250,25 @@ SQres <- SQtotal - SQreg
 # Soma do quadrado dos resíduos:
 QMres <- SQres/(n-2)
 ```
+### Calculando o Coeficiente de Determinação $R^2$ para realizar a interpretação gráfica
+
+$$ R^2 = SQ_{reg}/SQ_{total} $$
+
+```{r}
+
+Coef_Det = SQreg/SQtotal
+
+```
+
+### Gráfico de Dispersão entre $x_1$ (cilindrada do motor) e $y$ (rendimento da gasolina) com a reta ajustada
 ```{r}
 dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
- geom_smooth(method='lm', formula= y~x) +
-  theme_pubclean()
+  geom_smooth(method='lm',formula= y~x) +
+  ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
 ```
+Interpretação gráfica: Conforme revelado no resultado do coeficiente de determinação, o qual mostra a proporção em que a variação do rendimento de gasolina é explicada pelas cilindradas do motor, cujo resultado foi de aproximadamente 0.7833, apresenta um valor próximo de 1, indicando assim uma boa correlação linear entre as variáveis dado que segundo esta análise, aproximadamente 78,33% da variação do rendimento de gasolina é explicada pelas cilindradas do motor.
 
 ```{r}
 #Arredondando b0 e b1
@@ -262,27 +277,27 @@ round(b1_est, 4)
 ```
 
 Consequentemente, a reta ajustada é:
-$$\widehat{Y}_i=1224.043-0.7769X_i$$
+$$\widehat{Y}_i=34.2602-0.0499X_i$$
 
 
   3. Calcule o valor dos $\hat{Y}$ e o valor dos resíduos para seu modelo, resumo e histograma dos resíduos, e faça uma análise da distribuição destes.
 
-  O cálculo de $\hat{Y}$ pode ser realizado utilizando o modelo de regressão linear simples, em que a variabilidade de interesse é dada em função de uma única covariável - no caso, *x1*. No R, podemos expressar $\hat{Y}$ como sendo:
+  O cálculo de $\hat{Y}$ pode ser realizado utilizando o modelo de regressão linear simples, em que a variabilidade de interesse é dada em função de uma única covariável - no caso, *$x_1$*. No R, podemos expressar $\hat{Y}$ como sendo:
 
 ```{r}
 y_pred <-  b0_est + b1_est*x1
 ```
 
-Os resíduos se dão pelo desvio entre as observações e os valores preditos, sendo uma medida de variabilidade na variável resposta onde qualquer desvio relativo a suposição dos erros deveria aparecer. Analisá-los nos permite um discernimento maior em relação a quão adequado é o modelo. Fazendo uso do cálculo de *y_pred* feito anteriormente, salvamos nossos resíduos em uma variável *res* abaixo.
+Os resíduos se dão pelo desvio entre as observações e os valores preditos, sendo uma medida de variabilidade na variável resposta onde qualquer desvio relativo a suposição dos erros deveria aparecer. Analisá-los nos permite um discernimento maior em relação a quão adequado é o modelo. Fazendo uso do cálculo de *$y_pred$* feito anteriormente, salvamos nossos resíduos em uma variável *$res$* abaixo.
 
 ```{r}
 res <- y - y_pred
 ```
 
-Utilizando o comando *summary*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
+Utilizando o comando *summarize*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
 
-```{r}
-tibble(summary(res)) %>% kable(caption = "Principais medidas descritivas dos resíduos")
+```{r, warning=FALSE}
+papeR::summarize(tibble(res)) %>% kable(caption = "Sumário dos resíduos")
 ```
 
 Também podemos construir um histograma, assim como um gráfico quantil-quantil, que facilitará a visualização do comportamento dos resíduos.
@@ -338,7 +353,7 @@ t0_b1 <- b1_est/dp_b1
 ```
 
   Pelo enunciado, é dado que $\alpha= 5\%$. Se H0 não for rejeitado, temos que $\beta_1$ é estatisticamente igual a zero.
-  A partir disso, definimos $\alpha$ e dois quantis, de modo que *t1* é o quantil $\frac{\alpha}{2}$ da distribuicao $t$ com grau de liberdade $ n -2$, enquanto *t2* é o quantil $\frac{1-\alpha}{2}$ da distribuicao $t$ com grau de liberdade $n -2$.
+  A partir disso, definimos $\alpha$ e dois quantis, de modo que *t1* é o quantil $\frac{\alpha}{2}$ da distribuicao $t$ com grau de liberdade $n -2$, enquanto *t2* é o quantil $\frac{1-\alpha}{2}$ da distribuicao $t$ com grau de liberdade $n -2$.
   Com esses dados, podemos construir nosso programa de decisão que retornará caso $H_0$ seja rejeitado.
 
 ```{r}
@@ -396,7 +411,8 @@ if(t0_b1 < t1 || t0_b1>t2){
 Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de zero.
 
 
- 5. intervalos de confiança
+  
+ 5. Intervalos de Confiança
 
 ## ***Intervalos de Confiança***
 
@@ -582,7 +598,7 @@ Podemos ver que obtivemos coeficientes similares em nosso modelo.
 ```{r}
 anova(fit)
 ```
-Podemos notar que todos os resultados são similares ao já obtidos.
+Podemos notar que todos os resultados são similares aos já obtidos.
 
 ***Normalidade dos resíduos***
 ```{r normalidadtestresd}
@@ -594,8 +610,5 @@ shapiro.test(resid(Anovamodel))
 
 A hipótese nula do Teste de Shapiro-Wilk é de que não há diferença entre a nossa distribuição dos dados e a distribuição normal. O valor-p maior do que 0.01 nos dá uma confiança estatística para afirmar que as distribuição dos nossos resíduos não difere da distribuição normal.
 
-<<<<<<< HEAD
-Dessa forma nossos dados satisfazem todas as premissas da ANOVA e portanto, o resultado da nossa ANOVA são válidos, confirmando nossa premissa de que os resíduos possuem distribuição normal.
-=======
-Dessa forma nossos dados satisfazem todas as premissas da ANOVA e portanto, o resultado da nossa ANOVA são válidos.
->>>>>>> c5734a8498079e1da24ef9ce5195c70e77b5478d
+
+Dessa forma, nossos dados satisfazem todas as premissas da ANOVA e, portanto, os resultados da nossa ANOVA são válidos, confirmando nossa premissa de que os resíduos possuem distribuição normal.

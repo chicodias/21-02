@@ -296,7 +296,7 @@ res <- y - y_pred
 Utilizando o comando *summary*, podemos observar as principais medidas descritivas da variável, o que nos auxilia para a análise da mesma.
 
 ```{r}
-summary(res)
+tibble(summary(res)) %>% kable(caption = "Principais medidas descritivas dos resíduos")
 ```
 
 Também podemos construir um histograma, assim como um gráfico quantil-quantil, que facilitará a visualização do comportamento dos resíduos.

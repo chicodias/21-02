@@ -24,7 +24,6 @@ library(DataExplorer)
 library(GGally)
 library(knitr)
 library(data.table)
-
 ```
 
 Com os pacotes carregados em nosso ambiente, lemos o arquivo `.csv` disponibilizado colocando-o na mesma pasta de nosso projeto. Vamos inspecionar o que foi carregado com auxílio do comando `head()`, que exibe as 5 primeiras observações.
@@ -41,15 +40,11 @@ Vamos separar nossa base em treino e teste, onde guardaremos 4 observações par
 ```{r}
 set.seed(42)
 smp <- sample(32, 4)
-
 treino <- dados[-smp,] %>% select(y, x1)
 teste <- dados[smp,] %>% select(y, x1)
-
 y <- treino$y
 x1 <- treino$x1
-
 n <- length(y)
-
 ```
 
 ## Parte **a)**:
@@ -62,62 +57,83 @@ summary(dados %>% select(y,x1)) %>% kable(caption = "Sumário das variáveis uti
 ```
 
   Com o comando **summary** verificamos as principais medidas descritivas para cada variável (feature) presente no nosso conjunto de dados. Temos 12 features e ajustaremos o modelo com base na feature x1.
+  
   **Dimensão dos dados**
-
-```{r dimdata}
-dim(dados)
+  
+```{r fig.cap= "Dimensão dos Dados"}
+dim(dados) %>% kable(caption = "Dimensão dos dados")
 ```
 ## Análise Exploratória Básica
 
-**Gráfico da Dispersão entre x1 (cilindrada do motor) e y (rendimento da gasolina)**
-
-```{r scatter}
+```{r fig.cap="Gráfico de dispersão para as variáveis X1 e Y"}
 ggplot(dados, aes(x=dados$x1, y = dados$y)) + geom_point() + #geom_smooth(method = "lm") +
   ggtitle("Cilíndradas Vs Rendimento") + xlab("cc/pol.c") + ylab("Rendimento (mi / L)") +
   theme_pubclean() +
   theme(plot.title = element_text(size = 20, hjust = .5))
 ```
-Perceba que existe uma clara relação linear entre as duas variáveis, representada pela linha azul. Conforme as cilindradas do motor aumentam, o rendimento tende a diminuir.
+A partir do gráfico de dispersão acima parece que existe uma relação linear entre as variáveis $X_1$ e $Y$. Vamos verificar tal relação a partir do coeficiente de Pearson $\rho$.
 
-```{r boxplot x1}
+**Teste de Correlação de Pearson entre as variáveis $X_1$ e $Y$**
+
+```{r fig.cap="Coeficiente de Pearson para as variáveis $X_1$ e $Y$"}
+cor.test(dados$x1, dados$y)
+```
+
+O teste de correlação de Person resultou em um $\rho = -~0.87$ o que indica uma forte correlação entre as variáveis. Nosso objetivo é estimar a influência de $X_1$ sobre $Y$, ou seja, como $Y$ varia em relação às variações em $X_1$.
+
+```{r fig.cap="Boxplot do regressor $X_1$"}
 dados %>%
   ggplot(aes(x = "", y = dados$x1)) +
     geom_boxplot(color = "blue") +
     stat_summary(fun = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
     geom_jitter(color="black", size=1, alpha=.9) +
     theme(plot.title = element_text(size = 15, hjust = .5)) +
-
     ggtitle("Boxplot da Variável (X1)") +
     xlab("") + ylab("Cilíndradas por Polegada Cúbica")
-
-
 ```
-Podemos perceber a partir do boxplot acima e da função summary que 50% dos carros tem menos de 318 cilíndradas.
+Podemos perceber a partir do boxplot acima e da função summary que $50\%$ dos carros tem menos de $318$ cilíndradas.
+
+```{r fig.cap= "Boxplot da variável resposta $Y$"}
+dados %>%
+  ggplot(aes(x = "", y = dados$y)) +
+    geom_boxplot(color = "blue") +
+    stat_summary(fun = mean, geom = "point", shape = 20, size = 5, color = "red", fill = "red") +
+    geom_jitter(color="black", size=1, alpha=.9) +
+    theme(plot.title = element_text(size = 15, hjust = .5)) +
+    ggtitle("Boxplot da Variável (Y)") +
+    xlab("") + ylab("Rendimento por motor em milhas por litro")
+```
+Pelo boxplot acima percebemos que os dados da variável y parecem seguir uma distribuição Normal - o que será confirmado com a análise de um histograma. Ainda, destaca-se quatro outliers, cujo rendimento é superior a $30~mi/L$. 
 
 ```{r fig.cap = "Histograma do Rendimento do Motor"}
 dados %>%
   ggplot(aes( x=dados$y)) +
-    geom_histogram(color = "black", fill = "lightblue", bins = 24) + # xlab("Rendimento") + ylab("Frequência") +
-    geom_vline(aes(xintercept=mean(dados$y)), color = "red", linetype = "solid") +
-    geom_vline(aes(xintercept=median(dados$y)), color = "black", linetype = "solid") +
+    geom_histogram(aes(y=..density..), color = "black", fill = "lightblue", bins = 13) + # xlab("Rendimento") + ylab("Frequência") +
+    geom_vline(aes(xintercept=mean(dados$y), color = "Média"), linetype = "solid") +
+    geom_vline(aes(xintercept=median(dados$y), color = "Mediana"), linetype = "solid") +
     labs(title = "Histograma da variável Y ( em milhas por L)") +
-    scale_x_continuous("Rendimento", limits = c(10,37,1), breaks = c(10:37)) +
+    scale_x_continuous("Rendimento", breaks = seq(10,38,2)) +
+    scale_y_continuous("Frequência Relativa") +
+    scale_color_manual(name=" ", values = c("red", "black")) +
     ylab("Frequência") +
     theme(plot.title = element_text(hjust = 0.5)) +
-    theme_classic()
+    theme_pubclean()
 ```
-O histograma acima representa a distribuição da variável y. As linhas verticais vermelha e preta representam, respectivamente, a média e a mediana.
+O histograma acima representa a distribuição da variável y. Fica claro, portanto, que os dados da variável resposta se assemelham a uma distribuição normal, não fossem os outliers.
 
 
 ```{r}
-dados %>% filter(dados$y > 29.4)
+dados %>%
+  select(y,x1) %>%
+  filter(y>30) %>%
+  kable(caption = "Tabela com os 4 outliers presentes nos valores de Y")
 ```
-A partir do histogrma e da tabela acima, concluimos que os 4 outliers referem-se aos valores: 30.4, 31.9, 34.7, e 36.5
+A partir do histograma e da tabela acima, concluimos que os 4 outliers referem-se aos valores: $30.4$, $31.9$, $34.7$, e $36.5$.
 
 
-Vamos verificar a distribuição da variável x1
+Vamos verificar a distribuição da variável $X_1$
 
-```{r histx1}
+```{r fig.cap= "Histograma das cilíndradas por polegada cúbica"}
 dados %>%
   ggplot(aes( x=dados$x1)) +
     geom_histogram(aes(y=..density..), color = "black", fill = "lightgreen", bins = 15) + # xlab("Rendimento") + ylab("Frequência") +
@@ -132,23 +148,37 @@ dados %>%
     theme(plot.title = element_text(hjust = 0.5)) +
     theme_pubclean()
 ```
+O histograma da variável $X_1$ não apresenta uma distribuição bem definida, entretanto, destaca-se maior frequência para os valores em torno de $350$ cilíndradas.
+
+**Moda dos valores de $X_1$**
+```{r fig.cap="Valor da moda de $X_1$"}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+   
+mode_x1 = getmode(dados$x1)
+print(mode_x1)
+```
+De fato, a moda para os valores de $X_1$ é $350$.
+
 
 ## Parte **b)**:
 
 Consultar e descrever brevemente os conceitos Data splitting, cross validation, overfitting, underfitting, missing data, encoding data.
 
-1. Data Splitting: Data Splitting ou também “divisão de dados” é uma abordagem para proteger dados confidenciais de acesso não autorizado, criptografando os dados e armazenando diferentes partes de um arquivo em servidores diferentes. Quando os dados divididos são acessados, as partes são recuperadas, combinadas e descriptografadas.
+1. **Data Splitting**: Data Splitting ou também “divisão de dados” é uma abordagem para proteger dados confidenciais de acesso não autorizado, criptografando os dados e armazenando diferentes partes de um arquivo em servidores diferentes. Quando os dados divididos são acessados, as partes são recuperadas, combinadas e descriptografadas.
 
-2. Cross Validation: Cross Validation ou também “validação cruzada” é uma técnica muito utilizada para avaliar o desempenho de modelos de aprendizado de máquina. Consiste, basicamente, em particionar os dados em conjuntos, onde um conjunto é utilizado para treino e outro para teste e avaliação do desempenho do modelo. A utilização correta da técnica tem altas chances de detectar se um modelo está sobreajustado aos seus dados de treinamento, ou seja, sofrendo overfitting. Vale ressaltar que existem vários métodos de aplicação da validação cruzada.
+2. **Cross Validation**: Cross Validation ou também “validação cruzada” é uma técnica muito utilizada para avaliar o desempenho de modelos de aprendizado de máquina. Consiste, basicamente, em particionar os dados em conjuntos, onde um conjunto é utilizado para treino e outro para teste e avaliação do desempenho do modelo. A utilização correta da técnica tem altas chances de detectar se um modelo está sobreajustado aos seus dados de treinamento, ou seja, sofrendo overfitting. Vale ressaltar que existem vários métodos de aplicação da validação cruzada.
 
-3. Overfitting: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização no conjunto de teste. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
+3. **Overfitting**: Overfitting ou também "Sobreajuste" consiste na situação em que o modelo se ajusta bem demais ao conjunto de treinamento. Ou seja, nos dados de treinamento, em geral, a acurácia do modelo é muito alta (e, quando há 100% de acurácia dizemos que o modelo "memorizou" os dados). Isso ocorre pois além de aprender os detalhes dos dados o modelo também aprende os ruídos, o que prejudica sua capacidade de generalização no conjunto de teste. Em geral, quanto maior a complexidade do modelo mais propenso ao Overfitting ele se torna.
 
-4. Underfitting: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
+4. **Underfitting**: Já o Underfitting, por outro lado, refere-se ao problema em que o modelo não é capaz de modelar o conjunto de treinamento e nem generalizar para dados nunca vistos. Em geral, a solução reside no aumento da complexidade do modelo ou a troca do algoritmo.
 
-5. Missing data: Missing data, muitas vezes referido como missing values (com tradução literal: valores que faltam), é um conceito utilizado para quando alguma(s) observação(ões) no conjunto de dados está(ão) vazia(s), causando ambuiguidade e falta de precisão para a análise do mesmo.
+5. **Missing data**: Missing data, muitas vezes referido como missing values (com tradução literal: valores que faltam), é um conceito utilizado para quando alguma(s) observação(ões) no conjunto de dados está(ão) vazia(s), causando ambuiguidade e falta de precisão para a análise do mesmo.
 Na análise multivariada, temos uma relação proporcional da quantidade de variáveis a serem relacionadas com a falta de rigor causada pelos missing values.
 
-6. Encoding data: Encoding data (de tradução literal: dados codificados) é o nome dado para o processo de converter dados para um formato específico, assegurando sua transmissão e otimizando o modelo. Seu processo inverso - ou seja, a decodificação - refere-se a extrair as informações da forma convertida.
+6. **Encoding data**: Encoding data (de tradução literal: dados codificados) é o nome dado para o processo de converter dados para um formato específico, assegurando sua transmissão e otimizando o modelo. Seu processo inverso - ou seja, a decodificação - refere-se a extrair as informações da forma convertida.
 
 ## Parte **c)**:
 
@@ -212,24 +242,18 @@ Tal estimador é obtido através da soma do quadrado dos resíduos, definido pel
 ```{r}
 # Soma do quadrado da regressão:
 SQreg <- b1_est*Sxy
-
 # Soma do quadrado total:
 SQtotal <- sum((y-mean(y))^2)
-
 # Diferença entre a soma do quadrado da regressão e a soma do quadrado total:
 SQres <- SQtotal - SQreg
-
 # Soma do quadrado dos resíduos:
 QMres <- SQres/(n-2)
-
 ```
 
 ```{r}
-
 dados %>% ggplot(aes(x= x1, y= y)) + geom_point() +
   geom_smooth(method='lm', formula= y~x) +
   theme_pubclean()
-
 ```
 
 ```{r}
@@ -269,8 +293,6 @@ Também podemos construir um histograma, que facilitará a visualização do com
 n_res <- length(res)
 normalDist<- rnorm(length(res), mean =  mean(res), sd= sd(res))
 dat<- data.frame(error = res, norm = normalDist)
-
-
 ggplot(tibble(res), aes(x = res)) +
   ylab("Frequência") +
   geom_histogram(aes(y=..density..), color = "black", fill = "#FF69B4", bins=12, position="identity")+
@@ -279,8 +301,6 @@ ggplot(tibble(res), aes(x = res)) +
   scale_x_continuous("Resíduos", limits = c(-8,8,1), breaks = c(-8:8))+
   theme(plot.title = element_text(hjust = 0.5)) +
   theme_classic()
-
-
 ```
 
 ```{r qqplotresidu}
@@ -298,16 +318,12 @@ Para realizarmos nossos testes de hipóteses, é necessário o estimador do par�
 ```{r}
 # Soma do quadrado da regressão:
 SQreg <- b1_est*Sxy
-
 # Soma do quadrado total:
 SQtotal <- sum((y-mean(y))^2)
-
 # Diferença entre a soma do quadrado da regressão e a soma do quadrado total:
 SQres <- SQtotal - SQreg
-
 # Soma do quadrado dos resíduos:
 QMres <- SQres/(n-2)
-
 ```
 
 A partir disso, podemos prosseguir com nossos testes de hipóteses para $\beta_1$ e $\beta_0$, com decisão de rejeitar ou não $H_0$, uma vez que este representa o parâmetro se igualar a 0 estatisticamente caso não seja rejeitado, descrevendo a significância da contribuição do mesmo. 
@@ -329,7 +345,6 @@ t0_b1 <- b1_est/dp_b1
 alpha <- 0.05
 t1 <- qt(alpha/2,n-2)
 t2 <- qt(1-alpha/2,n-2)
-
 if(t0_b1 < t1 || t0_b1>t2){
   cat("Rejeita-se H0")
 }
@@ -340,7 +355,6 @@ Para $\alpha= 1\%$:
 alpha <- 0.01
 t1 <- qt(alpha/2,n-2)
 t2 <- qt(1-alpha/2,n-2)
-
 if(t0_b1 < t1 || t0_b1>t2){
   cat("Rejeita-se H0")
 }
@@ -355,7 +369,6 @@ Realizando o teste, temos que H0 é rejeitado, logo, $\beta_1$ é diferente de z
 
 ```{r}
 dp_b0 <- (sqrt( QMres *( (1/n) + (mean(x1))^2/Sxx )))
-
 t0_b0 <- b0_est/dp_b0
 ```
 
@@ -365,11 +378,9 @@ t0_b0 <- b0_est/dp_b0
 alpha <- 0.05
 t1 <- qt(alpha/2,n-2)
 t2 <- qt(1-alpha/2,n-2)
-
 if(t0_b1 < t1 || t0_b1>t2){
   cat("Rejeita-se H0")
 }
-
 ```
 Para $\alpha= 0.01$
 
@@ -377,11 +388,9 @@ Para $\alpha= 0.01$
 alpha <- 0.01
 t1 <- qt(alpha/2,n-2)
 t2 <- qt(1-alpha/2,n-2)
-
 if(t0_b1 < t1 || t0_b1>t2){
   cat("Rejeita-se H0")
 }
-
 ```
 
 Realizando o teste, temos que H0 é rejeitado, logo, $\beta_0$ é diferente de zero.
@@ -459,9 +468,7 @@ $\sigma^2/Sxx$.
 Nesse exemplo usaremos $X_0$ como sendo o proprio $\overline{X}$.
 ```{r x0exbarra}
 X0 <- mean(x1) # poderia ser outro valor
-
 v_medio <- (mean(y)+b1_est* (X0-mean(x1)) )
-
 auxiliar <- sqrt(QMres*(1/n + (X0 - mean(x1)) /Sxx ))
 ```
 
@@ -469,7 +476,6 @@ auxiliar <- sqrt(QMres*(1/n + (X0 - mean(x1)) /Sxx ))
 ```{r icmedio}
 v_medio_min <- v_medio - t2*auxiliar
 v_medio_max <- v_medio - t1*auxiliar
-
 IC_v_medio <- cbind(v_medio_min, v_medio_max)
 IC_v_medio
 ```

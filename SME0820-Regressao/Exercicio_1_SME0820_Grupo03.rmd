@@ -1,0 +1,22 @@
+---
+title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Exercício I"
+author:
+  - Brenda da Silva Muniz 11811603
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351
+  - Mônica Amaral Novelli 11810453
+date: "Setembro 2021"
+output: pdf_document
+---
+
+# Exercício 2
+
+Queremos mostrar que os estimadores de $\hat{beta_0}$ e $\hat{beta_1}$ são não enviesados.
+
+$$E(\hat{\beta_1}) = E \left(\frac{\sum_{i=1}^n{(x_i - \bar{x})}\right) $$
+
+
+# Exercício 3
+
+# Exercício 4
+

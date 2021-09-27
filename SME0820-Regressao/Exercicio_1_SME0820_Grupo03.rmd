@@ -51,5 +51,34 @@ Portanto, $\hat{\beta_1}$ e $\hat{\beta_0}$ são não enviesados.
 
 # Exercício 3
 
+Queremos obter o $EEMQ$ para o modelo linear simples sem intercepto $\beta_0$.
+
+Nesse caso, temos a equação:
+
+$$ y = \beta_1x + \epsilon $$
+Definindo um estimador $\hat{\beta_1}$ para $\beta_1$:
+
+
+Queremos que $\sum_{i=1}^n\epsilon_i^2 = 0$ Dado que $\epsilon_i = y_i - \beta_1x_i$
+
+Teremos que:
+
+$$ S(\hat\beta_1) = \sum_{i=1}^n(y_i - \hat\beta_1x_i)^2 = \sum_{i=1}^ny_i^2 - 2\hat\beta_1\sum_{i=1}^ny_ix_i + \hat\beta_1^2\sum_{i=1}^nx_i^2$$
+
+Minimizando o valor de $S(\beta_1)$ e igualando a zero:
+
+$$\frac{\partial S(\hat\beta_1)}{\partial \hat\beta_1} = 0 \Rightarrow\frac{\partial S(\hat\beta_1)}{\partial \hat\beta_1} = -2\sum_{i=1}^ny_ix_i + 2\hat\beta_1\sum_{i=1}^nx_i^2 = 0$$
+Logo:
+
+$$\hat\beta_1 = \sum_{i=1}^n\left(\frac{y_ix_i}{x_i^2} \right)$$
+Para mostrar que $\hat\beta_1$ é não-viesado, precisamos mostrar que $E(\hat\beta_1) = \beta_1$.
+
+Segue que:
+
+$$E(\hat\beta_1) = \frac{1}{\sum_{i=1}^nx_i^2} \sum_{i=1}^nx_i E(y_i) = \frac{1}{\sum_{i=1}^nx_i^2} \sum_{i=1}^nx_i (\beta_1x_i) = \frac{\sum_{i=1}^n x_i^2}{\sum_{i=1}^n x_i^2} \beta_1 = \beta_1 $$
+
+$$ \therefore~ E(\hat\beta_1) = \beta_1$$
+Desse modo, o $EMMQ$ $\hat\beta_1$ para o modelo linear simples sem o intercepto é não-viesado.
+
 # Exercício 4
 

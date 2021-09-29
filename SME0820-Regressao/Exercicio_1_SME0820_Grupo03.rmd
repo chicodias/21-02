@@ -93,7 +93,3 @@ Temos que $SQ_{total} = \sum_{i=1}^n Y_i^2$
 Logo, até agora, nossa equação é:
 
 $SQ_{res} = SQ_{total} - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2 $
-
-ou
-
-$SQ_{total} = SQ_{res} - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2 $

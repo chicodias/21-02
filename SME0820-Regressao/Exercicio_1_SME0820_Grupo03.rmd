@@ -66,15 +66,13 @@ Teremos que:
 
 $$S(\hat\beta_1) = \sum_{i=1}^n(y_i - \hat\beta_1x_i)^2 = \sum_{i=1}^ny_i^2 - 2\hat\beta_1\sum_{i=1}^ny_ix_i + \hat\beta_1^2\sum_{i=1}^nx_i^2$$
 
-Minimizando o valor de $S(\beta_1)$ e igualando a zero:
+Minimizando o valor de $S(\hat\beta_1)$ e igualando a zero:
 
 $$\frac{\partial S(\hat\beta_1)}{\partial \hat\beta_1} = 0 \Rightarrow\frac{\partial S(\hat\beta_1)}{\partial \hat\beta_1} = -2\sum_{i=1}^ny_ix_i + 2\hat\beta_1\sum_{i=1}^nx_i^2 = 0$$
 
-Este ponto é, de fato, o ponto de mínimo global, pois:
+Este ponto é, de fato, o de mínimo global, pois:
 
-$$
-\frac{\partial^2 S(\hat\beta_1)}{\partial \hat\beta_1^2} = 2\sum_{i=1}^nx_i^2  >0
-$$
+$$\frac{\partial^2 S(\hat\beta_1)}{\partial \hat\beta_1^2} = 2\sum_{i=1}^nx_i^2  > 0$$
 
 Logo:
 

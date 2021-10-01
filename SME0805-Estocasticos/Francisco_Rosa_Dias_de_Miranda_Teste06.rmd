@@ -1,0 +1,35 @@
+---
+title: "SME0805 - Processos Estocásticos - Teste 6"
+author: "Francisco Rosa Dias de Miranda - 4402962"
+date: "outubro 2021"
+output: pdf_document
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercício 1 
+
+- (a)
+
+Como $p = 0.55$, temos que
+
+$$P_i = (X_i = N | X_0 = i)  = \frac{1 - (0.45/0.55)^i}{1 - (0.45/0.55)^N}$$
+
+Pela falta de memória de um passeio aleatório, sair do estado inicial $i = 10$ e chegar em $i = 15$ é equivalente a:
+
+$$P(X_i = 15 | X_0 = 10) = P (X_i = 10 | X_0 = 5) = P_{10} = \frac{1 - (0.45/0.55)^{5}}{1 - (0.45/0.55)^{10}} = 0.732$$
+**Resposta:** A probabilidade de João atingir R$ 15,00 antes de R$ 5,00 é de $73,1\%$.
+
+- (b)
+
+Para $p > 0.5$ temos que:
+
+$$\lim_{N \to \infty} P_{i} = 1 - (0.45/0.55)^{i}$$
+
+Saindo a partir do estado $i = 10$, a probabilidade de João ficar infinitamente rico é:
+
+$$\lim_{N \to \infty} P_{10} = 1 - (0.45/0.55)^{10} = 1 - 0.82^{10} = 0.862$$
+
+**Resposta:** A probabilidade de João ficar infinitamente rico é de $86,2\%$

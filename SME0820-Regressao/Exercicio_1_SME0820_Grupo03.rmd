@@ -51,23 +51,31 @@ Portanto, $\hat{\beta_1}$ e $\hat{\beta_0}$ são não enviesados.
 
 # Exercício 3
 
-Queremos obter o $EEMQ$ para o modelo linear simples sem intercepto $\beta_0$.
+Queremos obter o **EMMQ** para o modelo linear simples sem intercepto $\beta_0$.
 
 Nesse caso, temos a equação:
 
-$$ y_i = \beta_1x_i + \epsilon $$
+$$ y_i = \beta_1x_i + \epsilon_i, \ \ i = 1, 2, ..., n.$$
+
 Definindo um estimador $\hat{\beta_1}$ para $\beta_1$:
 
 
-Queremos que $\sum_{i=1}^n\epsilon_i^2 = 0$ Dado que $\epsilon_i = y_i - \beta_1x_i$
+Queremos que $\sum_{i=1}^n\epsilon_i^2 = 0$, dado que $\epsilon_i = y_i - \beta_1x_i$
 
 Teremos que:
 
-$$ S(\hat\beta_1) = \sum_{i=1}^n(y_i - \hat\beta_1x_i)^2 = \sum_{i=1}^ny_i^2 - 2\hat\beta_1\sum_{i=1}^ny_ix_i + \hat\beta_1^2\sum_{i=1}^nx_i^2$$
+$$S(\hat\beta_1) = \sum_{i=1}^n(y_i - \hat\beta_1x_i)^2 = \sum_{i=1}^ny_i^2 - 2\hat\beta_1\sum_{i=1}^ny_ix_i + \hat\beta_1^2\sum_{i=1}^nx_i^2$$
 
 Minimizando o valor de $S(\beta_1)$ e igualando a zero:
 
 $$\frac{\partial S(\hat\beta_1)}{\partial \hat\beta_1} = 0 \Rightarrow\frac{\partial S(\hat\beta_1)}{\partial \hat\beta_1} = -2\sum_{i=1}^ny_ix_i + 2\hat\beta_1\sum_{i=1}^nx_i^2 = 0$$
+
+Este ponto é, de fato, o ponto de mínimo global, pois:
+
+$$
+\frac{\partial^2 S(\hat\beta_1)}{\partial \hat\beta_1^2} = 2\sum_{i=1}^nx_i^2  >0
+$$
+
 Logo:
 
 $$\hat\beta_1 = \sum_{i=1}^n\left(\frac{y_ix_i}{x_i^2} \right)$$
@@ -78,41 +86,40 @@ Segue que:
 $$E(\hat\beta_1) = \frac{1}{\sum_{i=1}^nx_i^2} \sum_{i=1}^nx_i E(y_i) = \frac{1}{\sum_{i=1}^nx_i^2} \sum_{i=1}^nx_i (\beta_1x_i) = \frac{\sum_{i=1}^n x_i^2}{\sum_{i=1}^n x_i^2} \beta_1 = \beta_1 $$
 
 $$ \therefore~ E(\hat\beta_1) = \beta_1$$
-Por fim, podemos confirmar que este ponto é, de fato, o ponto de mínimo global, se conseguirmos mostrar que:
 
-$$
-\frac{\partial^2 S(\hat\beta_1)}{\partial \hat\beta_1^2} >0
-$$
-Para isso, segue que:
-$$
-\frac{\partial~ (-2\sum_{i=1}^ny_ix_i + 2\hat\beta_1\sum_{i=1}^nx_i^2)}{\partial(\hat\beta_1)} = 2\sum_{i=1}^nx_i^2>0
-$$
-Desse modo, o $EMMQ$ $\hat\beta_1$ para o modelo linear simples sem o intercepto é não-viesado.
+Desse modo, o **EMMQ** de $\hat\beta_1$ para o modelo linear simples sem o intercepto é não-viesado.
+
+
+***
+
 
 # Exercício 4
 
-Queremos mostrar que $SQ_{total} = \sum_{i=1}^n Y_i^2$ no modelo linear simples sem o intercepto, pode ser escrito como $SQ_{total} = \beta_1 \sum_{i=1}^n X_i Y_i + SQ_{res}$.
+Queremos mostrar que $SQ_{total} = \sum_{i=1}^n Y_i^2$ no modelo linear simples sem o intercepto pode ser escrito como $SQ_{total} = \beta_1 \sum_{i=1}^n X_i Y_i + SQ_{res}$.
 
-Como o modelo não tem intercepto, temos que $\hat Y_i = \hat\beta_1 X_i$
+Temos que $\hat Y_i = \hat\beta_1 X_i$, para $i = 1, 2, ..., n$. Assim:
 
-<<<<<<< HEAD
-$$SQ_{res} = \sum_{i=1}^n (Y_i - \hat Y_i)^2 = \sum_{i=1}^n (Y_i^2 - 2 Y_i \hat Y_i + \hat Y_i^2) = \sum_{i=1}^n Y_i^2 - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2 $$
-=======
-$$SQ_{res} = \sum_{i=1}^n (Y_i - \hat Y_i)^2 = \sum_{i=1}^n (Y_i^2 - 2 Y_i \hat Y_i + \hat Y_i^2) = \sum_{i=1}^n Y_i^2 - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2$$
->>>>>>> 5c406cdc8c939c92740cecebe4953c48bc7fe2ad
 
-Temos que $SQ_{total} = \sum_{i=1}^n Y_i^2$
+$$SQ_{res} = \sum_{i=1}^n (Y_i - \hat Y_i)^2 = \sum_{i=1}^n (Y_i^2 - 2 Y_i \hat Y_i + \hat Y_i^2) = \\
+\sum_{i=1}^n Y_i^2 - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2$$
 
-Logo, até agora, nossa equação é:
 
-<<<<<<< HEAD
-$$SQ_{res} = SQ_{total} - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2= SQ_{total} - 2 \sum_{i=1}^n \hat\beta_1 X_iY_i + \sum_{i=1}^n \hat\beta_1^2 X_i^2= SQ_{total} - 2 \hat\beta_1 \sum_{i=1}^n  X_iY_i + \hat\beta_1^2 \sum_{i=1}^n X_i^2 $$
+Temos que $SQ_{total} = \sum_{i=1}^n Y_i^2$. Assim, nossa equação fica:
 
-Isolando $SQ_{total}$ temos que:
 
-$$SQ_{total} = SQ_{res} + 2 \hat\beta_1 \sum_{i=1}^n  X_iY_i - \hat\beta_1^2 \sum_{i=1}^n X_i^2 = SQ_{res} +\hat\beta_1 (2\sum_{i=1}^n  X_iY_i - \hat\beta_1^2 \sum_{i=1}^n X_i^2) = SQ_{res} +\hat\beta_1 (2\hat\beta_1\sum_{i=1}^n  X_i^2 - \hat\beta_1 \sum_{i=1}^n X_i^2) = SQ_{res} +\hat\beta_1 (\hat\beta_1\sum_{i=1}^n  X_i^2) = SQ_{res} +\hat\beta_1\sum_{i=1}^n  X_iY_i $$
+$$\begin{gathered}
+SQ_{res} = SQ_{total} - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2 \\
+= SQ_{total} - 2 \sum_{i=1}^n \hat\beta_1 X_iY_i + \sum_{i=1}^n \hat\beta_1^2 X_i^2 \\
+= SQ_{total} - 2 \hat\beta_1 \sum_{i=1}^n  X_iY_i + \hat\beta_1^2 \sum_{i=1}^n X_i^2
+\end{gathered}$$
 
-Assim sendo, está provado.
-=======
-$$SQ_{res} = SQ_{total} - 2 \sum_{i=1}^n Y_i(\hat\beta_1 X_i) + \sum_{i=1}^n (\hat\beta_1 X_i)^2$$
->>>>>>> 5c406cdc8c939c92740cecebe4953c48bc7fe2ad
+Isolando $SQ_{total}$, temos que:
+
+$$\begin{gathered}
+SQ_{total} =
+SQ_{res} + 2 \hat\beta_1 \sum_{i=1}^n  X_iY_i - \hat\beta_1^2 \sum_{i=1}^n X_i^2 \\ 
+= SQ_{res} +\hat\beta_1 (2\sum_{i=1}^n  X_iY_i - \hat\beta_1 \sum_{i=1}^n X_i^2) \\
+= SQ_{res} +\hat\beta_1 (2\hat\beta_1\sum_{i=1}^n  X_i^2 - \hat\beta_1 \sum_{i=1}^n X_i^2)\\
+= SQ_{res} +\hat\beta_1 (\hat\beta_1\sum_{i=1}^n  X_i^2) \\
+= SQ_{res} +\hat\beta_1\sum_{i=1}^n  X_i Y_i.
+\end{gathered}$$

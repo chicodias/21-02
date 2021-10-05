@@ -44,7 +44,7 @@ $$\mathbb{P} =  `r write_matex2(P)`$$
 
 Escolhida a condição inicial $X_0 = [0,0102\ \  0,1009\ \ 0,8889]$, vamos calcular $X_t$ para $t = 1,...,10$ utilizando a fórmula de recorrência $X_{t} = X_{t-1} \cdot \mathbb{P}$.
 
-É possivel ver na tabela abaixo que as distribuições se estabilizam em duas casas decimais para o $X_0$ escolhido para um burn-in a partir de $t = 6$.
+É possivel ver na tabela abaixo que as distribuições se estabilizam em aproximadamente duas casas decimais para o $X_0$ escolhido para um burn-in a partir de $t = 6$.
 
 ```{r}
 p0 <- c(0.0102, 0.1009, 0.8889)
@@ -65,7 +65,7 @@ kable(round(p_t, 3),
 
 **Nota:** Há uma outra forma de calcular $X_t$ que não requer que se conheça $X_{t-1}$, elevando a matriz $P$ a potencia de $N$, ou simplesmente:
 
-$$X_t = X_0 \cdot\mathbb{P}^N $$
+$$X_N = X_0 \cdot\mathbb{P}^N $$
 
 **Exemplo: ** Calculando $X_{10}$:
 ```{r}

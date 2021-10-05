@@ -199,28 +199,50 @@ Seja $Y_i$ uma amostra aleatória simples de uma distribuição $Y \sim N(0,\sig
 
 Primeiramente, vamos encontrar a função de verossimilhança de $\sigma^2$.
 
+
+$$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{2\pi}\frac1\sigma e^{-1/2 (y_i/\sigma)^2} \propto\frac1{\sigma^n} e^{ -(\sum_{i=1}^n y_i/\sigma)^2 } \propto \sigma^{-n} e^{-2\sigma^{-2}\sum_{i=1}^n y_i^2}$$
+
+
 $$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{2\pi}\frac1\sigma e^{-y_i^2/2\sigma^2} \propto\frac1{\sigma^n} e^{ -2\sigma^{-2}\sum_{i=1}^n y_i^2 } \propto \sigma^{-n} e^{-2\sigma^{-2}\sum_{i=1}^n y_i^2}$$
-### Priori não informativa
-
-A distribuição a *priori* de Jeffreys é dada por $\pi(\theta) \propto \sqrt{J(\theta)}$.
-
-
 
 ### Prioris Conjulgadas
 
+O suporte de nosso parâmetro $\sigma >0$ permite-nos adotar três distribuições de probabilidade estudadas durante o curso:
 
-Antes de prosseguir, vamos relembrar alguns resultados:
+Note que, desprezadas as constantes não informativas, as três distribuições são da forma $x$ elevado a uma potência vezes a exponencial de $x$. Dessa forma, as três distribuições servem como conjulgada natural da Normal, em nosso caso. Fazendo $x = \sigma$, temos que:
+
+  1.**Gama:** 
 
 Se $X_1 \sim \text{Gama}(\alpha,\beta)$ então
-$$ f_{X_1}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta x}$$
+$$ f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta x}$$
 
-Se $X_2 \sim \text{Gama-Inv}(\alpha,\beta)$ então
+$$\sigma^{(\alpha - 1)} e^{-\beta \sigma} \Rightarrow \pi(\sigma) \sim \text{Gama}(\alpha_0,\beta_0)$$
+  2.**Gama-Inversa:** 
+
+Se $X \sim \text{Gama-Inv}(\alpha,\beta)$ então
 $$ f_{X_2}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta / x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta/x}$$
-
-Se $X_3 \sim \chi^2 (\nu)$ então
+  3.**Qui-Quadrado:** 
+  
+Se $X\sim \chi^2 (\nu)$ então
 $$ f_{X_3}(x | \nu) = \frac{x^{(\nu/2) - 1} e^{- x/2}}{2^{\nu/2}\Gamma(\nu/2)} \propto x^{(\nu/2) - 1} e^{- x/2}$$
 
-Note que, desprezadas as constantes não informativas, as três distribuições são da forma $x$ elevado a uma potência vezes a exponencial de $x$ vezes algo. Dessa forma, as três distribuições servem como conjulgada natural da Normal, em nosso caso. Para explicitar os parâmetros de cada uma delas, vamos substituir o $x$ por $\sigma$ e ver o que acontece:
+$$\sigma^{(\nu/2) - 1} e^{- \sigma/2} \Rightarrow \pi(\sigma) \sim \chi^2(\alpha_0,\beta_0)$$
 
+
+
+### Priori não informativa
+
+
+$$\log(\mathcal{L}(y|\sigma^2)) \propto -n \log(\sigma) -2\sigma^{-2}\sum_{i=1}^n y_i^2 $$
+
+A distribuição a *priori* de Jeffreys é dada por $\pi(\sigma^2) \propto \sqrt{J(\sigma^2)}$.
+
+$$\begin{aligned}
+J(\sigma^2) \propto E\left(- \frac{\partial^2}{\partial \theta^2}\log(L(\theta))\right) 
+= E\left(- \frac{\partial^2}{\partial \theta^2}\left(-n \log(\sigma) -2\sigma^{-2}\sum_{i=1}^n y_i^2\right)\right)\\
+= E\left(- \frac{\partial}{\partial \theta}\left(\frac{-n}{\sigma} + 4\sigma^{-3}\sum_{i=1}^n y_i^2\right)\right) 
+= E\left(- \frac{n}{\sigma^2} + 12\sigma^{-4}\sum_{i=1}^n y_i^2\right) \\
+= - \frac{n}{\sigma^2} + 12\sigma^{-4}\sum_{i=1}^n E(y_i)^2 = - \frac{n}{\sigma^2} \propto {\sigma^{-2}}
+\end{aligned}$$
 
 

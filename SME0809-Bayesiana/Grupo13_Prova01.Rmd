@@ -250,7 +250,8 @@ $$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{\sqrt{2\pi\sigma}} e^{-(y_i-\th
   
 ### Priori não informativa
   
-  
+Definimos a log-verossimilhança em nosso caso como sendo:
+
 $$\log(\mathcal{L}(y|\sigma^2)) \propto -\frac n2 \log(\sigma^{-2}) -\sigma^{-2}\sum_{i=1}^n (y_i-\theta)^2$$
   
 A distribuição a *priori* de Jeffreys é dada por $\pi(\sigma^2) \propto \sqrt{J(\sigma^2)}$.
@@ -322,9 +323,9 @@ library(dados)
 sample <- dados::pinguins %>%
   filter(especie == "Pinguim-de-barbicha") %>%
   select(comprimento_bico) %>% 
-  drop_na() %>% sample_n(30) %>% pull()
+  drop_na() %>% pull()
 
-sample <- rnorm(10, 5, 4)
+#sample <- rnorm(10, 5, 4)
 
 
 
@@ -345,12 +346,12 @@ SigmaNorm <- function(samp, theta = 5, alpha = 0.001, beta = 0.001){
   a.post <- alpha + n/2
   b.post <- beta +  s
   
-  sigma2 <- seq(0.02, 50, 0.02)
+  sigma2 <- seq(0.02, 40, 0.02)
   
   tibble(sigma2 = sigma2,
-         priori = dinvgamma(sigma2,alpha,beta),
-         post = dinvgamma(sigma2,a.post,b.post),
-         ver = l_sigma2(sigma2),
+         priori = normalize( dinvgamma(sigma2,alpha,beta)),
+         post = normalize(dinvgamma(sigma2,a.post,b.post)),
+         ver = normalize(l_sigma2(sigma2)),
          alpha1 = a.post,
          beta1 = b.post)
 }
@@ -359,10 +360,28 @@ SigmaNorm <- function(samp, theta = 5, alpha = 0.001, beta = 0.001){
 
 ```{r}
 
-SigmaNorm(sample)[-c(5,6)] %>% 
+SigmaNorm(sample, mean(sample))[-c(5,6)] %>% 
   pivot_longer(cols = !"sigma2") %>% 
   ggplot(aes(x = sigma2)) +
   geom_line(aes(y = value)) +
   facet_wrap(~name, scales = "free_y")
 ```
+
+```{r}
+
+SigmaNorm(sample, 48.83382 ,alpha = 34, beta = 187)[-c(5,6)] %>% 
+  pivot_longer(cols = !"sigma2") %>% 
+  ggplot(aes(x = sigma2)) +
+  geom_line(aes(y = value)) +
+  facet_wrap(~name, scales = "free_y")
+```
+```{r}
+
+SigmaNorm(sample, mean(sample))[-c(5,6)] %>% 
+  pivot_longer(cols = !"sigma2") %>% 
+  ggplot(aes(x = log(sigma2))) +
+  geom_line(aes(y = log(value))) +
+  facet_wrap(~name, scales = "free_y")
+```
+
 

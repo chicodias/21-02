@@ -45,7 +45,7 @@ $$
 Logo, para uma dsitribuição Normal com variância conhecida, a média aposteriori $\mu_1$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y$, sendo os pesos proporcionais às precisões de cada um.
 
 
-Desse modo, a distribuiç~so s posteriori da média $\theta$ depende apenas da média amostral $\overline{y} = \frac{1}{n}\sum_{i=1}^ny_i$, sendo assim, $\overline{y}$ é uma estatística suficiente.
+Desse modo, a distribuição a posteriori da média $\theta$ depende apenas da média amostral $\overline{y} = \frac{1}{n}\sum_{i=1}^ny_i$, sendo assim, $\overline{y}$ é uma estatística suficiente.
 
 Portanto, para $n$ observações, a posteriori apresenta a seguinte distribuição:
 

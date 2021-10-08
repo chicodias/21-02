@@ -13,10 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Verossimilhança da distribuição
 
-$$
-\mathcal{L}(y|\theta) =\prod_{i=1}^n p(y_i|\theta) =  \prod_{i-1}^n e^{-1/2\sigma^2(y_i - \theta)^2}
-
-$$
+$$\mathcal{L}(y|\theta) =\prod_{i=1}^n p(y_i|\theta) =  \prod_{i-1}^n e^{-1/2\sigma^2(y_i - \theta)^2}$$
 
 ## A priori da distribuição
 
@@ -39,19 +36,17 @@ Sendo,
 $$\mu_n = \frac{\tau_0^{-2} \mu_0 + n\sigma^{-2}\bar{\mathcal y}}{\tau_0^{-2} + \sigma^{-2}},\ \ \text{e}\ \ \tau_n^{-2}= \tau_0^{-2}+ n\sigma^{-2}$$
 Podemos reescrever $p(\theta|y)$ como:
 
-$$
-p(\theta|y_n) \propto e^{(-1/2\tau_1^2)(\theta-\mu_n)^2}
-$$
-Logo, para uma dsitribuição Normal com variância conhecida, a média aposteriori $\mu_1$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y$, sendo os pesos proporcionais às precisões de cada um.
+$$p(\theta|y_n) \propto e^{(-1/2\tau_1^2)(\theta-\mu_n)^2}$$
+
+Logo, para uma distribuição Normal com variância conhecida, a média aposteriori $\mu_1$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y$, sendo os pesos proporcionais às precisões de cada um.
 
 
 Desse modo, a distribuição a posteriori da média $\theta$ depende apenas da média amostral $\overline{y} = \frac{1}{n}\sum_{i=1}^ny_i$, sendo assim, $\overline{y}$ é uma estatística suficiente.
 
 Portanto, para $n$ observações, a posteriori apresenta a seguinte distribuição:
 
-$$
-p(\theta|y_1,...,y_n) = p(\theta~|~\overline{y}) = \mathcal{N}(\theta|y_n, \tau_n^2)
-$$
+$$p(\theta|y_1,...,y_n) = p(\theta~|~\overline{y}) = \mathcal{N}(\theta|y_n, \tau_n^2)$$
+
 ```{r include=FALSE}
 library(tidyverse)
 
@@ -61,54 +56,54 @@ dados <- c(921.3429, 910.8055, 879.7302, 899.3456, 837.7587, 880.95, 830.4974, 8
 # gera a priori e a posteriori de uma normal com media desconhecida e sigma conhecido
 
 norm <- function(samp, sigma = 40, mu = 900, tau0 = 20){
-
-   n <- length(samp)
-   xbar <- mean(samp)
-   
-   ver <- function(x) exp(- n/(2*sigma^2) * (xbar - x)^2)
-   
-   
-   mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
-   sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
-   
-   theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
-   
-   
-   tibble(theta = theta,
-          priori = dnorm(theta,mu,tau0),
-          post = dnorm(theta,mu.post,sigma.post),
-          ver = ver(theta),
-          pred = dnorm(theta,mu.post,tau0+sigma),
-          tau1 = sigma.post,
-          mu1 = mu.post)
-
+  
+  n <- length(samp)
+  xbar <- mean(samp)
+  
+  ver <- function(x) exp(- n/(2*sigma^2) * (xbar - x)^2)
+  
+  
+  mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
+  sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
+  
+  theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
+  
+  
+  tibble(theta = theta,
+         priori = dnorm(theta,mu,tau0),
+         post = dnorm(theta,mu.post,sigma.post),
+         ver = ver(theta),
+         pred = dnorm(theta,mu.post,tau0+sigma),
+         tau1 = sigma.post,
+         mu1 = mu.post)
+  
 }
 
 
 ```
 
 
-$$f(x|\theta) = e^{-x^2}  $$
-
-
-- a) Faça um esboço do gráfico das distribuições prioris dos dois físicos em um mesmo sistema cartesiano.
+$$f(x|\theta) = e^{-x^2}$$
+  
+  
+  - a) Faça um esboço do gráfico das distribuições prioris dos dois físicos em um mesmo sistema cartesiano.
 
 
 Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
-
-```{r echo = FALSE, warning = FALSE}
+  
+  ```{r echo = FALSE, warning = FALSE}
 
 a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
-            norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
-            norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
-            norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
+           norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
+           norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
+           norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
 
 a %>% filter(obs == "100 observações") %>%
   ggplot(aes(x = theta)) +
   geom_line(aes(y = priori, color = cor)) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-     theme(axis.title.y=element_blank()) +
+  theme(axis.title.y=element_blank()) +
   ggtitle("Distribuição a priori da grandeza estimada pelos físicos")
 
 ```
@@ -118,16 +113,16 @@ a %>% filter(obs == "100 observações") %>%
 Como $X|\theta \sim N(\theta, \sigma^2)$ com $\sigma^2$ conhecido e $\theta \sim N(\mu_0,\tau_0^2)$ então $\theta|x \sim N(\mu_1, \tau_1)$, sendo
 
 $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \text{e}\ \ \tau_1^{-2}= \tau_0^{-2}+ \sigma^{-2}$$
-
-Assim, para 100 observações temos:
-
-$$\theta_A \sim N(884.314, 15.3846), \ \ \theta_B \sim N(883.7272, 15.9601) $$
-
-Enquanto que para uma única observação, a posteriori é:
-
-$$\theta_A \sim N(898.4, 320), \ \ \theta_B \sim N(893.6, 1280) $$
-
-
+  
+  Assim, para 100 observações temos:
+  
+  $$\theta_A \sim N(884.314, 15.3846), \ \ \theta_B \sim N(883.7272, 15.9601) $$
+  
+  Enquanto que para uma única observação, a posteriori é:
+  
+  $$\theta_A \sim N(898.4, 320), \ \ \theta_B \sim N(893.6, 1280) $$
+  
+  
 ```{r echo = FALSE, warning = FALSE}
 a %>%
   ggplot(aes(x = theta)) +
@@ -135,7 +130,7 @@ a %>%
   #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-     theme(axis.title.y=element_blank()) +
+  theme(axis.title.y=element_blank()) +
   ggtitle("Distribuição a posteriori da grandeza estimada pelos físicos") +
   facet_wrap(~obs)
 
@@ -153,7 +148,7 @@ a %>%
   #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-     theme(axis.title.y=element_blank()) +
+  theme(axis.title.y=element_blank()) +
   ggtitle("Distribuição da grandeza estimada pelos físicos")+
   facet_wrap(cor~obs)
 
@@ -169,7 +164,7 @@ a %>%
   geom_line(aes(y = coeff* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
- #    theme(axis.title.y=element_blank()) +
+  #    theme(axis.title.y=element_blank()) +
   scale_y_continuous(name = " ",
                      sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
   ggtitle("Distribuição da grandeza estimada pelos físicos")+
@@ -182,13 +177,13 @@ a %>%
 - d) Observando o gráfico, qual físico aprendeu mais com o experimento? Justifique.
 
 Aumentos nas precisões a posteriori em relação às precisões a priori com 100 observações:
-
-- para o físico A: precisão($\theta$) passou de $\tau_0^{-2} = 0.0025$ a $\tau_1^{-2} = 0.004225008$ (aumento de 70%).
+  
+  - para o físico A: precisão($\theta$) passou de $\tau_0^{-2} = 0.0025$ a $\tau_1^{-2} = 0.004225008$ (aumento de 70%).
 - para o físico B: precisão($\theta$) passou de $\tau_0^{-2} = 0.00015625$ a $\tau_1^{-2} = 0.003926$ (aumento de 2500%)
 
 Com 1 observação:
-
-- para o físico A: precisão($\theta$) passou de $\tau_0^{-2} = 0.0025$ a $\tau_1^{-2} = 6.1035*10^{-7}$.
+  
+  - para o físico A: precisão($\theta$) passou de $\tau_0^{-2} = 0.0025$ a $\tau_1^{-2} = 6.1035*10^{-7}$.
 - para o físico B: precisão($\theta$) passou de $\tau_0^{-2} = 0.00015625$ a $\tau_1^{-2} =  9.7656 *10^{-6}$.
 
 
@@ -214,9 +209,9 @@ tibble(      Fisico = c("A","B"),
 - f) Encontre a distribuição preditiva e faça um esboço de seu gráfico.
 
 A distribuição preditiva é dada por:
-
-$$X \sim N(\mu_0, \tau_0^2 + \sigma^2) $$
-
+  
+  $$X \sim N(\mu_0, \tau_0^2 + \sigma^2) $$
+  
 ```{r echo = FALSE, warning = FALSE}
 a %>% filter(obs == "100 observações") %>% 
   ggplot(aes(x = theta)) +
@@ -224,7 +219,7 @@ a %>% filter(obs == "100 observações") %>%
   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
   scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-     theme(axis.title.y=element_blank()) +
+  theme(axis.title.y=element_blank()) +
   ggtitle("Distribuição da grandeza estimada pelos físicos")+
   scale_linetype(name = "Distribuição")
 
@@ -235,54 +230,73 @@ a %>% filter(obs == "100 observações") %>%
 
 ## Distribuições a priori
 
-Seja $Y_i$ uma amostra aleatória simples de uma distribuição $Y \sim N(0,\sigma^2)$.
+Seja $Y_i$ uma amostra aleatória simples de uma distribuição $Y \sim N(\theta,\sigma^2)$, com $\theta$ conhecido.
 
 Primeiramente, vamos encontrar a função de verossimilhança de $\sigma^2$.
-
-
-$$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{2\pi}\frac1\sigma e^{-1/2 (y_i/\sigma)^2} \propto\frac1{\sigma^n} e^{ -(\sum_{i=1}^n y_i/\sigma)^2 } \propto \sigma^{-n} e^{-2\sigma^{-2}\sum_{i=1}^n y_i^2}$$
-
-
-$$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{2\pi}\frac1\sigma e^{-y_i^2/2\sigma^2} \propto\frac1{\sigma^n} e^{ -2\sigma^{-2}\sum_{i=1}^n y_i^2 } \propto \sigma^{-n} e^{-2\sigma^{-2}\sum_{i=1}^n y_i^2}$$
-
-### Prioris Conjulgadas
-
-O suporte de nosso parâmetro $\sigma >0$ permite-nos adotar três distribuições de probabilidade estudadas durante o curso:
-
-Note que, desprezadas as constantes não informativas, as três distribuições são da forma $x$ elevado a uma potência vezes a exponencial de $x$. Dessa forma, as três distribuições servem como conjulgada natural da Normal, em nosso caso. Fazendo $x = \sigma$, temos que:
-
-  1.**Gama:** 
-
-Se $X_1 \sim \text{Gama}(\alpha,\beta)$ então
-$$ f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta x}$$
-
-$$\sigma^{(\alpha - 1)} e^{-\beta \sigma} \Rightarrow \pi(\sigma) \sim \text{Gama}(\alpha_0,\beta_0)$$
-  2.**Gama-Inversa:** 
-
-Se $X \sim \text{Gama-Inv}(\alpha,\beta)$ então
-$$ f_{X_2}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta / x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta/x}$$
-  3.**Qui-Quadrado:** 
   
-Se $X\sim \chi^2 (\nu)$ então
-$$ f_{X_3}(x | \nu) = \frac{x^{(\nu/2) - 1} e^{- x/2}}{2^{\nu/2}\Gamma(\nu/2)} \propto x^{(\nu/2) - 1} e^{- x/2}$$
-
-$$\sigma^{(\nu/2) - 1} e^{- \sigma/2} \Rightarrow \pi(\sigma) \sim \chi^2(\alpha_0,\beta_0)$$
-
-
-
+$$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{\sqrt{2\pi\sigma}} e^{-(y_i-\theta)^2/2\sigma^2} \propto
+(\sigma^2)^{- \frac{n}{2}} e^{ -\left(\frac{1}{\sigma^{2}}\sum_{i=1}^n (y_i-\theta)^2 \right) }$$
+  
 ### Priori não informativa
-
-
-$$\log(\mathcal{L}(y|\sigma^2)) \propto -n \log(\sigma) -2\sigma^{-2}\sum_{i=1}^n y_i^2 $$
-
+  
+  
+$$\log(\mathcal{L}(y|\sigma^2)) \propto -\frac n2 \log(\sigma^{-2}) -\sigma^{-2}\sum_{i=1}^n (y_i-\theta)^2$$
+  
 A distribuição a *priori* de Jeffreys é dada por $\pi(\sigma^2) \propto \sqrt{J(\sigma^2)}$.
 
 $$\begin{aligned}
 J(\sigma^2) \propto E\left(- \frac{\partial^2}{\partial \theta^2}\log(L(\theta))\right) 
-= E\left(- \frac{\partial^2}{\partial \theta^2}\left(-n \log(\sigma) -2\sigma^{-2}\sum_{i=1}^n y_i^2\right)\right)\\
-= E\left(- \frac{\partial}{\partial \theta}\left(\frac{-n}{\sigma} + 4\sigma^{-3}\sum_{i=1}^n y_i^2\right)\right) 
-= E\left(- \frac{n}{\sigma^2} + 12\sigma^{-4}\sum_{i=1}^n y_i^2\right) \\
-= - \frac{n}{\sigma^2} + 12\sigma^{-4}\sum_{i=1}^n E(y_i)^2 = - \frac{n}{\sigma^2} \propto {\sigma^{-2}}
+= E\left(- \frac{\partial^2}{\partial \theta^2}\left(-\frac n2 \log(\sigma^{-2}) -(\sigma^{2})^{-1}\sum_{i=1}^n (y_i-\theta)^2\right)\right)\\
+= E\left(- \frac{\partial}{\partial \theta}\left(-\frac n2 (\sigma^{2})^{-1} + (\sigma^{2})^{-2}\sum_{i=1}^n (y_i-\theta)^2\right)\right) 
+= E\left(- \frac{n}{2\sigma^2} + 2(\sigma^{2})^{-3}\sum_{i=1}^n (y_i-\theta)^2\right) \\
+= - \frac{n}{2\sigma^2} + 2\sigma^{-4}\sum_{i=1}^n (E(y_i)-\theta)^2 
+= - \frac{n}{\sigma^2} + 2\sigma^{-4}\sum_{i=1}^n (\theta-\theta)^2
+= - \frac{n}{\sigma^2} \propto {\sigma^{-2}}
 \end{aligned}$$
 
+Assim, $\pi(\sigma) \propto \sqrt{\sigma^{-2}} = \sigma^{-1}$. Seu parâmetro $\Phi$ de escala que faz com que $\theta$ mude somente em locação pode ser obtido através do cálculo de
+
+$$\phi \propto \int \pi(\sigma^2) d\sigma^2 = \int \frac1{\sigma^{2}} d\sigma^2 = \log|\sigma^2| + k \propto
+\log\sigma^2 $$
+
+$\phi$ é uma distribuição imprópria, pois $\int_0^{+\infty} \log(\sigma^2) d\sigma^2$ é divergente. Assim, a *priori* 
+  
+### Conjulgadas Naturais
+  
+  O suporte de nosso parâmetro de interesse $\sigma >0$ permite-nos adotar três distribuições de probabilidade estudadas durante o curso:
+  
+  1.**Gama:** 
+  
+  Se $X \sim \text{Gama}(\alpha,\beta)$ então
+$$f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta x}, \ \ \alpha>0, \beta >0, x>0$$
+
+  
+  2.**Gama-Inversa:** 
+  
+  Se $X \sim \text{Gama-Inv}(\alpha,\beta)$ então
+$$ f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{-(\alpha + 1)} e^{-\beta / x}}{\Gamma(\alpha)} \propto x^{-(\alpha + 1)} e^{-\beta/x}, \ \ \alpha>0, \beta >0, x>0$$
+  
+  3.**Qui-Quadrado:** 
+
+  Se $X\sim \chi^2 (\nu)$ então
+$$ f_{X}(x | \nu) = \frac{x^{(\nu/2) - 1} e^{- x/2}}{2^{\nu/2}\Gamma(\nu/2)} \propto x^{(\nu/2) - 1} e^{- x/2}, \ \ \nu>0, x>0$$  
+
+Note que as duas primeiras estão relacionadas via uma transformação simples e a última é um caso particular delas. Desprezadas as constantes não informativas, as três distribuições são da forma $x$ elevado a uma potência vezes a exponencial de $x$. Dessa forma, as três distribuições servem como conjulgada natural da Normal, em nosso caso. Neste trabalho, optou-se por utilizar a distribuição Gama Inversa.
+
+Fazendo $x = \sigma$, temos uma *priori* da forma:
+  
+$$\sigma^{-(\alpha + 1)} e^{-\beta / \sigma^2} \Rightarrow \pi(\sigma) \sim \text{Gama-Inv}(\alpha,\beta)$$
+Se quisermos torná-la não informativa, basta utilizarmos $\alpha \to 0, \beta \to 0$.
+
+
+## Distribuição a *posteriori*
+
+$$\pi(\sigma|y) \propto \mathcal{L}(y|\sigma^2) \pi(\sigma) =
+(\sigma^2)^{- \frac{n}{2}} e^{ -\left(\frac{1}{2\sigma^{2}}\sum_{i=1}^n (y_i-\theta)^2 \right) } \sigma^{-(\alpha - 1)} e^{-\beta/ \sigma^2}$$
+
+$$= (\sigma^2)^{-(\alpha + \frac{n}{2} + 1)} e^{ -\frac{1}{\sigma^2}\left(\beta +\frac{1}{2}\sum_{i=1}^n (y_i-\theta)^2 \right)}$$
+
+Dessa forma,
+
+$$\pi(\sigma^2 | y) \sim \text{Gama-Inv}(\alpha + \frac n2,\beta +\frac{1}{2}\sum_{i=1}^n (y_i-\theta)^2)$$
 

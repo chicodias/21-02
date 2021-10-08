@@ -324,7 +324,7 @@ sample <- dados::pinguins %>%
   select(comprimento_bico) %>% 
   drop_na() %>% sample_n(30) %>% pull()
 
-sample <- rnorm(10, 50, 4)
+sample <- rnorm(10, 5, 4)
 
 
 
@@ -335,31 +335,25 @@ sample <- rnorm(10, 50, 4)
 
 # gera a priori e a posteriori de uma normal com media conhecida e sigma desconhecido
 
-SigmaNorm <- function(samp, theta = 50, alpha = 0.001, beta = 0.001){
+SigmaNorm <- function(samp, theta = 5, alpha = 0.001, beta = 0.001){
   
   n <- length(samp)
   s <- sum(((samp - theta)/2)^2)
   
-  l_sigma2 <- function(sigma2){
-    exp(- (n/2) * log(1/sigma2) - 1/sigma2 * s)
-  }
-  
+  l_sigma2 <- function(sigma2) sigma2^(-(n/2))  * exp(- 1/sigma2 *s)
   
   a.post <- alpha + n/2
   b.post <- beta +  s
   
   sigma2 <- seq(0.02, 50, 0.02)
   
-  
   tibble(sigma2 = sigma2,
          priori = dinvgamma(sigma2,alpha,beta),
          post = dinvgamma(sigma2,a.post,b.post),
-         ver = normalize(l_sigma2(sigma2)),
+         ver = l_sigma2(sigma2),
          alpha1 = a.post,
          beta1 = b.post)
-  
 }
-
 ```
 
 

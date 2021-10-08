@@ -336,7 +336,7 @@ SigmaNorm <- function(samp, theta = 49, alpha = 0.001, beta = 0.001){
   mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
   sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
   
-  theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
+  sigma2 <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
   
   
   tibble(theta = theta,

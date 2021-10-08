@@ -9,6 +9,17 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(dados)
+#remotes::install_github("cienciadedatos/dados")
+
+sample <- dados::pinguins %>%
+  filter(especie == "Pinguim-de-barbicha") %>%
+  select(comprimento_bico) %>% 
+  drop_na()
+```
+
+
 # Caso 1: $\mu$ desconhecido e $\sigma$ conhecido
 
 ## Verossimilhança da distribuição
@@ -91,7 +102,7 @@ $$f(x|\theta) = e^{-x^2}$$
 
 Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
   
-  ```{r echo = FALSE, warning = FALSE}
+```{r echo = FALSE, warning = FALSE}
 
 a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
            norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
@@ -259,7 +270,7 @@ Assim, $\pi(\sigma) \propto \sqrt{\sigma^{-2}} = \sigma^{-1}$. Seu parâmetro $\
 $$\phi \propto \int \pi(\sigma^2) d\sigma^2 = \int \frac1{\sigma^{2}} d\sigma^2 = \log|\sigma^2| + k \propto
 \log\sigma^2 $$
 
-$\phi$ é uma distribuição imprópria, pois $\int_0^{+\infty} \log(\sigma^2) d\sigma^2$ é divergente. Assim, a *priori* 
+$\phi$ é uma distribuição imprópria, pois $\int_0^{+\infty} \log(\sigma^2) d\sigma^2$ é divergente. Assim, a *priori* não favorece nenhuma escala em detrimento de outra.
   
 ### Conjulgadas Naturais
   
@@ -299,4 +310,65 @@ $$= (\sigma^2)^{-(\alpha + \frac{n}{2} + 1)} e^{ -\frac{1}{\sigma^2}\left(\beta 
 Dessa forma,
 
 $$\pi(\sigma^2 | y) \sim \text{Gama-Inv}(\alpha + \frac n2,\beta +\frac{1}{2}\sum_{i=1}^n (y_i-\theta)^2)$$
+
+
+```{r}
+library(tidyverse)
+library(effectsize)
+library(invgamma)
+library(dados)
+
+
+sample <- dados::pinguins %>%
+  filter(especie == "Pinguim-de-barbicha") %>%
+  select(comprimento_bico) %>% 
+  drop_na() %>% sample_n(30) %>% pull()
+
+sample <- rnorm(10, 50, 4)
+
+
+
+```
+
+
+```{r include=FALSE}
+
+# gera a priori e a posteriori de uma normal com media conhecida e sigma desconhecido
+
+SigmaNorm <- function(samp, theta = 50, alpha = 0.001, beta = 0.001){
+  
+  n <- length(samp)
+  s <- sum(((samp - theta)/2)^2)
+  
+  l_sigma2 <- function(sigma2){
+    exp(- (n/2) * log(1/sigma2) - 1/sigma2 * s)
+  }
+  
+  
+  a.post <- alpha + n/2
+  b.post <- beta +  s
+  
+  sigma2 <- seq(0.02, 50, 0.02)
+  
+  
+  tibble(sigma2 = sigma2,
+         priori = dinvgamma(sigma2,alpha,beta),
+         post = dinvgamma(sigma2,a.post,b.post),
+         ver = normalize(l_sigma2(sigma2)),
+         alpha1 = a.post,
+         beta1 = b.post)
+  
+}
+
+```
+
+
+```{r}
+
+SigmaNorm(sample)[-c(5,6)] %>% 
+  pivot_longer(cols = !"sigma2") %>% 
+  ggplot(aes(x = sigma2)) +
+  geom_line(aes(y = value)) +
+  facet_wrap(~name, scales = "free_y")
+```
 

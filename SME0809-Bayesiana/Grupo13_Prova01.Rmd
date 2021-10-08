@@ -28,9 +28,9 @@ $$\mathcal{L}(y|\theta) =\prod_{i=1}^n p(y_i|\theta) =  \prod_{i-1}^n e^{-1/2\si
 
 ## A priori da distribuição
 
-$$
-p(\theta) \propto e^{(-1/2\tau_0^2)(\theta-y_0)^2}
-$$
+$$p(\theta)\propto e^{(-1/2\tau_0^2)(\theta-y_0)^2}$$
+## A priori não informativa de Jeffreys
+
 
 ## A posteriori da distribuição
 
@@ -38,57 +38,57 @@ A posteriori é computada assumindo-se que:
 1. Cada observação é independentemente distribuída
 2. Cada observação tem a mesma variância
 
-$$
-p(\theta|y) = p(\theta)~p(y|\theta) = \\= p(\theta)\prod_{i=1}^np(y_i|\theta) = e^{(-1/2\tau_0^2)(\theta-\mu_0)^2}\prod_{i=1}^ne^{(-1/2\sigma^2)(y_i-\theta)^2} =\\
-= e^{(\frac{-1}{2})(1/\tau_0^2(\theta-\mu_0)^2~ +\frac{1}{\sigma^2}\sum_{i=1}^n(y_i - \theta)^2 )}
-$$
-Sendo, 
-
-$$\mu_n = \frac{\tau_0^{-2} \mu_0 + n\sigma^{-2}\bar{\mathcal y}}{\tau_0^{-2} + \sigma^{-2}},\ \ \text{e}\ \ \tau_n^{-2}= \tau_0^{-2}+ n\sigma^{-2}$$
-Podemos reescrever $p(\theta|y)$ como:
-
-$$p(\theta|y_n) \propto e^{(-1/2\tau_1^2)(\theta-\mu_n)^2}$$
-
-Logo, para uma distribuição Normal com variância conhecida, a média aposteriori $\mu_1$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y$, sendo os pesos proporcionais às precisões de cada um.
-
-
-Desse modo, a distribuiç~so s posteriori da média $\theta$ depende apenas da média amostral $\overline{y} = \frac{1}{n}\sum_{i=1}^ny_i$, sendo assim, $\overline{y}$ é uma estatística suficiente.
+$$p(\theta|y) = p(\theta)~p(y|\theta) = \\ p(\theta)\prod_{i=1}^np(y_i|\theta) = e^{(-1/2\tau_0^2)(\theta-\mu_0)^2}\prod_{i=1}^ne^{(-1/2\sigma^2)(y_i-\theta)^2} =\\ e^{(\frac{-1}{2})(1/\tau_0^2(\theta-\mu_0)^2~ +\frac{1}{\sigma^2}\sum_{i=1}^n(y_i - \theta)^2 )}$$
+Desse modo, a distribuição a posteriori da média $\theta$ depende apenas da média amostral $\overline{y} = \frac{1}{n}\sum_{i=1}^ny_i$, sendo assim, $\overline{y}$ é uma estatística suficiente.
 
 Portanto, para $n$ observações, a posteriori apresenta a seguinte distribuição:
 
 $$p(\theta|y_1,...,y_n) = p(\theta~|~\overline{y}) = \mathcal{N}(\theta|y_n, \tau_n^2)$$
 
+Sendo, 
+
+$$\mu_n = \frac{\tau_0^{-2} \mu_0 + n\sigma^{-2}\overline{y}}
+{\tau_0^{-2} + \sigma^{-2}},\ \ \text{e}\ \ \tau_n^{-2}= \tau_0^{-2}+ n\sigma^{-2}$$
+Podemos reescrever $p(\theta|y)$ como:
+
+$$p(\theta|y_n) \propto e^{(-1/2\tau_n^2)(\theta-\mu_n)^2}$$
+
+Logo, para uma distribuição Normal com variância conhecida, a média aposteriori $\mu_n$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y = y_1,...,y_n$, sendo os pesos proporcionais às precisões de cada um.
+
+
+
+
 ```{r include=FALSE}
-library(tidyverse)
-
-dados <- c(921.3429, 910.8055, 879.7302, 899.3456, 837.7587, 880.95, 830.4974, 856.1041, 777.5677, 983.3444, 981.048, 863.2836, 943.1702, 904.5064, 831.879, 854.2947, 920.2139, 839.7896, 897.0014, 839.3796, 872.4004, 884.6379, 892.7966, 897.9938, 840.228, 823.2803, 903.4257, 798.5764, 862.5581, 938.8837, 894.951, 871.0477, 863.9725, 857.6077, 856.3452, 906.6818, 859.7368, 876.7236, 868.8648, 900.386, 839.8117, 878.5936, 866.6935, 921.2941, 877.8528, 897.6217, 894.6499, 830.6403, 935.6717, 948.9588, 888.0726, 788.6694, 877.4076, 863.1756, 982.6952, 934.724, 898.8038, 874.8416, 905.8379, 843.0447, 877.0727, 894.5569, 959.8427, 826.6365, 907.9904, 912.9051, 912.4662, 975.3224, 922.8291, 934.6569, 953.236, 833.5084, 842.0623, 885.3881, 918.0987, 842.0927, 875.6968, 826.3312, 870.4634, 866.2226, 845.4767, 914.2475, 922.4006, 832.359, 877.5627, 887.8087, 879.4061, 925.3103, 877.6632, 877.3689, 854.1189, 904.5891, 882.893, 866.3494, 892.4554, 908.3249, 873.6439, 914.1283, 879.8893, 843.1085)
-
-
-# gera a priori e a posteriori de uma normal com media desconhecida e sigma conhecido
-
-norm <- function(samp, sigma = 40, mu = 900, tau0 = 20){
-  
-  n <- length(samp)
-  xbar <- mean(samp)
-  
-  ver <- function(x) exp(- n/(2*sigma^2) * (xbar - x)^2)
-  
-  
-  mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
-  sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
-  
-  theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
-  
-  
-  tibble(theta = theta,
-         priori = dnorm(theta,mu,tau0),
-         post = dnorm(theta,mu.post,sigma.post),
-         ver = ver(theta),
-         pred = dnorm(theta,mu.post,tau0+sigma),
-         tau1 = sigma.post,
-         mu1 = mu.post)
-  
-}
+# library(tidyverse)
+# 
+# dados <- c(921.3429, 910.8055, 879.7302, 899.3456, 837.7587, 880.95, 830.4974, 856.1041, 777.5677, 983.3444, 981.048, 863.2836, 943.1702, 904.5064, 831.879, 854.2947, 920.2139, 839.7896, 897.0014, 839.3796, 872.4004, 884.6379, 892.7966, 897.9938, 840.228, 823.2803, 903.4257, 798.5764, 862.5581, 938.8837, 894.951, 871.0477, 863.9725, 857.6077, 856.3452, 906.6818, 859.7368, 876.7236, 868.8648, 900.386, 839.8117, 878.5936, 866.6935, 921.2941, 877.8528, 897.6217, 894.6499, 830.6403, 935.6717, 948.9588, 888.0726, 788.6694, 877.4076, 863.1756, 982.6952, 934.724, 898.8038, 874.8416, 905.8379, 843.0447, 877.0727, 894.5569, 959.8427, 826.6365, 907.9904, 912.9051, 912.4662, 975.3224, 922.8291, 934.6569, 953.236, 833.5084, 842.0623, 885.3881, 918.0987, 842.0927, 875.6968, 826.3312, 870.4634, 866.2226, 845.4767, 914.2475, 922.4006, 832.359, 877.5627, 887.8087, 879.4061, 925.3103, 877.6632, 877.3689, 854.1189, 904.5891, 882.893, 866.3494, 892.4554, 908.3249, 873.6439, 914.1283, 879.8893, 843.1085)
+# 
+# 
+# # gera a priori e a posteriori de uma normal com media desconhecida e sigma conhecido
+# 
+# norm <- function(samp, sigma = 40, mu = 900, tau0 = 20){
+#   
+#   n <- length(samp)
+#   xbar <- mean(samp)
+#   
+#   ver <- function(x) exp(- n/(2*sigma^2) * (xbar - x)^2)
+#   
+#   
+#   mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
+#   sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
+#   
+#   theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
+#   
+#   
+#   tibble(theta = theta,
+#          priori = dnorm(theta,mu,tau0),
+#          post = dnorm(theta,mu.post,sigma.post),
+#          ver = ver(theta),
+#          pred = dnorm(theta,mu.post,tau0+sigma),
+#          tau1 = sigma.post,
+#          mu1 = mu.post)
+#   
+# }
 
 
 ```
@@ -104,18 +104,19 @@ Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
   
 ```{r echo = FALSE, warning = FALSE}
 
-a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
-           norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
-           norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
-           norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
-
-a %>% filter(obs == "100 observações") %>%
-  ggplot(aes(x = theta)) +
-  geom_line(aes(y = priori, color = cor)) +
-  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
-  scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-  theme(axis.title.y=element_blank()) +
-  ggtitle("Distribuição a priori da grandeza estimada pelos físicos")
+# 
+# a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
+#            norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
+#            norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
+#            norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
+# 
+# a %>% filter(obs == "100 observações") %>%
+#   ggplot(aes(x = theta)) +
+#   geom_line(aes(y = priori, color = cor)) +
+#   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+#   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
+#   theme(axis.title.y=element_blank()) +
+#   ggtitle("Distribuição a priori da grandeza estimada pelos físicos")
 
 ```
 
@@ -135,15 +136,15 @@ $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \t
   
   
 ```{r echo = FALSE, warning = FALSE}
-a %>%
-  ggplot(aes(x = theta)) +
-  geom_line(aes(y = post, color = cor)) +
-  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
-  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
-  scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-  theme(axis.title.y=element_blank()) +
-  ggtitle("Distribuição a posteriori da grandeza estimada pelos físicos") +
-  facet_wrap(~obs)
+# a %>%
+#   ggplot(aes(x = theta)) +
+#   geom_line(aes(y = post, color = cor)) +
+#   #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
+#   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+#   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
+#   theme(axis.title.y=element_blank()) +
+#   ggtitle("Distribuição a posteriori da grandeza estimada pelos físicos") +
+#   facet_wrap(~obs)
 
 ```
 
@@ -151,36 +152,36 @@ a %>%
 - c) Faça um esboço do gráfico das distribuições: a priori e a posteriori de cada um dos dois físicos em um mesmo sistema cartesiano.
 
 ```{r echo = FALSE, warning = FALSE}
-a %>%
-  ggplot(aes(x = theta)) +
-  geom_line(aes(y = post, color = "Posteriori")) +
-  geom_line(aes(y = priori, color = "Priori")) +
-  #geom_line(aes(y = pred, color = "Preditiva")) +
-  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
-  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
-  scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-  theme(axis.title.y=element_blank()) +
-  ggtitle("Distribuição da grandeza estimada pelos físicos")+
-  facet_wrap(cor~obs)
+# a %>%
+#   ggplot(aes(x = theta)) +
+#   geom_line(aes(y = post, color = "Posteriori")) +
+#   geom_line(aes(y = priori, color = "Priori")) +
+#   #geom_line(aes(y = pred, color = "Preditiva")) +
+#   #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
+#   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+#   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
+#   theme(axis.title.y=element_blank()) +
+#   ggtitle("Distribuição da grandeza estimada pelos físicos")+
+#   facet_wrap(cor~obs)
 
 ```
 
 
 ```{r echo = FALSE, warning = FALSE}
-coeff <- 0.03
-a %>%
-  ggplot(aes(x = theta)) +
-  geom_line(aes(y = post, color = cor, linetype = "Posteriori")) +
-  geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
-  geom_line(aes(y = coeff* ver, colour = "Verossimilhança")) +
-  scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
-  scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-  #    theme(axis.title.y=element_blank()) +
-  scale_y_continuous(name = " ",
-                     sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
-  ggtitle("Distribuição da grandeza estimada pelos físicos")+
-  scale_linetype(name = "Distribuição") +
-  facet_wrap(~obs)
+# coeff <- 0.03
+# a %>%
+#   ggplot(aes(x = theta)) +
+#   geom_line(aes(y = post, color = cor, linetype = "Posteriori")) +
+#   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
+#   geom_line(aes(y = coeff* ver, colour = "Verossimilhança")) +
+#   scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
+#   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
+#   #    theme(axis.title.y=element_blank()) +
+#   scale_y_continuous(name = " ",
+#                      sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
+#   ggtitle("Distribuição da grandeza estimada pelos físicos")+
+#   scale_linetype(name = "Distribuição") +
+#   facet_wrap(~obs)
 
 ```
 
@@ -202,14 +203,14 @@ Com 1 observação:
 
 ```{r echo = FALSE, warning = FALSE}
 
-tibble(      Fisico = c("A","B"),
-             Media.pri = c(900, 900),
-             Media.pos.100 = c(884.314,883.7272),
-             Media.pos.1 = c(898.4 ,893.6),
-             SD.pri = c(20, 80),
-             SD.pos.100 = c(15.3846, 15.9601),
-             SD.pos.1 = c(320 ,1280)) %>% 
-  knitr::kable()
+# tibble(      Fisico = c("A","B"),
+#              Media.pri = c(900, 900),
+#              Media.pos.100 = c(884.314,883.7272),
+#              Media.pos.1 = c(898.4 ,893.6),
+#              SD.pri = c(20, 80),
+#              SD.pos.100 = c(15.3846, 15.9601),
+#              SD.pos.1 = c(320 ,1280)) %>% 
+#   knitr::kable()
 
 ```
 
@@ -224,15 +225,15 @@ A distribuição preditiva é dada por:
   $$X \sim N(\mu_0, \tau_0^2 + \sigma^2) $$
   
 ```{r echo = FALSE, warning = FALSE}
-a %>% filter(obs == "100 observações") %>% 
-  ggplot(aes(x = theta)) +
-  geom_line(aes(y = pred, color = cor, linetype = "Preditiva")) +
-  geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
-  scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
-  scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
-  theme(axis.title.y=element_blank()) +
-  ggtitle("Distribuição da grandeza estimada pelos físicos")+
-  scale_linetype(name = "Distribuição")
+# a %>% filter(obs == "100 observações") %>% 
+#   ggplot(aes(x = theta)) +
+#   geom_line(aes(y = pred, color = cor, linetype = "Preditiva")) +
+#   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
+#   scale_colour_brewer(name = "Cor", type = "qual", palette = "Dark2")+
+#   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
+#   theme(axis.title.y=element_blank()) +
+#   ggtitle("Distribuição da grandeza estimada pelos físicos")+
+#   scale_linetype(name = "Distribuição")
 
 ```
 
@@ -383,5 +384,4 @@ SigmaNorm(sample, mean(sample))[-c(5,6)] %>%
   geom_line(aes(y = log(value))) +
   facet_wrap(~name, scales = "free_y")
 ```
-
 

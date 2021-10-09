@@ -145,8 +145,8 @@ Sabe-se que o comprimento do bico deles tem distribuição Normal com média 48.
 Os quatro amigos decidem estimar este desvio padrão, cada um define sua *priori* da seguinte forma:
 
  - **Cleiton** nunca viu um pinguim-de-barbicha na vida, nem em fotografia. Dessa forma, ele decide adotar uma *priori* não informativa $\text{Gama-Inv}(\alpha = 0.01,\ \beta = 0.01)$
- - **Eduarda** sabe tudo sobre pinguins, mas nunca viu um pessoalmente. Ela opta por uma $\text{Gama-Inv}(\alpha = 0.5,\ \beta = 3)$ 
- - **Larissa** adora ir ao zoológico visitar aos pinguins. Ela decide adotar uma $\text{Gama-Inv}(\alpha = 20,\ \beta = 20)$
+ - **Eduarda** sabe tudo sobre pinguins, mas nunca viu um pessoalmente. Ela opta por uma $\text{Gama-Inv}(\alpha = 20,\ \beta = 20)$ 
+ - **Larissa** adora ir ao zoológico visitar aos pinguins. Ela decide adotar uma $\text{Gama-Inv}(\alpha = 0.5,\ \beta = 3)$
  - **Robertinho** é um biólogo com muita experiência, que consulta suas anotações sobre pinguins e decide adotar uma *priori* $\text{Gama-Inv}(\alpha = 35,\ \beta = 186)$
 
 
@@ -195,10 +195,10 @@ rbind(a,b,c,d) %>%
   geom_line(aes(y = priori, color = "Priori")) +
   geom_line(aes(y = ver, color = "Verossimilhança")) +
   #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
-  scale_colour_brewer(name = "Distribuição normalizada", type = "qual", palette = "Dark2")+
+  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(sigma^2), limits = c(0, 20))+
   theme(axis.title.y=element_blank()) +
-  ggtitle("Distribuição da variância da nadadeira dos pinguins") +
+  ggtitle("Distribuições normalizadas da variância da nadadeira dos pinguins") +
   facet_wrap(~Priori)
 ```
 
@@ -217,10 +217,10 @@ tabDesc <- function(alpha, beta){
 
 
   cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
-             rbind(tabDesc(0.1 , 0.1),
-                   tabDesc(20,20),
-                   tabDesc(0.5 , 3),
-                   tabDesc(34 , 186)
+             rbind(tabDesc(a$alpha0[1], a$beta0[1]),
+                   tabDesc(b$alpha0[1], b$beta0[1]),
+                   tabDesc(c$alpha0[1], c$beta0[1]),
+                   tabDesc(d$alpha0[1], d$beta0[1])
               )) %>%
   knitr::kable(digits = 2, caption = "Resumo a priori")
 

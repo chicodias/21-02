@@ -8,16 +8,12 @@ output: pdf_document
   ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-```{r}
+```{r message = FALSE}
 library(tidyverse)
+library(effectsize)
+library(invgamma)
 library(dados)
-#remotes::install_github("cienciadedatos/dados")
 
-sample <- dados::pinguins|>
-  filter(especie == "Pinguim-de-barbicha")|>
-  select(comprimento_bico)|>
-  drop_na()
 ```
 
 
@@ -68,15 +64,13 @@ $$p(\theta|y_n) \propto e^{(-1/2\tau_n^2)(\theta-\mu_n)^2}$$
 
 Logo, para uma distribuição Normal com variância conhecida, a média aposteriori $\mu_n$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y = y_1,...,y_n$, sendo os pesos proporcionais às precisões de cada um.
 
+
 ```{r include=FALSE}
-library(tidyverse)
-library(dados)
 
-
-sample <- dados::pinguins|>
-  filter(especie == "Pinguim-de-barbicha")|>
-  select(comprimento_bico)|>
-  drop_na() |>
+sample <- dados::pinguins%>%
+  filter(especie == "Pinguim-de-barbicha")%>%
+  select(comprimento_bico)%>%
+  drop_na() %>%
   pull()
 
 ```
@@ -121,7 +115,7 @@ norm(samp = sample,  sigma = sd(sample)+1, tau0 = 1e10, mu = 42) %>%
 #coeff <- 0.03
 a <- norm(samp = sample,  sigma = sd(sample)+1, tau0 = 20, mu = 42)
 
-a|>  
+a%>%  
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post,  color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
@@ -137,7 +131,7 @@ a|>
 ```{r}
 b <- norm(samp = sample,  sigma = sd(sample), tau0 = 8, mu = 30)
 
-b|>  
+b%>%  
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post,  color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
@@ -153,7 +147,7 @@ b|>
 ```{r}
 c <- norm(samp = sample,  sigma = sd(sample), tau0 = 14 , mu = 60)
 
-c|>  
+c%>%  
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post,  color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
@@ -169,7 +163,7 @@ c|>
 ```{r}
 d <- norm(samp = sample,  sigma = sd(sample), tau0 = 12, mu = 54)
 
-d|>  
+d%>%  
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post,  color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
@@ -196,13 +190,14 @@ tab <- tibble(      Prioris = c("Priori 1","Priori 2","Priori 3", "Priori 4"),
              IC.975 = c(qnorm(0.975, mean = 42 , sd = 48.8),
                         qnorm(0.975, mean = 30 , sd = 48.8),
                         qnorm(0.975, mean = 60, sd = 48.8),
-                        qnorm(0.975, mean = 54, sd = 48.8)))|>
+                        qnorm(0.975, mean = 54, sd = 48.8)))%>%
   knitr::kable()
 ```
 
 Quatro amigos, Cleiton, Eduardo, Larissa e Robertinho resolvem tentar estimar a média do comprimento do bico dos pinguins de barbicha. Para tanto, cada integrante do grupo resolve dar um palpite em relação a média e variância da distribuição. Desse modo, Cleiton acredita que a distribuição seja próxima a $\mathcal {N}(42, 20)$, Eduardo acredita que $\mathcal {N}(30, 8)$, Larissa $\mathcal {N}(60, 14)$  e Robertinho $\mathcal {N}(54, 12)$.
 
 Cleiton obteve uma $p(\theta|y) \sim \mathcal{N}(48.8, 0.277)$, Eduardo obteve uma$p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$, Larissa obteve $p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$ e Robertinho também obteve $p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$ 
+
 
 # Caso 2: $\mu$ conhecido e $\sigma$ desconhecido
 
@@ -252,7 +247,7 @@ $$f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta x}}{\G
   
   2.**Gama-Inversa:** 
   
-  Se $X \sim \text{Gama-Inv}(\alpha,\beta)$ então
+  Se $X \sim (\alpha,\beta)$ então
 $$ f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{-(\alpha + 1)} e^{-\beta / x}}{\Gamma(\alpha)} \propto x^{-(\alpha + 1)} e^{-\beta/x}, \ \ \alpha>0, \beta >0, x>0$$
   
   3.**Qui-Quadrado:** 
@@ -275,9 +270,12 @@ $$\pi(\sigma|y) \propto \mathcal{L}(y|\sigma^2) \pi(\sigma) =
 
 $$= (\sigma^2)^{-(\alpha + \frac{n}{2} + 1)} e^{ -\frac{1}{\sigma^2}\left(\beta +\frac{1}{2}\sum_{i=1}^n (y_i-\theta)^2 \right)}$$
 
+
 Dessa forma,
 
 $$\pi(\sigma^2 | y) \sim \text{Gama-Inv}(\alpha + \frac n2,\beta +\frac{1}{2}\sum_{i=1}^n (y_i-\theta)^2)$$
+
+## Exemplo: Comprimento do bico dos pinguins
 
 
 ```{r}
@@ -299,15 +297,28 @@ sample <- dados::pinguins %>%
 ```
 
 
-```{r include=FALSE}
+Cleiton, Eduarda, Larissa e Robertinho estão estudando sobre os Pinguins-de-barbicha.
+Sabe-se que o comprimento do bico deles tem distribuição Normal com média 48.833 e desvio padrão desconhecido.
+Os quatro amigos decidem estimar este desvio padrão, cada um define sua *priori* da seguinte forma:
 
+
+ - **Cleiton** nunca viu um pinguim-de-barbicha na vida, nem em fotografia. Dessa forma, ele decide adotar uma *priori* não informativa $\text{Gama-Inv}(\alpha = 0.01,\ \beta = 0.01)$
+ - **Eduarda** sabe tudo sobre pinguins, mas nunca viu um pessoalmente. Ela opta por uma $\text{Gama-Inv}(\alpha = 20,\ \beta = 20)$ 
+ - **Larissa** adora ir ao zoológico visitar aos pinguins. Ela decide adotar uma $\text{Gama-Inv}(\alpha = 0.5,\ \beta = 3)$
+ - **Robertinho** é um biólogo com muita experiência, que consulta suas anotações sobre pinguins e decide adotar uma *priori* $\text{Gama-Inv}(\alpha = 35,\ \beta = 186)$
+
+
+
+```{r sigmaNorm-func}
 
 # gera a priori e a posteriori de uma normal com media conhecida e sigma desconhecido
-
-SigmaNorm <- function(samp, theta = 5, alpha = 0.001, beta = 0.001){
+SigmaNorm <- function(samp, theta = 48.833, alpha = 0.001, beta = 0.001){
   
   n <- length(samp)
 
+  xbar <- mean(samp)
+  
+  
   s <- sum(((samp - theta)/2)^2)
   
   l_sigma2 <- function(sigma2) sigma2^(-(n/2))  * exp(- 1/sigma2 *s)
@@ -319,38 +330,67 @@ SigmaNorm <- function(samp, theta = 5, alpha = 0.001, beta = 0.001){
   sigma2 <- seq(0.02, 40, 0.02)
   
   tibble(sigma2 = sigma2,
-         priori = normalize( dinvgamma(sigma2,alpha,beta)),
+         priori = normalize(dinvgamma(sigma2,alpha,beta)),
          post = normalize(dinvgamma(sigma2,a.post,b.post)),
          ver = normalize(l_sigma2(sigma2)),
          alpha1 = a.post,
-         beta1 = b.post)
+         beta1 = b.post,
+         alpha0 = alpha,
+         beta0 = beta)
 }
 ```
 
+```{r warning = FALSE}
+a <- SigmaNorm(sample, alpha = 0.01, beta = 0.01) %>% mutate(Priori = "Cleiton") 
+b <- SigmaNorm(sample,alpha = 20, beta = 20) %>% mutate(Priori = "Eduarda")
+c <- SigmaNorm(sample,alpha = 0.5, beta = 3) %>% mutate(Priori = "Larissa")
+d <- SigmaNorm(sample,alpha = 34, beta = 186) %>% mutate(Priori = "Robertinho")
 
-```{r}
-
-SigmaNorm(sample, mean(sample))[-c(5,6)] %>% 
-  pivot_longer(cols = !"sigma2") %>% 
+rbind(a,b,c,d) %>% 
   ggplot(aes(x = sigma2)) +
-  geom_line(aes(y = value)) +
-  facet_wrap(~name, scales = "free_y")
+  geom_line(aes(y = post, color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
+  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(sigma^2), limits = c(0, 20))+
+  theme(axis.title.y=element_blank()) +
+  ggtitle("Distribuições normalizadas da variância da nadadeira dos pinguins") +
+  facet_wrap(~Priori)
+```
+
+
+```{r warning = FALSE}
+
+tabDesc <- function(alpha, beta){
+  tibble( alpha = alpha,
+          beta = beta,
+          media = beta/(alpha-1),
+          var = beta^2/((alpha-1)^2*(alpha-2)),
+          moda = beta/(alpha+1),
+          IC2.5 = qinvgamma(0.025, alpha, beta),
+          IC97.5 = qinvgamma(0.975, alpha, beta))
+}
+
+
+  cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
+             rbind(tabDesc(a$alpha0[1], a$beta0[1]),
+                   tabDesc(b$alpha0[1], b$beta0[1]),
+                   tabDesc(c$alpha0[1], c$beta0[1]),
+                   tabDesc(d$alpha0[1], d$beta0[1])
+              )) %>%
+  knitr::kable(digits = 2, caption = "Resumo a priori")
+
 ```
 
 ```{r}
 
-SigmaNorm(sample, 48.83382 ,alpha = 34, beta = 187)[-c(5,6)] %>% 
-  pivot_longer(cols = !"sigma2") %>% 
-  ggplot(aes(x = sigma2)) +
-  geom_line(aes(y = value)) +
-  facet_wrap(~name, scales = "free_y")
-```
-```{r}
-
-SigmaNorm(sample, mean(sample))[-c(5,6)] %>% 
-  pivot_longer(cols = !"sigma2") %>% 
-  ggplot(aes(x = log(sigma2))) +
-  geom_line(aes(y = log(value))) +
-  facet_wrap(~name, scales = "free_y")
+  cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
+             rbind(tabDesc(a$alpha1[1], a$beta1[1]),
+                   tabDesc(b$alpha1[1], b$beta1[1]),
+                   tabDesc(c$alpha1[1], c$beta1[1]),
+                   tabDesc(d$alpha1[1], d$beta1[1])
+              )) %>%
+  knitr::kable(digits = 2, caption = "Resumo a posteriori")
 ```
 

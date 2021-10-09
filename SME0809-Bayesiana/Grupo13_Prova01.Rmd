@@ -13,9 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dados)
 #remotes::install_github("cienciadedatos/dados")
 
-sample <- dados::pinguins %>%
-  filter(especie == "Pinguim-de-barbicha") %>%
-  select(comprimento_bico) %>% 
+sample <- dados::pinguins|>
+  filter(especie == "Pinguim-de-barbicha")|>
+  select(comprimento_bico)|>
   drop_na()
 ```
 
@@ -31,6 +31,18 @@ $$\mathcal{L}(y|\theta) =\prod_{i=1}^n p(y_i|\theta) =  \prod_{i-1}^n e^{-1/2\si
 $$p(\theta)\propto e^{(-1/2\tau_0^2)(\theta-y_0)^2}$$
 ## A priori não informativa de Jeffreys
 
+A distribuição a *priori* de Jeffreys é dada por $p(\theta) \propto \sqrt{J(n/\sigma^2)} \propto 1$
+
+Sabemos que a Informação de Fisher de $\theta$ através de $y = y_1,...,y_n$ é definida como:
+
+$$I(\theta) = E [-\frac{\partial^2log~p(y|\theta)}{\partial\theta^2}]$$
+Segue que:
+
+$$- E[\frac{\partial^2}{\partial\theta^2}(-log(2\pi\sigma^2)/2-1/2\sigma^2 (\sum_{i=1}^n(y_i-\theta)^2)] \\
+= - E [\frac{\partial^2}{\partial\theta^2}(-log(2\pi\sigma^2)/2-1/2\sigma^2 (\sum_{i=1}^n(y_i^2-2\theta n\overline{y} + n\theta^2)] \\
+= -E [\frac{\partial}{\partial\theta}\left(-1/2\sigma^2(-2n\overline{y} + 2n\theta\right))] \\
+= -E[-1/2\sigma^2\left(2n)\right] \\
+= n/\sigma^2$$
 
 ## A posteriori da distribuição
 
@@ -55,7 +67,48 @@ $$p(\theta|y_n) \propto e^{(-1/2\tau_n^2)(\theta-\mu_n)^2}$$
 
 Logo, para uma distribuição Normal com variância conhecida, a média aposteriori $\mu_n$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y = y_1,...,y_n$, sendo os pesos proporcionais às precisões de cada um.
 
+```{r include=FALSE}
+library(tidyverse)
+library(dados)
 
+
+sample <- dados::pinguins|>
+  filter(especie == "Pinguim-de-barbicha")|>
+  select(comprimento_bico)|>
+  drop_na() |>
+  pull()
+
+# gera a priori e a posteriori de uma normal com media desconhecida e sigma conhecido
+
+#Media a priori
+MediaNorm <- function(samp,xbar=1, sigma = 3.3){
+  
+  n <- length(samp)
+  
+  loglik <- function(theta) exp((-1/2*sigma^2)*(n*theta-sum(samp))^2)
+  
+  tau_n <- tau_0^-2
+  mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
+  sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
+  
+  theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
+  
+  
+  tibble(theta = theta,
+         priori = dnorm(theta,xbar, sigma),
+         post = dnorm(theta,mu.post,sigma.post),
+         ver = loglik(theta),
+         pred = dnorm(theta,mu.post,tau0+sigma),
+         tau1 = sigma.post,
+         mu1 = mu.post)
+  
+}
+
+```
+
+```{r}
+MediaNorm(sample)
+```
 
 
 ```{r include=FALSE}
@@ -105,12 +158,12 @@ Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
 ```{r echo = FALSE, warning = FALSE}
 <<<<<<< HEAD
 # 
-# a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
-#            norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
-#            norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
-#            norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
+# a <- rbind(norm(dados, tau0 = 20)|> mutate(cor = "Fisico A", obs = "100 observações"),
+#            norm(dados, tau0 = 80)|> mutate(cor = "Fisico B", obs = "100 observações"),
+#            norm(892, tau0 = 20)|> mutate(cor = "Fisico A", obs = "1 observação"),
+#            norm(892, tau0 = 80)|> mutate(cor = "Fisico B", obs = "1 observação"))
 # 
-# a %>% filter(obs == "100 observações") %>%
+# a|> filter(obs == "100 observações")|>
 #   ggplot(aes(x = theta)) +
 #   geom_line(aes(y = priori, color = cor)) +
 #   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
@@ -119,12 +172,12 @@ Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
 #   ggtitle("Distribuição a priori da grandeza estimada pelos físicos")
 =======
 
-a <- rbind(norm(dados, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "100 observações"),
-           norm(dados, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "100 observações"),
-           norm(892, tau0 = 20) %>% mutate(cor = "Fisico A", obs = "1 observação"),
-           norm(892, tau0 = 80) %>% mutate(cor = "Fisico B", obs = "1 observação"))
+a <- rbind(norm(dados, tau0 = 20)|> mutate(cor = "Fisico A", obs = "100 observações"),
+           norm(dados, tau0 = 80)|> mutate(cor = "Fisico B", obs = "100 observações"),
+           norm(892, tau0 = 20)|> mutate(cor = "Fisico A", obs = "1 observação"),
+           norm(892, tau0 = 80)|> mutate(cor = "Fisico B", obs = "1 observação"))
 
-a %>% filter(obs == "100 observações") %>%
+a|> filter(obs == "100 observações")|>
   ggplot(aes(x = theta)) +
   geom_line(aes(y = priori, color = cor)) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
@@ -151,7 +204,7 @@ $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \t
   
   
 ```{r echo = FALSE, warning = FALSE}
-# a %>%
+# a|>
 #   ggplot(aes(x = theta)) +
 #   geom_line(aes(y = post, color = cor)) +
 #   #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
@@ -167,7 +220,7 @@ $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \t
 - c) Faça um esboço do gráfico das distribuições: a priori e a posteriori de cada um dos dois físicos em um mesmo sistema cartesiano.
 
 ```{r echo = FALSE, warning = FALSE}
-# a %>%
+# a|>
 #   ggplot(aes(x = theta)) +
 #   geom_line(aes(y = post, color = "Posteriori")) +
 #   geom_line(aes(y = priori, color = "Priori")) +
@@ -184,7 +237,7 @@ $$\mu_1 = \frac{\tau_0^2 \mu_0 + \sigma^{-2}x}{\tau_0^{-2} + \sigma^{-2}},\ \ \t
 
 ```{r echo = FALSE, warning = FALSE}
 # coeff <- 0.03
-# a %>%
+# a|>
 #   ggplot(aes(x = theta)) +
 #   geom_line(aes(y = post, color = cor, linetype = "Posteriori")) +
 #   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
@@ -224,7 +277,7 @@ Com 1 observação:
 #              Media.pos.1 = c(898.4 ,893.6),
 #              SD.pri = c(20, 80),
 #              SD.pos.100 = c(15.3846, 15.9601),
-#              SD.pos.1 = c(320 ,1280)) %>% 
+#              SD.pos.1 = c(320 ,1280))|> 
 #   knitr::kable()
 
 ```
@@ -240,7 +293,7 @@ A distribuição preditiva é dada por:
   $$X \sim N(\mu_0, \tau_0^2 + \sigma^2) $$
   
 ```{r echo = FALSE, warning = FALSE}
-# a %>% filter(obs == "100 observações") %>% 
+# a|> filter(obs == "100 observações")|> 
 #   ggplot(aes(x = theta)) +
 #   geom_line(aes(y = pred, color = cor, linetype = "Preditiva")) +
 #   geom_line(aes(y = priori, color = cor, linetype = "Priori")) +
@@ -334,9 +387,9 @@ $$\pi(\sigma^2 | y) \sim \text{Gama-Inv}(\alpha + \frac n2,\beta +\frac{1}{2}\su
 library(tidyverse)
 library(dados)
 
-sample <- dados::pinguins %>%
-  filter(especie == "Pinguim-de-barbicha") %>%
-  select(comprimento_bico) %>% 
+sample <- dados::pinguins|>
+  filter(especie == "Pinguim-de-barbicha")|>
+  select(comprimento_bico)|> 
   drop_na()
 
 # gera a priori e a posteriori de uma normal com media conhecida e sigma desconhecido
@@ -346,7 +399,7 @@ SigmaNorm <- function(samp, theta = 49, alpha = 0.001, beta = 0.001){
   n <- length(samp)
   xbar <- mean(samp)
   
-  loglik <- function(sigma2) (- (n/2) * exp(sigma^2) - 1/sigma2 * sum(samp - theta)^2))
+  loglik <- function(sigma2) - (n/2) * exp(sigma^2) - 1/sigma2 * sum(samp - theta)^2
   
   
   mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))

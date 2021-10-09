@@ -116,7 +116,7 @@ norm <- function(samp, sigma = 40, mu, tau0 = 10000 ){
 
 Escolheu-se o conjunto de dados *palmerpenguins* em sua versão traduzida. Como atributo de interesse escolhemos o comprimento do bico dos pinguis e nos limitamos a análise de uma espécie - nesse caso o **Pinguin-de-barbicha**. Existem 68 pinguins desta espécie em nosso dataset.
 
-Sabe-se que para a distribuição do comprimento do bico dos pinguins tem-se que $\sigma = 3,34$ e a média $\theta = 48.8$ . 
+Sabe-se que para a distribuição do comprimento do bico dos pinguins tem-se que $\sigma = 3,34$. 
 
 Quatro amigos, Cleiton, Eduarda, Larissa e Robertinho resolvem tentar estimar a média do comprimento do bico dos pinguins de barbicha. Para tanto, cada integrante do grupo resolve dar um palpite em relação a média e variância da distribuição.
 
@@ -222,7 +222,6 @@ tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
                         qnorm(0.975, mean = 49.1,  sd = 0.687)))%>%
   knitr::kable(digits = 2, caption = "Resumo aposteriori dos quatro amigos (n=15)")
 ```
-
 
 ***
 

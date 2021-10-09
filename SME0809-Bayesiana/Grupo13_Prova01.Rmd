@@ -13,17 +13,7 @@ library(tidyverse)
 library(effectsize)
 library(invgamma)
 library(dados)
-```
 
-
-```{r}
-
-#remotes::install_github("cienciadedatos/dados")
-
-sample <- dados::pinguins %>%
-  filter(especie == "Pinguim-de-barbicha") %>%
-  select(comprimento_bico) %>% 
-  drop_na()
 ```
 
 
@@ -38,6 +28,18 @@ $$\mathcal{L}(y|\theta) =\prod_{i=1}^n p(y_i|\theta) =  \prod_{i-1}^n e^{-1/2\si
 $$p(\theta)\propto e^{(-1/2\tau_0^2)(\theta-y_0)^2}$$
 ## A priori não informativa de Jeffreys
 
+A distribuição a *priori* de Jeffreys é dada por $p(\theta) \propto \sqrt{J(n/\sigma^2)} \propto 1$
+
+Sabemos que a Informação de Fisher de $\theta$ através de $y = y_1,...,y_n$ é definida como:
+
+$$I(\theta) = E [-\frac{\partial^2log~p(y|\theta)}{\partial\theta^2}]$$
+Segue que:
+
+$$- E[\frac{\partial^2}{\partial\theta^2}(-log(2\pi\sigma^2)/2-1/2\sigma^2 (\sum_{i=1}^n(y_i-\theta)^2)] \\
+= - E [\frac{\partial^2}{\partial\theta^2}(-log(2\pi\sigma^2)/2-1/2\sigma^2 (\sum_{i=1}^n(y_i^2-2\theta n\overline{y} + n\theta^2)] \\
+= -E [\frac{\partial}{\partial\theta}\left(-1/2\sigma^2(-2n\overline{y} + 2n\theta\right))] \\
+= -E[-1/2\sigma^2\left(2n)\right] \\
+= n/\sigma^2$$
 
 ## A posteriori da distribuição
 
@@ -61,6 +63,141 @@ Podemos reescrever $p(\theta|y)$ como:
 $$p(\theta|y_n) \propto e^{(-1/2\tau_n^2)(\theta-\mu_n)^2}$$
 
 Logo, para uma distribuição Normal com variância conhecida, a média aposteriori $\mu_n$ pode ser interpretada como a média ponderada da média a priori e o valor observado $y = y_1,...,y_n$, sendo os pesos proporcionais às precisões de cada um.
+
+
+```{r include=FALSE}
+
+sample <- dados::pinguins|>
+  filter(especie == "Pinguim-de-barbicha")|>
+  select(comprimento_bico)|>
+  drop_na() |>
+  pull()
+
+```
+
+```{r}
+# gera a priori e a posteriori de uma normal com media desconhecida e sigma conhecido
+
+ norm <- function(samp, sigma = 40, mu, tau0 = 10000 ){
+
+  n <- length(samp)
+  xbar <- mean(samp)
+
+  ver <- function(x) exp(- n/(2*sigma^2) * (xbar - x)^2)
+
+  mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
+  sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
+
+  theta <- seq(20, 60, 0.2)
+
+
+  tibble(theta = theta,
+         priori = dnorm(theta,mu,tau0),
+         post = dnorm(theta,mu.post,sigma.post),
+         ver = ver(theta),
+         pred = dnorm(theta,mu.post,tau0+sigma),
+         tau1 = sigma.post,
+         mu1 = mu.post)
+
+}
+```
+
+
+```{r}
+norm(samp = sample,  sigma = sd(sample)+1, tau0 = 1e10, mu = 42) %>% 
+  pivot_longer(cols = !"theta") %>% 
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = value)) +
+  facet_wrap(~name, scales = "free_y")
+```
+
+```{r}
+#coeff <- 0.03
+a <- norm(samp = sample,  sigma = sd(sample)+1, tau0 = 20, mu = 42)
+
+a|>  
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = post,  color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  scale_color_brewer(name = "Cor", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(theta), limits = c(20, 60))+
+  #    theme(axis.title.y=element_blank()) +
+  #scale_y_continuous(name = " ",
+   #                  sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
+  ggtitle("Média Posteriori")+
+  scale_linetype(name = "Distribuição")
+```
+```{r}
+b <- norm(samp = sample,  sigma = sd(sample), tau0 = 8, mu = 30)
+
+b|>  
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = post,  color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  scale_color_brewer(name = "Cor", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(theta), limits = c(20, 60))+
+  #    theme(axis.title.y=element_blank()) +
+  #scale_y_continuous(name = " ",
+   #                  sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
+  ggtitle("Média Posteriori")+
+  scale_linetype(name = "Distribuição")
+```
+```{r}
+c <- norm(samp = sample,  sigma = sd(sample), tau0 = 14 , mu = 60)
+
+c|>  
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = post,  color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  scale_color_brewer(name = "Cor", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(theta), limits = c(20, 60))+
+  #    theme(axis.title.y=element_blank()) +
+  #scale_y_continuous(name = " ",
+   #                  sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
+  ggtitle("Média Posteriori")+
+  scale_linetype(name = "Distribuição")
+```
+```{r}
+d <- norm(samp = sample,  sigma = sd(sample), tau0 = 12, mu = 54)
+
+d|>  
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = post,  color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  scale_color_brewer(name = "Cor", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(theta), limits = c(20, 60))+
+  #    theme(axis.title.y=element_blank()) +
+  #scale_y_continuous(name = " ",
+   #                  sec.axis = sec_axis(~.*1/coeff, name=expression(L(theta))))+
+  ggtitle("Média Posteriori")+
+  scale_linetype(name = "Distribuição")
+```
+
+```{r}
+tab <- tibble(      Prioris = c("Priori 1","Priori 2","Priori 3", "Priori 4"),
+             Media.pri = c(42, 30, 60, 54),
+             Media.pos = c(48.8, 48.8, 48.8, 48.8),
+             SD.pri = c(2000, 1000, 800, 980),
+             SD.pos = c(0.277, 0.164, 0.164, 0.164),
+             IC.025 = c(qnorm(0.025, mean = 42 , sd = 48.8),
+                        qnorm(0.025, mean = 30 , sd = 48.8),
+                        qnorm(0.025, mean = 60, sd = 48.8),
+                        qnorm(0.025, mean = 54, sd = 48.8)),
+             IC.975 = c(qnorm(0.975, mean = 42 , sd = 48.8),
+                        qnorm(0.975, mean = 30 , sd = 48.8),
+                        qnorm(0.975, mean = 60, sd = 48.8),
+                        qnorm(0.975, mean = 54, sd = 48.8)))|>
+  knitr::kable()
+```
+
+Quatro amigos, Cleiton, Eduardo, Larissa e Robertinho resolvem tentar estimar a média do comprimento do bico dos pinguins de barbicha. Para tanto, cada integrante do grupo resolve dar um palpite em relação a média e variância da distribuição. Desse modo, Cleiton acredita que a distribuição seja próxima a $\mathcal {N}(42, 20)$, Eduardo acredita que $\mathcal {N}(30, 8)$, Larissa $\mathcal {N}(60, 14)$  e Robertinho $\mathcal {N}(54, 12)$.
+
+Cleiton obteve uma $p(\theta|y) \sim \mathcal{N}(48.8, 0.277)$, Eduardo obteve uma$p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$, Larissa obteve $p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$ e Robertinho também obteve $p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$ 
+
 
 # Caso 2: $\mu$ conhecido e $\sigma$ desconhecido
 
@@ -149,20 +286,16 @@ Os quatro amigos decidem estimar este desvio padrão, cada um define sua *priori
  - **Larissa** adora ir ao zoológico visitar aos pinguins. Ela decide adotar uma $\text{Gama-Inv}(\alpha = 0.5,\ \beta = 3)$
  - **Robertinho** é um biólogo com muita experiência, que consulta suas anotações sobre pinguins e decide adotar uma *priori* $\text{Gama-Inv}(\alpha = 35,\ \beta = 186)$
 
-
-```{r load-data}
-sample <- dados::pinguins %>%
-  filter(especie == "Pinguim-de-barbicha") %>%
-  select(comprimento_bico) %>% 
-  drop_na() %>% pull()
-```
-
-
 ```{r sigmaNorm-func}
+
 # gera a priori e a posteriori de uma normal com media conhecida e sigma desconhecido
 SigmaNorm <- function(samp, theta = 48.833, alpha = 0.001, beta = 0.001){
   
   n <- length(samp)
+
+  xbar <- mean(samp)
+  
+  
   s <- sum(((samp - theta)/2)^2)
   
   l_sigma2 <- function(sigma2) sigma2^(-(n/2))  * exp(- 1/sigma2 *s)

@@ -156,7 +156,7 @@ $$f(x|\theta) = e^{-x^2}$$
 Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
   
 ```{r echo = FALSE, warning = FALSE}
-<<<<<<< HEAD
+
 # 
 # a <- rbind(norm(dados, tau0 = 20)|> mutate(cor = "Fisico A", obs = "100 observações"),
 #            norm(dados, tau0 = 80)|> mutate(cor = "Fisico B", obs = "100 observações"),
@@ -170,6 +170,7 @@ Temos $\theta_A \sim N(900, 20^2)$ e $\theta_B \sim N(900, 80^2)$. Assim:
 #   scale_x_continuous(name = expression(theta), limits = c(700, 1100))+
 #   theme(axis.title.y=element_blank()) +
 #   ggtitle("Distribuição a priori da grandeza estimada pelos físicos")
+<<<<<<< HEAD
 =======
 
 a <- rbind(norm(dados, tau0 = 20)|> mutate(cor = "Fisico A", obs = "100 observações"),
@@ -185,6 +186,8 @@ a|> filter(obs == "100 observações")|>
   theme(axis.title.y=element_blank()) +
   ggtitle("Distribuição a priori da grandeza estimada pelos físicos")
 >>>>>>> 28667acb8a665ea4764d398640aafb73bc34d1b2
+=======
+>>>>>>> 7c572f929bf115f1e6f08e20621837424f5b2402
 
 ```
 
@@ -319,7 +322,8 @@ $$\mathcal{L}(y|\sigma^2) = \prod_{i=1}^n \frac1{\sqrt{2\pi\sigma}} e^{-(y_i-\th
   
 ### Priori não informativa
   
-  
+Definimos a log-verossimilhança em nosso caso como sendo:
+
 $$\log(\mathcal{L}(y|\sigma^2)) \propto -\frac n2 \log(\sigma^{-2}) -\sigma^{-2}\sum_{i=1}^n (y_i-\theta)^2$$
   
 A distribuição a *priori* de Jeffreys é dada por $\pi(\sigma^2) \propto \sqrt{J(\sigma^2)}$.
@@ -381,22 +385,40 @@ Dessa forma,
 $$\pi(\sigma^2 | y) \sim \text{Gama-Inv}(\alpha + \frac n2,\beta +\frac{1}{2}\sum_{i=1}^n (y_i-\theta)^2)$$
 
 
-
-
-```{r include=FALSE}
+```{r}
 library(tidyverse)
+library(effectsize)
+library(invgamma)
 library(dados)
 
+<<<<<<< HEAD
 sample <- dados::pinguins|>
   filter(especie == "Pinguim-de-barbicha")|>
   select(comprimento_bico)|> 
   drop_na()
+=======
+
+sample <- dados::pinguins %>%
+  filter(especie == "Pinguim-de-barbicha") %>%
+  select(comprimento_bico) %>% 
+  drop_na() %>% pull()
+
+#sample <- rnorm(10, 5, 4)
+
+
+
+```
+
+
+```{r include=FALSE}
+>>>>>>> 7c572f929bf115f1e6f08e20621837424f5b2402
 
 # gera a priori e a posteriori de uma normal com media conhecida e sigma desconhecido
 
-SigmaNorm <- function(samp, theta = 49, alpha = 0.001, beta = 0.001){
+SigmaNorm <- function(samp, theta = 5, alpha = 0.001, beta = 0.001){
   
   n <- length(samp)
+<<<<<<< HEAD
   xbar <- mean(samp)
   
   loglik <- function(sigma2) - (n/2) * exp(sigma^2) - 1/sigma2 * sum(samp - theta)^2
@@ -404,19 +426,50 @@ SigmaNorm <- function(samp, theta = 49, alpha = 0.001, beta = 0.001){
   
   mu.post <- (tau0^(-2)*mu + n*sigma^(-2)*xbar)/ (tau0^(-2) + n * sigma^(-2))
   sigma.post <- (tau0^(-2) + n*sigma^(-2))^(-1)
+=======
+  s <- sum(((samp - theta)/2)^2)
+>>>>>>> 7c572f929bf115f1e6f08e20621837424f5b2402
   
-  theta <- seq(mu - 10* sigma, mu + 10 * sigma,0.5)
+  l_sigma2 <- function(sigma2) sigma2^(-(n/2))  * exp(- 1/sigma2 *s)
   
+  a.post <- alpha + n/2
+  b.post <- beta +  s
   
-  tibble(theta = theta,
-         priori = dgamma(sigma2,alpha,beta),
-         post = dnorm(theta,mu.post,sigma.post),
-         ver = ver(theta),
-         pred = dnorm(theta,mu.post,tau0+sigma),
-         tau1 = sigma.post,
-         mu1 = mu.post)
+  sigma2 <- seq(0.02, 40, 0.02)
   
+  tibble(sigma2 = sigma2,
+         priori = normalize( dinvgamma(sigma2,alpha,beta)),
+         post = normalize(dinvgamma(sigma2,a.post,b.post)),
+         ver = normalize(l_sigma2(sigma2)),
+         alpha1 = a.post,
+         beta1 = b.post)
 }
-
-
 ```
+
+
+```{r}
+
+SigmaNorm(sample, mean(sample))[-c(5,6)] %>% 
+  pivot_longer(cols = !"sigma2") %>% 
+  ggplot(aes(x = sigma2)) +
+  geom_line(aes(y = value)) +
+  facet_wrap(~name, scales = "free_y")
+```
+
+```{r}
+
+SigmaNorm(sample, 48.83382 ,alpha = 34, beta = 187)[-c(5,6)] %>% 
+  pivot_longer(cols = !"sigma2") %>% 
+  ggplot(aes(x = sigma2)) +
+  geom_line(aes(y = value)) +
+  facet_wrap(~name, scales = "free_y")
+```
+```{r}
+
+SigmaNorm(sample, mean(sample))[-c(5,6)] %>% 
+  pivot_longer(cols = !"sigma2") %>% 
+  ggplot(aes(x = log(sigma2))) +
+  geom_line(aes(y = log(value))) +
+  facet_wrap(~name, scales = "free_y")
+```
+

@@ -26,6 +26,8 @@ $$\mathcal{L}(y|\theta) =\prod_{i=1}^n p(y_i|\theta) =  \prod_{i-1}^n e^{-1/2\si
 
 ## A *priori* da distribuição
 
+Nós parametrizamos $p(\theta)$ de modo que $\theta \sim \mathcal{N}(y_0, \tau_0^2)$ com média $y_0$ e variância $\tau_0^2$
+
 $$p(\theta)\propto e^{(-1/2\tau_0^2)(\theta-y_0)^2}$$
 
 ## A priori não informativa de Jeffreys
@@ -112,35 +114,41 @@ norm <- function(samp, sigma = 40, mu, tau0 = 10000 ){
 
 ## Exemplo: Comprimento do bico dos pinguins
 
-Quatro amigos, Cleiton, Eduardo, Larissa e Robertinho resolvem tentar estimar a média do comprimento do bico dos pinguins de barbicha. Para tanto, cada integrante do grupo resolve dar um palpite em relação a média e variância da distribuição. Desse modo, Cleiton acredita que a distribuição seja próxima a $\mathcal {N}(42, 20)$, Eduardo acredita que $\mathcal {N}(30, 8)$, Larissa $\mathcal {N}(60, 14)$  e Robertinho $\mathcal {N}(54, 12)$.
+Escolheu-se o conjunto de dados *palmerpenguins* em sua versão traduzida. Como atributo de interesse escolhemos o comprimento do bico dos pinguis e nos limitamos a análise de uma espécie - nesse caso o **Pinguin-de-barbicha**. Existem 68 pinguins desta espécie em nosso dataset.
 
-Chegam duas amostras de bico de pinguins, uma com $n = 2$, outra com $n = 15$. 
+Sabe-se que para a distribuição do comprimento do bico dos pinguins tem-se que $\sigma = 3,34$ e a média $\theta = 48.8$ . 
+
+Quatro amigos, Cleiton, Eduarda, Larissa e Robertinho resolvem tentar estimar a média do comprimento do bico dos pinguins de barbicha. Para tanto, cada integrante do grupo resolve dar um palpite em relação a média e variância da distribuição.
+
+Desse modo, Cleiton, que nunca foi a um zoológico e nunca viu um pinguin pessoalmente acredita que a distribuição seja próxima a $\mathcal {N}(80, 12)$, Eduarda, que adora pinguins porém nunca viu um pessoalmente, acredita que $\mathcal {N}(30, 8)$, Larissa que  visita zoológicos com frequência acredita que $\mathcal {N}(55, 5)$  e Robertinho - biólogo que trabalha com pinguis acredita que  $\mathcal {N}(47, 3)$.
+
+. 
 
 
 ```{r tab1}
-tibble(      Prioris = c("Priori 1","Priori 2","Priori 3", "Priori 4"),
-             Media.pri = c(42, 30, 60, 54),
-             Media.pos = c(48.8, 48.8, 48.8, 48.8),
-             SD.pri = c(2000, 1000, 800, 980),
-             SD.pos = c(0.277, 0.164, 0.164, 0.164),
-             IC.025 = c(qnorm(0.025, mean = 42 , sd = 48.8),
-                        qnorm(0.025, mean = 30 , sd = 48.8),
-                        qnorm(0.025, mean = 60, sd = 48.8),
-                        qnorm(0.025, mean = 54, sd = 48.8)),
-             IC.975 = c(qnorm(0.975, mean = 42 , sd = 48.8),
-                        qnorm(0.975, mean = 30 , sd = 48.8),
-                        qnorm(0.975, mean = 60, sd = 48.8),
-                        qnorm(0.975, mean = 54, sd = 48.8)))%>%
-  knitr::kable(digits = 2, caption = "Resumo das prioris dos quatro amigos")
+tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
+             Media.pri = c(80, 30, 55, 47),
+             SD.pri = c(20, 8, 5, 3),
+             IC.025 = c(qnorm(0.025, mean = 80 , sd = 20),
+                        qnorm(0.025, mean = 30 , sd = 17.2),
+                        qnorm(0.025, mean = 55,  sd = 12.1),
+                        qnorm(0.025, mean = 47,  sd = 6.51)),
+             IC.975 = c(qnorm(0.975, mean = 50.6 , sd = 22.2),
+                        qnorm(0.975, mean = 43.8 , sd = 17.2),
+                        qnorm(0.975, mean = 51.8,  sd = 12.1),
+                        qnorm(0.975, mean = 47.5,  sd = 6.51)))%>%
+  knitr::kable(digits = 2, caption = "Resumo apriori dos quatro amigos para n = 68")
 ```
 
-Cleiton obteve uma $p(\theta|y) \sim \mathcal{N}(48.8, 0.277)$, Eduardo obteve uma$p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$, Larissa obteve $p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$ e Robertinho também obteve $p(\theta|y) \sim \mathcal{N}(48.8, 0.164)$ 
+Chegam duas amostras de bico de pinguins, uma com $n = 5$, outra com $n = 15$
+
+Para a amostra com $n = 5$ teremos:
 
 ```{r graf11, warning=FALSE}
-a <- norm(samp = sample2,  sigma = sd(sample)+1, tau0 = 20, mu = 42) %>% mutate(Priori = "Cleiton") 
-b <- norm(samp = sample2,  sigma = sd(sample), tau0 = 8, mu = 30) %>% mutate(Priori = "Eduarda")
-c <- norm(samp = sample2,  sigma = sd(sample), tau0 = 14 , mu = 60) %>% mutate(Priori = "Larissa")
-d <- norm(samp = sample2,  sigma = sd(sample), tau0 = 12, mu = 54) %>% mutate(Priori = "Robertinho")
+a <- norm(samp = sample5,  sigma = sd(sample), tau0 = 12, mu = 60) %>% mutate(Priori = "Cleiton") 
+b <- norm(samp = sample5,  sigma = sd(sample), tau0 = 8, mu = 30) %>% mutate(Priori = "Eduarda")
+c <- norm(samp = sample5,  sigma = sd(sample), tau0 = 5 , mu = 55) %>% mutate(Priori = "Larissa")
+d <- norm(samp = sample5,  sigma = sd(sample), tau0 = 3, mu = 47) %>% mutate(Priori = "Robertinho")
 
 
 rbind(a,b,c,d) %>% 
@@ -157,16 +165,35 @@ rbind(a,b,c,d) %>%
 
 ```
 
+```{r tabdis5}
+tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
+             Media.pri = c(80, 30, 55, 47),
+             Media.pos = c(50.6, 43.8, 51.8, 47.5),
+             SD.pri = c(12, 8, 5, 3),
+             SD.pos = c(22.2, 17.2, 12.1, 6.51),
+             IC.025 = c(qnorm(0.025, mean = 50.6 , sd = 22.2),
+                        qnorm(0.025, mean = 43.8 , sd = 17.2),
+                        qnorm(0.025, mean = 51.8,  sd = 12.1),
+                        qnorm(0.025, mean = 47.5,  sd = 6.51)),
+             IC.975 = c(qnorm(0.975, mean = 50.6 , sd = 22.2),
+                        qnorm(0.975, mean = 43.8 , sd = 17.2),
+                        qnorm(0.975, mean = 51.8,  sd = 12.1),
+                        qnorm(0.975, mean = 47.5,  sd = 6.51)))%>%
+  knitr::kable(digits = 2, caption = "Resumo aposteriori dos quatro amigos (n=5)")
+```
+
+
+Enquanto que, para $n = 15$:
 ```{r graf12, warning=FALSE}
 
 
-a <- norm(samp = sample15,  sigma = sd(sample)+1, tau0 = 20, mu = 42) %>% mutate(Priori = "Cleiton") 
-b <- norm(samp = sample15,  sigma = sd(sample), tau0 = 8, mu = 30) %>% mutate(Priori = "Eduarda")
-c <- norm(samp = sample15,  sigma = sd(sample), tau0 = 14 , mu = 60) %>% mutate(Priori = "Larissa")
-d <- norm(samp = sample15,  sigma = sd(sample), tau0 = 12, mu = 54) %>% mutate(Priori = "Robertinho")
+e <- norm(samp = sample15,  sigma = sd(sample), tau0 = 12, mu = 80) %>% mutate(Priori = "Cleiton") 
+f <- norm(samp = sample15,  sigma = sd(sample), tau0 = 8, mu = 30) %>% mutate(Priori = "Eduarda")
+g <- norm(samp = sample15,  sigma = sd(sample), tau0 = 5 , mu = 55) %>% mutate(Priori = "Larissa")
+h <- norm(samp = sample15,  sigma = sd(sample), tau0 = 3, mu = 47) %>% mutate(Priori = "Robertinho")
 
 
-rbind(a,b,c,d) %>% 
+rbind(e,f,g,h) %>% 
   ggplot(aes(x = theta)) +
   geom_line(aes(y = post, color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
@@ -175,9 +202,25 @@ rbind(a,b,c,d) %>%
   scale_x_continuous(name = expression(theta), limits = c(20, 60))+
   theme(axis.title.y=element_blank()) +
   labs(title = "Distribuições da média do bico dos pinguins",
-       subtitle = "n = 30") +
+       subtitle = "n = 15") +
   facet_wrap(~Priori)
 
+```
+```{r tab115}
+tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
+             Media.pri = c(80, 30, 55, 47),
+             Media.pos = c(49.6, 49.1, 49.5, 49.1),
+             SD.pri = c(20, 8, 5, 3),
+             SD.pos = c(1.24, 0.735, 0.722, 0.687),
+             IC.025 = c(qnorm(0.025, mean = 49.6,  sd = 1.240),
+                        qnorm(0.025, mean = 49.1,  sd = 0.735),
+                        qnorm(0.025, mean = 49.5,  sd = 0.722),
+                        qnorm(0.025, mean = 49.1,  sd = 0.687)),
+             IC.975 = c(qnorm(0.975, mean = 49.6 , sd = 1.240),
+                        qnorm(0.975, mean = 49.1 , sd = 0.735),
+                        qnorm(0.975, mean = 49.5,  sd = 0.722),
+                        qnorm(0.975, mean = 49.1,  sd = 0.687)))%>%
+  knitr::kable(digits = 2, caption = "Resumo aposteriori dos quatro amigos (n=15)")
 ```
 
 

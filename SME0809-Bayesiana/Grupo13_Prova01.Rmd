@@ -122,25 +122,7 @@ Quatro amigos, Cleiton, Eduarda, Larissa e Robertinho resolvem tentar estimar a 
 
 Desse modo, Cleiton, que nunca foi a um zoológico e nunca viu um pinguin pessoalmente acredita que a distribuição seja próxima a $\mathcal {N}(80, 12)$, Eduarda, que adora pinguins porém nunca viu um pessoalmente, acredita que $\mathcal {N}(30, 8)$, Larissa que  visita zoológicos com frequência acredita que $\mathcal {N}(55, 5)$  e Robertinho - biólogo que trabalha com pinguis acredita que  $\mathcal {N}(47, 3)$.
 
-. 
-
-
-```{r tab1}
-tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
-             Media.pri = c(80, 30, 55, 47),
-             SD.pri = c(20, 8, 5, 3),
-             IC.025 = c(qnorm(0.025, mean = 80 , sd = 20),
-                        qnorm(0.025, mean = 30 , sd = 17.2),
-                        qnorm(0.025, mean = 55,  sd = 12.1),
-                        qnorm(0.025, mean = 47,  sd = 6.51)),
-             IC.975 = c(qnorm(0.975, mean = 50.6 , sd = 22.2),
-                        qnorm(0.975, mean = 43.8 , sd = 17.2),
-                        qnorm(0.975, mean = 51.8,  sd = 12.1),
-                        qnorm(0.975, mean = 47.5,  sd = 6.51)))%>%
-  knitr::kable(digits = 2, caption = "Resumo apriori dos quatro amigos para n = 68")
-```
-
-Chegam duas amostras de bico de pinguins, uma com $n = 5$, outra com $n = 15$
+Adotaremos três amostras de bico de pinguins, uma com $n = 5$, outra com $n = 15$, sorteadas independentemente, e a amostra com todos os pinguins, onde $n = 68$.
 
 Para a amostra com $n = 5$ teremos:
 
@@ -183,9 +165,9 @@ tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
 ```
 
 
-Enquanto que, para $n = 15$:
-```{r graf12, warning=FALSE}
+Procedendo de forma análoga, para $n = 15$:
 
+```{r graf12, warning=FALSE, echo = FALSE}
 
 e <- norm(samp = sample15,  sigma = sd(sample), tau0 = 12, mu = 80) %>% mutate(Priori = "Cleiton") 
 f <- norm(samp = sample15,  sigma = sd(sample), tau0 = 8, mu = 30) %>% mutate(Priori = "Eduarda")
@@ -206,7 +188,8 @@ rbind(e,f,g,h) %>%
   facet_wrap(~Priori)
 
 ```
-```{r tab115}
+
+```{r tab115, echo = FALSE}
 tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
              Media.pri = c(80, 30, 55, 47),
              Media.pos = c(49.6, 49.1, 49.5, 49.1),
@@ -222,6 +205,48 @@ tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
                         qnorm(0.975, mean = 49.1,  sd = 0.687)))%>%
   knitr::kable(digits = 2, caption = "Resumo aposteriori dos quatro amigos (n=15)")
 ```
+
+Para a amostra completa:
+
+```{r, echo = FALSE}
+
+e <- norm(samp = sample,  sigma = sd(sample), tau0 = 12, mu = 80) %>% mutate(Priori = "Cleiton") 
+f <- norm(samp = sample,  sigma = sd(sample), tau0 = 8, mu = 30) %>% mutate(Priori = "Eduarda")
+g <- norm(samp = sample,  sigma = sd(sample), tau0 = 5 , mu = 55) %>% mutate(Priori = "Larissa")
+h <- norm(samp = sample,  sigma = sd(sample), tau0 = 3, mu = 47) %>% mutate(Priori = "Robertinho")
+
+
+rbind(e,f,g,h) %>% 
+  ggplot(aes(x = theta)) +
+  geom_line(aes(y = post, color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(theta), limits = c(20, 60))+
+  theme(axis.title.y=element_blank()) +
+  labs(title = "Distribuições da média do bico dos pinguins",
+       subtitle = "n = 68") +
+  facet_wrap(~Priori)
+
+```
+
+
+```{r tab1, echo = FALSE}
+tibble(      Prioris = c("Cleiton","Eduarda","Larissa", "Robertinho"),
+             Media.pri = c(80, 30, 55, 47),
+             SD.pri = c(20, 8, 5, 3),
+             IC.025 = c(qnorm(0.025, mean = 80 , sd = 20),
+                        qnorm(0.025, mean = 30 , sd = 17.2),
+                        qnorm(0.025, mean = 55,  sd = 12.1),
+                        qnorm(0.025, mean = 47,  sd = 6.51)),
+             IC.975 = c(qnorm(0.975, mean = 50.6 , sd = 22.2),
+                        qnorm(0.975, mean = 43.8 , sd = 17.2),
+                        qnorm(0.975, mean = 51.8,  sd = 12.1),
+                        qnorm(0.975, mean = 47.5,  sd = 6.51)))%>%
+  knitr::kable(digits = 2, caption = "Resumo apriori dos quatro amigos para n = 68")
+```
+
+
 
 ***
 
@@ -263,27 +288,11 @@ $\phi$ é uma distribuição imprópria, pois $\int_0^{+\infty} \log(\sigma^2) d
   
 ### Conjulgadas Naturais
   
-  O suporte de nosso parâmetro de interesse $\sigma >0$ permite-nos adotar três distribuições de probabilidade estudadas durante o curso:
+  O suporte de nosso parâmetro de interesse $\sigma >0$ permite-nos adotar três distribuições de probabilidade estudadas durante o curso: **Gama**, **Gama-Inversa** e **Qui-Quadrado**. Note que as duas primeiras estão relacionadas via uma transformação simples e a última é um caso particular delas. Dessa forma, as três distribuições servem como conjulgada natural da Normal, em nosso caso optou-se por utilizar a distribuição *Gama Inversa*.
   
-  1.**Gama:** 
+$$ p_{\theta}(\theta | \alpha,\beta) = \frac{\beta^\alpha \theta^{-(\alpha + 1)} e^{-\beta / \theta}}{\Gamma(\alpha)} \propto \theta^{-(\alpha + 1)} e^{-\beta/\theta}, \ \ \alpha>0, \beta >0, \theta>0$$
   
-  Se $X \sim \text{Gama}(\alpha,\beta)$ então
-$$f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{(\alpha - 1)} e^{-\beta x}}{\Gamma(\alpha)} \propto x^{(\alpha - 1)} e^{-\beta x}, \ \ \alpha>0, \beta >0, x>0$$
-
-  
-  2.**Gama-Inversa:** 
-  
-  Se $X \sim (\alpha,\beta)$ então
-$$ f_{X}(x | \alpha,\beta) = \frac{\beta^\alpha x^{-(\alpha + 1)} e^{-\beta / x}}{\Gamma(\alpha)} \propto x^{-(\alpha + 1)} e^{-\beta/x}, \ \ \alpha>0, \beta >0, x>0$$
-  
-  3.**Qui-Quadrado:** 
-
-  Se $X\sim \chi^2 (\nu)$ então
-$$ f_{X}(x | \nu) = \frac{x^{(\nu/2) - 1} e^{- x/2}}{2^{\nu/2}\Gamma(\nu/2)} \propto x^{(\nu/2) - 1} e^{- x/2}, \ \ \nu>0, x>0$$  
-
-Note que as duas primeiras estão relacionadas via uma transformação simples e a última é um caso particular delas. Desprezadas as constantes não informativas, as três distribuições são da forma $x$ elevado a uma potência vezes a exponencial de $x$. Dessa forma, as três distribuições servem como conjulgada natural da Normal, em nosso caso. Neste trabalho, optou-se por utilizar a distribuição Gama Inversa.
-
-Fazendo $x = \sigma$, temos uma *priori* da forma:
+Fazendo $\theta = \sigma^2$, temos uma *priori* da forma:
   
 $$\sigma^{-(\alpha + 1)} e^{-\beta / \sigma^2} \Rightarrow \pi(\sigma) \sim \text{Gama-Inv}(\alpha,\beta)$$
 Se quisermos torná-la não informativa, basta utilizarmos $\alpha \to 0, \beta \to 0$.
@@ -307,11 +316,11 @@ Os quatro amigos decidem estimar este desvio padrão, cada um define sua *priori
 
 
  - **Cleiton** nunca viu um pinguim-de-barbicha na vida, nem em fotografia. Dessa forma, ele decide adotar uma *priori* não informativa $\text{Gama-Inv}(\alpha = 0.01,\ \beta = 0.01)$
- - **Eduarda** sabe tudo sobre pinguins, mas nunca viu um pessoalmente. Ela opta por uma $\text{Gama-Inv}(\alpha = 20,\ \beta = 20)$ 
+ - **Eduarda** sabe tudo sobre pinguins, mas nunca viu um pessoalmente. Ela opta por uma $\text{Gama-Inv}(\alpha = 1,\ \beta = 1.5)$ 
  - **Larissa** adora ir ao zoológico visitar aos pinguins. Ela decide adotar uma $\text{Gama-Inv}(\alpha = 0.5,\ \beta = 3)$
  - **Robertinho** é um biólogo com muita experiência, que consulta suas anotações sobre pinguins e decide adotar uma *priori* $\text{Gama-Inv}(\alpha = 35,\ \beta = 186)$
 
-Chegam duas amostras de bico de pinguins, uma com $n = 5$, outra com $n = 30$. 
+Assim como no caso anterior, utilizaremos três amostras de bico de pinguins, uma com $n = 5$, outra com $n = 30$, sorteadas independentemente, e o conjunto de dados completo, com $n=68$. 
 
 
 ```{r sigmaNorm-func}
@@ -343,7 +352,7 @@ SigmaNorm <- function(samp, theta = 48.833, alpha = 0.001, beta = 0.001){
 
 ```{r graf21, warning = FALSE}
 a <- SigmaNorm(sample5, alpha = 0.01, beta = 0.01) %>% mutate(Priori = "Cleiton") 
-b <- SigmaNorm(sample5,alpha = 1.5, beta = 1.5) %>% mutate(Priori = "Eduarda")
+b <- SigmaNorm(sample5,alpha = 1, beta = 1.5) %>% mutate(Priori = "Eduarda")
 c <- SigmaNorm(sample5,alpha = 0.5, beta = 3) %>% mutate(Priori = "Larissa")
 d <- SigmaNorm(sample5,alpha = 34, beta = 186) %>% mutate(Priori = "Robertinho")
 
@@ -352,23 +361,30 @@ rbind(a,b,c,d) %>%
   geom_line(aes(y = post, color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
   geom_line(aes(y = ver, color = "Verossimilhança")) +
-  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
-  scale_x_continuous(name = expression(sigma^2), limits = c(0, 20))+
+  scale_x_continuous(name = expression(sigma^2), limits = c(0, 40))+
   theme(axis.title.y=element_blank()) +
   labs(
     title ="Distribuições normalizadas da variância do comprimeiro do bico dos pinguins",
     subtitle = "n=5") +
   facet_wrap(~Priori)
 ```
+Neste caso, com o $n$ pequeno, é interessante notar que uma verossimilhança difusa a respeito de $\sigma^2$, se traduz em uma *posteriori* difusa para os colegas, exceto para Robertinho, que não aprendeu muito aqui.
 
 ```{r tab23, warning = FALSE}
 
 tabDesc <- function(alpha, beta){
+  if(alpha < 1)
+    med <- NA
+  else med <- beta/(alpha-1)
+  if(alpha < 2)
+    v <- NA
+  else v <- beta^2/((alpha-1)^2*(alpha-2))
+  
   tibble( alpha = alpha,
           beta = beta,
-          media = beta/(alpha-1),
-          var = beta^2/((alpha-1)^2*(alpha-2)),
+          media = med,
+          var = v,
           moda = beta/(alpha+1),
           IC2.5 = qinvgamma(0.025, alpha, beta),
           IC97.5 = qinvgamma(0.975, alpha, beta))
@@ -397,11 +413,12 @@ tabDesc <- function(alpha, beta){
 ```
 
 
+Procedendo de forma análoga, geramos os gráficos e tabelas para os outros valores de $n$.
 
 
-```{r graf22, warning = FALSE}
+```{r graf22, warning = FALSE, echo = FALSE}
 a <- SigmaNorm(sample30, alpha = 0.01, beta = 0.01) %>% mutate(Priori = "Cleiton") 
-b <- SigmaNorm(sample30,alpha = 1.5, beta = 1.5) %>% mutate(Priori = "Eduarda")
+b <- SigmaNorm(sample30,alpha = 1, beta = 1.5) %>% mutate(Priori = "Eduarda")
 c <- SigmaNorm(sample30,alpha = 0.5, beta = 3) %>% mutate(Priori = "Larissa")
 d <- SigmaNorm(sample30,alpha = 34, beta = 186) %>% mutate(Priori = "Robertinho")
 
@@ -410,7 +427,6 @@ rbind(a,b,c,d) %>%
   geom_line(aes(y = post, color = "Posteriori")) +
   geom_line(aes(y = priori, color = "Priori")) +
   geom_line(aes(y = ver, color = "Verossimilhança")) +
-  #geom_line(aes(y = 0.03* ver, colour = "Verossimilhança")) +
   scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
   scale_x_continuous(name = expression(sigma^2), limits = c(0, 20))+
   theme(axis.title.y=element_blank()) +
@@ -420,19 +436,10 @@ rbind(a,b,c,d) %>%
   facet_wrap(~Priori)
 ```
 
+Agora, o $n$ parece ser adequado. Vemos que todos os participantes obtiveram bastante informação a respeito de $\sigma$ com essa amostra.
 
-```{r tab2, warning = FALSE}
 
-tabDesc <- function(alpha, beta){
-  tibble( alpha = alpha,
-          beta = beta,
-          media = beta/(alpha-1),
-          var = beta^2/((alpha-1)^2*(alpha-2)),
-          moda = beta/(alpha+1),
-          IC2.5 = qinvgamma(0.025, alpha, beta),
-          IC97.5 = qinvgamma(0.975, alpha, beta))
-}
-
+```{r tab2, echo = FALSE}
 
   cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
              rbind(tabDesc(a$alpha0[1], a$beta0[1]),
@@ -444,7 +451,7 @@ tabDesc <- function(alpha, beta){
 
 ```
 
-```{r tab3}
+```{r tab3, echo = FALSE}
 
   cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
              rbind(tabDesc(a$alpha1[1], a$beta1[1]),
@@ -455,3 +462,50 @@ tabDesc <- function(alpha, beta){
   knitr::kable(digits = 2, caption = "Resumo a posteriori (n = 30)")
 ```
 
+
+
+```{r graf26, warning = FALSE, echo = FALSE}
+a <- SigmaNorm(sample, alpha = 0.01, beta = 0.01) %>% mutate(Priori = "Cleiton") 
+b <- SigmaNorm(sample,alpha = 1, beta = 1.5) %>% mutate(Priori = "Eduarda")
+c <- SigmaNorm(sample,alpha = 0.5, beta = 3) %>% mutate(Priori = "Larissa")
+d <- SigmaNorm(sample,alpha = 34, beta = 186) %>% mutate(Priori = "Robertinho")
+
+rbind(a,b,c,d) %>% 
+  ggplot(aes(x = sigma2)) +
+  geom_line(aes(y = post, color = "Posteriori")) +
+  geom_line(aes(y = priori, color = "Priori")) +
+  geom_line(aes(y = ver, color = "Verossimilhança")) +
+  scale_colour_brewer(name = "Distribuição", type = "qual", palette = "Dark2")+
+  scale_x_continuous(name = expression(sigma^2), limits = c(0, 20))+
+  theme(axis.title.y=element_blank()) +
+  labs(
+    title ="Distribuições normalizadas da variância do comprimeiro do bico dos pinguins",
+    subtitle = "n=68") +
+  facet_wrap(~Priori)
+```
+Aqui, não há grandes alterações se comparado com o anterior.  Aparentemente, o conhecimento que os colegas acumularam a respeito de $\sigma$ foi parecido em $n = 30$ e $n = 68$.
+
+```{r tab26, echo = FALSE}
+
+  cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
+             rbind(tabDesc(a$alpha0[1], a$beta0[1]),
+                   tabDesc(b$alpha0[1], b$beta0[1]),
+                   tabDesc(c$alpha0[1], c$beta0[1]),
+                   tabDesc(d$alpha0[1], d$beta0[1])
+              )) %>%
+  knitr::kable(digits = 2, caption = "Resumo a priori  (n = 68)")
+
+```
+
+```{r tab36, echo = FALSE}
+
+  cbind( Priori = c("Cleiton","Eduarda", "Larissa", "Robertinho"),
+             rbind(tabDesc(a$alpha1[1], a$beta1[1]),
+                   tabDesc(b$alpha1[1], b$beta1[1]),
+                   tabDesc(c$alpha1[1], c$beta1[1]),
+                   tabDesc(d$alpha1[1], d$beta1[1])
+              )) %>%
+  knitr::kable(digits = 2, caption = "Resumo a posteriori (n = 68)")
+```
+
+Neste trabalho, pudemos ver a forma das distribuições a *priori* e *posteriori* da média, com a variância conhecida, e da variância, com a média conhecida de uma distribuição Normal comportaram-se para diferentes valores de $n$, utilizando o conjunto de dados *palmerpenguins*. Foi uma aprendizagem interessante tanto do ponto de vista teórico quando prático, aqui procuramos elencar todo o nosso conhecimento acumulado em SME0809, e utilizá-lo para realizar a análise de um conjunto de dados reais utilizando a Inferência Bayesiana. Para próximos trabalhos teóricos nesse tópico, poderiam ser calculadas as distribuições preditivas, assim como as posterioris para o caso da *Gama* e da *Qui-Quadrado*.

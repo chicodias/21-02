@@ -1,0 +1,74 @@
+---
+title: "metropolis-hasting"
+author: "Heitor Carvalho Pinheiro"
+date: "23/10/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Metropolis - Hasting 
+
+### Random Walk Metropolis Hasting
+
+Sampling from a standard Normal distribution
+
+```{r , echo=TRUE}
+delta <- 0.5
+N <- 500
+x <- numeric(N) #cria um vetor de comprimento 500
+x[1] <- 0
+
+set.seed(2018-06-04)
+for (i in 2:N){
+  
+  eps <- runif(1, -delta, delta) #gerando um valor de uma dist uniforme
+  y <- x[i-1] + eps
+  #definindo o alpha (taxa de aceitação)
+  alpha <- min(dnorm(y, log = TRUE) - dnorm(x[i-1], log = TRUE), 1)
+  #amostrando de uma uniforme 
+  u <- runif(1,0,1)
+  if(log(u) <= alpha)
+    x[i] <- y
+  else
+    x[i] <- x[i-1]
+  
+}
+
+summary(x)
+
+hist(x)
+```
+
+Trace plot of the samples
+
+```{r}
+library(ggplot2)
+qplot(1:N, x, geom = 'line', xlab = "Iteration")
+```
+O que acontece se mudarmos o $\delta$?
+
+```{r}
+delta <- 2
+N <- 500
+x <- numeric(N)
+x[1] <- 0
+set.seed(10)
+for ( i in 2:N){
+  eps <- runif(1,-delta, delta)
+  y <- x[i-1] + eps
+  alpha <- min(dnorm(y, log = TRUE) - dnorm(x[i-1], log = TRUE),1)
+  U <- runif(1,0,1)
+  if (log(u) <= alpha)
+    x[i] <- y
+  else
+    x[i] <- x[i-1]
+  
+}
+print(summary(x))
+qplot(1:N, x, geom = "line", xlab = "Iteration")
+```
+
+

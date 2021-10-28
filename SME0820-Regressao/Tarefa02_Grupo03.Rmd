@@ -1,0 +1,55 @@
+---
+title: "Tarefa02_Grupo03_SME0820"
+author:
+  - Brenda da Silva Muniz 11811603
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351
+  - Mônica Amaral Novelli 11810453
+date: "Outubro de 2021"
+output: pdf_document
+---
+
+Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
+
+##### Informações do dataset
+
+Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
+
+Significancia: 97%
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Dataset
+
+```{r, echo=TRUE, warning=FALSE}
+dados <- read_csv("data-table-B7.csv", locale = locale(decimal_mark = ","))
+dim(dados)
+
+#Renomeando as colunas
+names(dados) <- c('Pressao', 'Temp', 'FluxoCO2', 'Umidade', 'Tamanho', 'y')
+
+head(dados)
+```
+Temos cinco covariáveis e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de azeite por lote de amendoim**
+
+## 1. Análise Descritiva dos dados
+
+## 2. ajuste do modelo de Regressão Linear Múltipla
+* Qual a diferença entre o EMV e o EMMQ
+
+## 3. Estimação de $\sigma^2$
+
+## 4. ANOVA
+
+## 5. $R^2$ e $R^2 ajustado$
+* Compare os dois avaliadores para 3 cenários diferentes do modelo.
+
+## 6. Testes dos Coeficientes de regressão
+
+## 7.  Teste um Subconjunto de Coeficientes
+* Faça análise e Escolha do Melhor Modelo, Qual modelo seu grupo acredita ser o melhor? Apresente omodelo escolhido pelo grupo (Equação do modelo ajustado, com as estimativas dos $\beta$'s e $\sigma^2$ e interpretação do modelo). Justifique a escolha das co-variáveis. Faça uso do teste de um subconjuntode coeficientes nesta questão ilustrado na aula 14 e 15.
+$R^2$

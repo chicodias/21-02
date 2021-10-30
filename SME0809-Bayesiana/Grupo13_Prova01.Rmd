@@ -122,7 +122,7 @@ Quatro amigos, Cleiton, Eduarda, Larissa e Robertinho resolvem tentar estimar a 
 
 Desse modo, Cleiton, que nunca foi a um zoológico e nunca viu um pinguin pessoalmente acredita que a distribuição seja próxima a $\mathcal {N}(80, 12)$, Eduarda, que adora pinguins porém nunca viu um pessoalmente, acredita que $\mathcal {N}(30, 8)$, Larissa que  visita zoológicos com frequência acredita que $\mathcal {N}(55, 5)$  e Robertinho - biólogo que trabalha com pinguis acredita que  $\mathcal {N}(47, 3)$.
 
-Adotaremos três amostras de bico de pinguins, uma com $n = 5$, outra com $n = 15$, sorteadas independentemente, e a amostra com todos os pinguins, onde $n = 68$.
+Adotaremos três amostras de bico de pinguins, uma com $n = 5$, outra com $n = 15$ sorteadas independentemente, e a amostra com todos os pinguins, onde $n = 68$.
 
 Para a amostra com $n = 5$ teremos:
 

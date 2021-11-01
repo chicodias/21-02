@@ -26,7 +26,7 @@ library(tidyverse)
 ## Dataset
 
 ```{r, echo=TRUE, warning=FALSE}
-dados <- read_csv("data-table-B7.csv", locale = locale(decimal_mark = ","))
+dados <- read_csv("dados/data-table-B7.csv", locale = locale(decimal_mark = ","))
 dim(dados)
 
 #Renomeando as colunas
@@ -45,8 +45,245 @@ Temos cinco covariáveis e a coluna $y$ corresponde a nossa variável preditora 
 
 ## 4. ANOVA
 
+```{r}
+library(mlbench)
+library(caret)
+```
+
+
+```{r}
+set.seed(42)
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+# train the model
+model <- train(y~., data=dados, method = 'lm', preProcess="scale", trControl=control)
+# estimate variable importance
+importance <- varImp(model, scale=FALSE)
+
+# plot importance
+plot(importance)
+```
+```{r}
+c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
+```
+
+```{r}
+base.mod <- lm(y ~ 1 , data= dados)  # base intercept only model
+all.mod <- lm(y ~ . , data= dados) # full model with all predictors
+stepMod <- step(base.mod, scope = list(lower = base.mod, upper = all.mod), direction = "both", trace = 0, steps = 1000)  # perform step-wise algorithm
+shortlistedVars <- names(unlist(stepMod[[1]])) # get the shortlisted variable.
+shortlistedVars <- shortlistedVars[!shortlistedVars %in% "(Intercept)"]  # remove intercept 
+print(shortlistedVars)
+```
+```{r}
+stepMod$anova
+```
+
+```{r}
+lm.anova <- function(x,y){
+  x<- as.matrix(x)
+  y<- as.matrix(y)
+  
+  n <- length(y)
+  k <- ncol(x) # covariaveis utilizadas
+  p <- k+1
+
+  X <- matrix(c(rep(1,n), x), ncol = p, nrow = n, byrow = FALSE)
+  Y <- matrix(y, ncol = 1, nrow = n)
+  
+  betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+  
+  Y_est <- X%*%betas 
+ 
+  res <- Y - Y_est
+  
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
+  
+  u <- c(rep(1,n)) 
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+  
+  SQReg <- SQTotal - SQRes
+  
+  
+  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
+  gl_sqreg <- k 
+  QMReg <- SQReg/gl_sqreg 
+   
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
+  gl_sqres <- n-p 
+  QMRes <- SQRes/gl_sqres 
+   
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+  gl_sqtotal <- n-1
+   
+   
+  #calculando a estatistica F 
+  F_0 <- QMReg/QMRes
+  
+  R2 <-  SQReg/SQTotal 
+  QMTotal <- QMRes + QMReg
+  R2adj <- 1 - QMRes/QMTotal
+  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est, 
+       anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
+  
+}
+```
+
+
+```{r}
+
+n <- length(dados$y)
+
+X <- matrix(c(rep(1,n), dados$Tamanho, dados$Temp, dados$Pressao), ncol = 4, nrow = n, byrow = FALSE)
+Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
+```
+
+```{r}
+betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+```
+
+```{r}
+#Obtendo os valores dos residuos, SQres, SQreg , SQTotal do nosso modelo  
+# No modelo de regressao linear multipla  
+# Forma matricial: 
+# Y_estimado = X*betas = X * (X^T*X)^(-1)*X^T*Y = H*Y 
+#SQtotal <-  
+Y_est <- X%*%betas 
+ 
+res <- Y - Y_est
+```
+
+
+```{r}
+# Soma dos quadrados dos residuos  
+# podemos calcular pela equacao: 
+# (Y-Y_est)^T*(Y-Y_est) 
+# ou pela equacao
+# Y^T * Y - betas^T * X^T * Y 
+ 
+SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
+ 
+#note que  
+t(Y)%*%Y - t(betas)%*%t(X)%*%Y
+```
+
+
+```{r}
+# Soma dos quadrados totais 
+# vetor unitario para facilitar as contas 
+u <- c(rep(1,n)) 
+SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+ 
+# obs 
+# ((t(u)%*%Y)^2)/n = ((sum(y))^2)/n
+```
+
+
+$$SQReg = SQT - SQRes = ((sum(y))^2)/n - (Y-Y_est)^T*(Y-Y_est) = betas^T * X^T * Y - ((t(u)%*%Y)^
+2)/n $$
+```{r}
+#Soma dos quadrados da regressao  
+ 
+SQReg <- SQTotal - SQRes
+```
+
+
+```{r}
+#Calculando a anova 
+k <- 3 # covariaveis utilizadas 
+p <- k+1
+ 
+SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
+gl_sqreg <- k 
+QMReg <- SQReg/gl_sqreg 
+ 
+SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
+gl_sqres <- n-p 
+QMRes <- SQRes/gl_sqres 
+ 
+SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+gl_sqtotal <- n-1
+ 
+ 
+#calculando a estatistica F 
+F_0 <- QMReg/QMRes 
+F_0
+```
+
+```{r}
+QMTotal <- QMRes + QMReg
+```
+
+```{r}
+alpha <- 0.05 
+RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) 
+RR
+```
+
+```{r}
+# Rejeitamos H0 se F_0 > RR, RR = regiao de rejeicao = quantil teorico da distribuicao F com k e  
+# n-k-1 = n-p g.l.
+if(RR < F_0){ 
+  cat("Rejeita-se H0") 
+}
+```
+
 ## 5. $R^2$ e $R^2 ajustado$
 * Compare os dois avaliadores para 3 cenários diferentes do modelo.
+```{r}
+R2 <-  SQReg/SQTotal 
+R2
+```
+
+### Cenário 1: Modelo de regressão linear simples
+
+```{r}
+x <- dados$Tamanho
+y <- dados$y
+
+modelo <- lm.anova(x,y)
+
+print(paste("R2: ", modelo$R2,
+            "R2_adj:", modelo$R2adj))
+
+```
+
+
+### Cenário 2: Modelo de regressão linear com três variáveis
+
+```{r}
+x <- dados %>% select("Tamanho", "Temp","Pressao")
+y <- dados$y
+
+modelo <- lm.anova(x,y)
+
+print(paste("R2: ", modelo$R2,
+            "R2_adj:", modelo$R2adj))
+
+```
+
+### Cenário 3: Modelo de regressão linear com cinco variáveis
+```{r}
+x <- dados %>% select(-"y")
+y <- dados$y
+
+modelo <- lm.anova(x,y)
+
+print(paste("R2: ", modelo$R2,
+            "R2_adj:", modelo$R2adj))
+
+```
+
+R2 ajustado = 1 - qres/qmtotal
+
+```{r}
+(R2adj <- 1 - QMRes/QMTotal)
+```
+```{r}
+feat <- c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
+
+1:5 %>% map(~head(feat,.x)) %>% map(~lm.anova(dados$y, dados %>% select(.x))$R2adj)
+```
+
 
 ## 6. Testes dos Coeficientes de regressão
 

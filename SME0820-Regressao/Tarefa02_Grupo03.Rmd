@@ -21,6 +21,7 @@ Significancia: 97%
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(knitr)
 ```
 
 ## Dataset
@@ -36,12 +37,61 @@ head(dados)
 ```
 Temos cinco covariáveis e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de azeite por lote de amendoim**
 
+```{r}
+
+n <- length(dados$y)
+
+X <- matrix(c(rep(1,n), dados$Pressao, dados$Temp, dados$FluxoCO2, dados$Umidade, dados$Tamanho), ncol = 6, nrow = n, byrow = FALSE)
+
+Y <- matrix(dados$y, ncol = 1, nrow = n)
+
+k <- ncol(X) -1
+
+p <- k + 1
+```
+
+
 ## 1. Análise Descritiva dos dados
 
 ## 2. ajuste do modelo de Regressão Linear Múltipla
 * Qual a diferença entre o EMV e o EMMQ
 
+```{r}
+#Definindo os betas do modelo de regressão múltipla
+betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+betas
+
+#Definindo a matrix C_jj
+C_jj = solve(t(X)%*%X)
+
+#Definindo uma matrix para os betas
+betas <- matrix(data = betas, nrow = length(betas), ncol = 1, byrow = FALSE)
+rownames(betas) <- c("beta0", "beta1","beta2","beta3","beta4","beta5")
+betas
+
+#Modelo do R
+lm(formula = y ~., data = dados)
+```
+
+
 ## 3. Estimação de $\sigma^2$
+
+$SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$
+
+```{r}
+SQRes <- (t(Y)%*%Y)-(t(betas)%*%t(X)%*%Y)
+SQRes
+```
+Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p}$
+
+```{r}
+p <- ncol(X)
+
+#estimando o sigma^2
+sigma2 <- SQRes/(n-p)
+sigma2
+```
+
 
 ## 4. ANOVA
 
@@ -131,14 +181,10 @@ lm.anova <- function(x,y){
 
 ```{r}
 
-n <- length(dados$y)
-
-X <- matrix(c(rep(1,n), dados$Tamanho, dados$Temp, dados$Pressao), ncol = 4, nrow = n, byrow = FALSE)
-Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
 ```
 
 ```{r}
-betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+
 ```
 
 ```{r}
@@ -290,3 +336,195 @@ feat <- c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
 ## 7.  Teste um Subconjunto de Coeficientes
 * Faça análise e Escolha do Melhor Modelo, Qual modelo seu grupo acredita ser o melhor? Apresente omodelo escolhido pelo grupo (Equação do modelo ajustado, com as estimativas dos $\beta$'s e $\sigma^2$ e interpretação do modelo). Justifique a escolha das co-variáveis. Faça uso do teste de um subconjuntode coeficientes nesta questão ilustrado na aula 14 e 15.
 $R^2$
+
+## 8. IC Para Coeficientes de Regressão
+
+Faça o intervalo de confiança para os coeficientes de regressão de seu modelo. Apresente conclusões ou interpretação para cada um deles.
+
+Dado que o melhor modelo que encontramos foi aquele com as variáveis **Pressão**, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_1, \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$ 
+
+Definimos o $Índice~de~confiança = (100 - \alpha)\%$, também chamado de *coeficiente de confiança*
+
+```{r}
+#Definindo o alpha e o t crítico
+alpha <- 0.03
+t1 <- qt(alpha/2, n-p)
+t2 <- qt(1-alpha/2, n-p)
+```
+
+Para $\beta_1$ temos que:
+
+$97\%; \hat{\beta}_1=0,055; QMRes=65,05; (X^T X)_{22}^{-1}=1,3747e^-5; T_{(0,975;22)}=2,5274$
+
+
+```{r}
+#Testando para beta1
+dp_b1 <- sqrt(sigma2 * diag(C_jj)[2])
+b1_lim_inf <- betas[2] - t2*dp_b1
+b1_lim_sup <- betas[2] - t1*dp_b1
+IC_b1 <- cbind(b1_lim_inf, b1_lim_sup)
+```
+
+
+Para $\beta_2$ temos que:
+
+$97\%; \hat{\beta}_2=0,2821; QMRes=65,05; (X^T X)_{33}^{-1}=5,1020e^-5; T_{(0,975;22)}=2,5274$
+
+```{r}
+#Testando para o beta2
+dp_b2 <- sqrt(sigma2 * diag(C_jj)[3])
+b2_lim_inf <- betas[3] - t2*dp_b2
+b2_lim_sup <- betas[3] - t1*dp_b2
+IC_b2 <- cbind(b2_lim_inf, b2_lim_sup)
+```
+
+Para $\beta_5$ temos que:
+
+$97\%; \hat{\beta}_5=-16,065; QMRes=65,05; (X^T X)_{66}^{-1}=0,0326; T_{(0,975;22)}=2,5274$
+
+```{r}
+#Testando para beta5
+dp_b5 <- sqrt(sigma2 * diag(C_jj)[6])
+b5_lim_inf <- betas[6] - t2*dp_b5
+b5_lim_sup <- betas[6] - t1*dp_b5
+IC_b5 <- cbind(b5_lim_inf, b5_lim_sup)
+```
+
+```{r}
+#Estruturando em uma tabela
+IC_tab <- rbind(IC_b1, IC_b2, IC_b5)
+row.names(IC_tab) <- c("beta1", "beta2", "beta5")
+colnames(IC_tab) <- c("IC (0.015)", "IC (0.985)")
+IC_tab |> kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
+```
+A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confiança de que o real valor do parâmetro $\beta_j$ está contido nos intervalos acima.
+
+
+## 9. IC para E(Y)
+Podemos também construir intervalos de confiança para pontos específicos do nosso conjunto de dados. 
+Seja $\boldsymbol{x}_0=[1,x_{01},x_{02},\ldots,x_{0k}]$, podemos obter uma estimativa de $\hat{y}$ a partir da seguinte equação:
+
+$$\hat{y_0}=x_0^{´}\hat{\beta}$$
+Em seguida, estimamos a variância, ou erro padrão, de $\hat{y_0}$ através da equação:
+
+$$Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0$$
+Desse modo, construímos nosso intervalo de confiança para a média de $y$ no 
+ponto $x_0$, conforme a seguinte equação:
+
+$$\hat{y_0} - t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}\leq E(y|x_0)\leq \hat{y_0} + t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}$$
+A seguir, calculamos o Intervalo de Confiança (IC) para a média , dado um $x_0$ - ou seja, dado uma observação do nosso conjunto de dados. De início, iremos calcular para o modelo com todas as covariáveis e, em seguida, para o modelo com as covariáveis mais significativas. A fim de comparar os diferentes modelos e seus IC , utilizaremos como métrica de avaliação o **Erro Quadrático Médio (MSE)** e o **Coeficiente de Determinação R^2 Ajustado**
+
+$$MSE = \sum_{i=1}^n\frac{(\hat{y_i} - y_i)^2}{n}$$
+$$R^2_{aj} = 1 -\frac{SQ_{Res}/(n-p)}{SQ_{T}/(n-1)}$$
+
+### IC de E(Y), considerando todas as covariáveis no modelo
+
+```{r}
+
+mean_IC <- data.frame(low_b = numeric(0), upper_b = numeric(0))
+y_pred <- data.frame(value = numeric(0))
+
+for (row in 1:nrow(X)){
+  x0 <- X[row,]
+  y0 <- x0%*%betas
+  se <- sqrt(sigma2%*%t(x0)%*%C_jj%*%x0)
+  low_b <- y0 - t2*se
+  upper_b <- y0 + t2*se
+  tab <- cbind(low_b, upper_b)
+  mean_IC <- rbind(mean_IC, tab)
+  y_pred <- rbind(y_pred, y0)
+}
+
+colnames(mean_IC) <- c("Lower Bound", "Upper Bound")
+len_mean_IC <- mean_IC$`Upper Bound` - mean_IC$`Lower Bound`
+mean_IC <- cbind(mean_IC, len_mean_IC)
+mean_IC <- cbind(mean_IC, y_pred)
+mean_IC <- cbind(mean_IC, dados$y)
+
+colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value")
+
+error <- abs(mean_IC$`Predicted Value` - mean_IC$`Real Value`)
+mean_IC <- cbind(mean_IC, error)
+
+colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value", "Absolute Error")
+
+mse <- mean(mean_IC$`Absolute Error`**2)
+
+mean_IC |> kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
+```
+
+O resultado da tabela acima nos diz que, dado qualquer observação do nosso conjunto dados, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, considerando que o nosso modelo leva em conta todas as covariáveis $x_i$.
+
+Entretanto, sabemos que o melhor modelo encontrado foi aquele com as covariáveis **Pressão, Temperatura** e **Tamanho**. Considerando apenas essas variáveis explicatórias, obteremos os seguintes intervalos de confiança:
+
+```{r}
+mean_IC2 <- data.frame(low_b = numeric(0), upper_b = numeric(0))
+y_pred2 <- data.frame(value = numeric(0))
+
+#recalculando a estatística teste t
+#agora nosso k =4
+t3 <- qt(1-alpha/2, n-4-1)
+
+for (row in 1:nrow(X)){
+  x0 <- X[row,c(1,2,3,6)]
+  y0 <- x0%*%t(t(betas[c(1,2,3,6),]))
+  se <- sqrt(sigma2%*%t(x0)%*%C_jj[c(1,2,3,4),c(1,2,3,6)]%*%x0)
+  low_b <- y0 - t3*se
+  upper_b <- y0 + t3*se
+  tab <- cbind(low_b, upper_b)
+  mean_IC2 <- rbind(mean_IC2, tab)
+  y_pred2 <- rbind(y_pred2, y0)
+}
+
+colnames(mean_IC2) <- c("Lower Bound", "Upper Bound")
+len_mean_IC2 <- mean_IC2$`Upper Bound` - mean_IC2$`Lower Bound`
+mean_IC2 <- cbind(mean_IC2, len_mean_IC2)
+mean_IC2 <- cbind(mean_IC2, y_pred2)
+mean_IC2 <- cbind(mean_IC2, dados$y)
+
+colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value")
+
+error <- abs(mean_IC2$`Predicted Value` - mean_IC2$`Real Value`)
+mean_IC2 <- cbind(mean_IC2, error)
+
+colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value", "Absolute Error")
+
+mse2 <- mean(mean_IC2$`Absolute Error`**2)
+
+mean_IC2 |> kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 42.6, R^2 = 0.92)")
+```
+
+Do mesmo modo que a tabela anterior, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, dado que o nosso modelo possui as covariáveis mais significativas.
+
+Vale notar que é sempre preferível ter intervalos de confiança menores, uma vez que eles nos dão uma melhor ideia da magnitude da variável dependente $y$. Porém, nosso melhor modelo apresentou intervalos de confiança muito maiores que o modelo completo. Isso ocorre pois o modelo completo apresenta uma **erro padrão** $Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0 \approx 4.3$ enquanto que o melhor modelo, com apenas 3 covariáveis, apresenta um **erro padrão** $Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0 \approx 11.65$. Essa diferença é responsável pelo aumento do comprimento do IC. Ainda sim, vale lembrar que o $R^2_{aj}$ do melhor modelo é maior que o do modelo completo, o que indica que esse modelo é, de fato, melhor.
+
+Esse fato ilustra um conceito interessante em modelos preditivos e aprendizado de máquina: **o dilema viés-variância**. Esse dilema estabelece que a diminuição da variãncia de um modelo sempre ocorre às custas do aumento do viés e, vice-versa.
+
+Podemos definir **Viés** como a diferença entre o valor real e o predito. Para múltiplas observações, computamos a média desta diferença:
+$$Viés = E(\hat{y_i} - y_i)$$
+E a **Variância** como a média dos desvios quadrados dos valores preditos $\hat{y_i}$ em relação à média dos valores preditos $E(\hat{y_i})$ :
+$$Var(\hat{y_i}) = \frac{\sum_{i=1}^n(\hat{y_i} - E(\hat{y_i}))^2}{n}$$
+```{r, echo=FALSE}
+#Viés do modelo completo
+bias_fullm <- abs(mean(mean_IC$`Predicted Value` - mean_IC$`Real Value`))
+
+#Viés do melhor modelo
+bias_bestm <- abs(mean(mean_IC2$`Predicted Value` - mean_IC2$`Real Value`))
+
+#Variancia do modelo completo
+var_fullm <- var(mean_IC$`Predicted Value` - mean_IC$`Real Value`)
+
+#Variancia do melhor modelo
+var_bestm <- var(mean_IC2$`Predicted Value` - mean_IC2$`Real Value`)
+
+#criando uma tabela com os valores
+vies <- c(round(bias_bestm,2), round(bias_fullm,2))
+variancia <- c(round(var_bestm,2), round(var_fullm,2))
+
+bias_var_m <- data.frame(Viés = vies,
+                         Variância = variancia)
+
+row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
+bias_var_m |> kable(caption = "Tabela Viés X Variância")
+```
+Percebemos que na tabela acima, o **modelo completo** apresentou $Viés = 0$, o que provavelmente é um indicativo de ***overfitting***, por outro lado, o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar $92\%$ da variabilidade.

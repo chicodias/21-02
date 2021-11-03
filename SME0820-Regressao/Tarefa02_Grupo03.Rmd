@@ -54,7 +54,43 @@ p <- k + 1
 ## 1. Análise Descritiva dos dados
 
 ## 2. ajuste do modelo de Regressão Linear Múltipla
-* Qual a diferença entre o EMV e o EMMQ
+
+
+Ajustaremos um modelo de regressão utilizando todas as covariáveis presentes em nosso conjunto de dados.
+
+Definimos um modelo de regressão linear múltipla com $k$ covariáveis através da fórmula $Y=\beta_0+\beta_1X_1+\ldots+\beta_kX_k+\xi$, onde $\beta_j, j=1,\ldots,k$ são os coeficientes de regressão e representam a mudança esperada na variável resposta $Y$ por unidade de mudança em $X_i$ quando todas as outras covariáveis $X_i (i\neq j)$ são mantidas constantes.
+
+Podemos também representar o modelo da seguinte forma:
+
+$$\boldsymbol{Y}=\boldsymbol{X}\boldsymbol{\beta}+\boldsymbol{\xi}$$
+
+Onde:
+
+$\boldsymbol{Y}=$ Vetor de $(n\times 1)$ observações;
+
+$\boldsymbol{X}=$ Matriz $(n\times p)$ de covariáveis;
+
+$\boldsymbol{\beta=}$ Vetor $P\times 1$ de coeficientes de regressão;
+
+$\xi=$ Vetor n\time 1 de erros aleatórios;
+
+$p=k+1$.
+
+
+As variáveis de nosso conjunto de dados são definidas como sendo:
+
+
+- $Y:$ Rendimento total de azeite por lote de amendoim*
+
+- $X_1:$ Tamanho
+
+- $X_2:$ Temperatura
+
+- $X_3:$ Pressão
+
+- $X_4:$ Fluxo de CO2
+
+- $X_5:$ Umidade
 
 ```{r}
 #Definindo os betas do modelo de regressão múltipla

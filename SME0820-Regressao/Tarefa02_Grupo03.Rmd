@@ -22,6 +22,7 @@ Significancia: 97%
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
+library(ggplot2)
 ```
 
 ## Dataset
@@ -37,21 +38,134 @@ head(dados)
 ```
 Temos cinco covariáveis e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de azeite por lote de amendoim**
 
+
+## 1. Análise Descritiva dos dados
+
 ```{r}
+x1 <- dados$Pressao
+x2 <- dados$Temp
+x3 <- dados$FluxoCO2
+x4 <- dados$Umidade
+x5 <- dados$Tamanho
+y <- dados$y
+
+tabela01 <- data.frame(cbind(x1, x2, x3, x4, x5, y))
+
+```
+
+
+```{r}
+
+# Construindo matrizes
 
 n <- length(dados$y)
 
-X <- matrix(c(rep(1,n), dados$Pressao, dados$Temp, dados$FluxoCO2, dados$Umidade, dados$Tamanho), ncol = 6, nrow = n, byrow = FALSE)
+X <- matrix(c(rep(1,n), x1, x2, x3, x4, x5), ncol = 6, nrow = n, byrow = FALSE)
 
-Y <- matrix(dados$y, ncol = 1, nrow = n)
+Y <- matrix(y, ncol = 1, nrow = n)
 
 k <- ncol(X) -1
 
 p <- k + 1
+
+```
+
+### Gráficos de dispersão - a arrumar!!!
+```{r}
+barplot(X, beside = TRUE)
+
+pairs(X)
+```
+
+```{r}
+
+#Gráfico de dispersão para as variáveis Pressao e y
+
+ggplot(tabela01, aes(x=x1, y = y)) + geom_point() + geom_smooth(method = "lm") +
+  ggtitle("") + xlab("Pressão") + ylab("Rendimento(azeite/lote)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
+
+#Gráfico de dispersão para as variáveis Temp e y
+
+ggplot(tabela01, aes(x=x2, y = y)) + geom_point() + geom_smooth(method = "lm") +
+  ggtitle("") + xlab("Temperatura") + ylab("Rendimento(azeite/lote)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
+
+#Gráfico de dispersão para as variáveis Fluxo de CO^2 e y
+
+ggplot(tabela01, aes(x=x3, y = y)) + geom_point() + geom_smooth(method = "lm") +
+  ggtitle("") + xlab("Fluxo de CO^2") + ylab("Rendimento(azeite/lote)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
+
+#Gráfico de dispersão para as variáveis Umidade e y
+
+ggplot(tabela01, aes(x=x4, y = y)) + geom_point() + geom_smooth(method = "lm") +
+  ggtitle("") + xlab("Umidade") + ylab("Rendimento(azeite/lote)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
+
+#Gráfico de dispersão para as variáveis Tamanho e y
+
+ggplot(tabela01, aes(x=x5, y = y)) + geom_point() + geom_smooth(method = "lm") +
+  ggtitle("") + xlab("Tamanho") + ylab("Rendimento(azeite/lote)") +
+  theme_pubclean() +
+  theme(plot.title = element_text(size = 20, hjust = .5))
+
+
 ```
 
 
-## 1. Análise Descritiva dos dados
+**Teste de Correlação de Pearson entre as covariáveis e $y$**
+
+```{r}
+
+cor.test(x1, y)
+
+cor.test(x2, y)
+
+cor.test(x3, y)
+
+cor.test(x4, y)
+
+cor.test(x5, y)
+
+tabela_correlacao <- round(stats::cor(tabela01), 1)
+
+tabela_correlacao
+
+```
+### Histogramas
+
+```{r}
+
+```
+
+```{r}
+h1 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
+  xlab("Pressao") + ylab("Frequencia")
+
+h2 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
+  xlab("Temperatura") + ylab("Frequencia")
+
+h3 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
+  xlab("Fluxo de CO^2") + ylab("Frequencia")
+
+h4 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
+  xlab("Umidade") + ylab("Frequencia")
+
+h5 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
+  xlab("Tamanho") + ylab("Frequencia")
+
+```
+### Box Plots
+```{r}
+ggplot(tabela01, aes(x = "", y = x1)) +
+    geom_boxplot(color = "blue") 
+
+```
 
 ## 2. ajuste do modelo de Regressão Linear Múltipla
 * Qual a diferença entre o EMV e o EMMQ

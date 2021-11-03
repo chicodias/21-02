@@ -11,7 +11,7 @@ output: pdf_document
 
 Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
 
-##### Informações do dataset
+##### Informações do dataset %>% uuiiiiiiii
 
 Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
 
@@ -22,6 +22,7 @@ Significancia: 97%
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
+
 ```
 
 ## Dataset
@@ -68,13 +69,13 @@ dados %>% pivot_longer(!c(Tamanho, y)) %>%
 ```
 
 ```{r}
-dados %>% pivot_longer(cols = !Tamanho) %>% 
-  ggplot() + geom_bar(aes(x = as_factor(value), fill = as_factor(Tamanho)),stat="count") +
+dados %>% pivot_longer(cols = everything()) %>% 
+  ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
   facet_wrap(~name, scales = "free_x")
 ```
 
 ```{r}
-GGally::ggparcoord(dados[,c(2, 4, ,6, 1, 3)])
+GGally::ggparcoord(dados[,c(2, 4, 6, 1, 3)])
 ```
 
 ```{r}

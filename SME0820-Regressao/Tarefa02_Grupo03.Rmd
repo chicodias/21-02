@@ -11,7 +11,7 @@ output: pdf_document
 
 Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
 
-##### Informações do dataset 
+##### Informações do dataset
 
 Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
 
@@ -163,26 +163,26 @@ h5 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
 ### Box Plots
 ```{r}
 ggplot(tabela01, aes(x = "", y = x1)) +
-    geom_boxplot(color = "blue") 
+    geom_boxplot(color = "blue")
 
 ```
 
 
 
 ```{r message =F}
-dados %>% pivot_longer(!y) %>% 
+dados %>% pivot_longer(!y) %>%
   ggplot(aes(y = y)) + geom_point(aes(x = value)) +
   facet_wrap(~name, scales = "free_x")
 ```
 
 ```{r}
-dados %>% pivot_longer(!c(Tamanho, y)) %>% 
+dados %>% pivot_longer(!c(Tamanho, y)) %>%
   ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
   facet_wrap(~name, scales = "free_x")
 ```
 
 ```{r}
-dados %>% pivot_longer(cols = everything()) %>% 
+dados %>% pivot_longer(cols = everything()) %>%
   ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
   facet_wrap(~name, scales = "free_x")
 ```
@@ -282,85 +282,85 @@ sigma2
 lm.anova <- function(x,y){
   x<- as.matrix(x)
   y<- as.matrix(y)
-  
+
   n <- length(y)
   k <- ncol(x) # covariaveis utilizadas
   p <- k+1
 
   X <- matrix(c(rep(1,n), x), ncol = p, nrow = n, byrow = FALSE)
   Y <- matrix(y, ncol = 1, nrow = n)
-  
+
   betas <- solve(t(X)%*%X)%*%t(X)%*%Y
-  
-  Y_est <- X%*%betas 
- 
+
+  Y_est <- X%*%betas
+
   res <- Y - Y_est
-  
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
-  
-  u <- c(rep(1,n)) 
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
-  
+
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+
+  u <- c(rep(1,n))
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
+
   SQReg <- SQTotal - SQRes
-  
-  
-  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
-  gl_sqreg <- k 
-  QMReg <- SQReg/gl_sqreg 
-   
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
-  gl_sqres <- n-p 
-  QMRes <- SQRes/gl_sqres 
-   
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+
+
+  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n
+  gl_sqreg <- k
+  QMReg <- SQReg/gl_sqreg
+
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+  gl_sqres <- n-p
+  QMRes <- SQRes/gl_sqres
+
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
   gl_sqtotal <- n-1
-   
-   
-  #calculando a estatistica F 
+
+
+  #calculando a estatistica F
   F_0 <- QMReg/QMRes
-  
-  R2 <-  SQReg/SQTotal 
+
+  R2 <-  SQReg/SQTotal
   QMTotal <- QMRes + QMReg
   R2adj <- 1 - QMRes/QMTotal
-  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est, 
+  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est,
        anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
-  
+
 }
 ```
 
 ```{r}
 #Obtendo os valores dos residuos, SQres, SQreg , SQTotal do nosso modelo  
 # No modelo de regressao linear multipla  
-# Forma matricial: 
-# Y_estimado = X*betas = X * (X^T*X)^(-1)*X^T*Y = H*Y 
+# Forma matricial:
+# Y_estimado = X*betas = X * (X^T*X)^(-1)*X^T*Y = H*Y
 #SQtotal <-  
-Y_est <- X%*%betas 
- 
+Y_est <- X%*%betas
+
 res <- Y - Y_est
 ```
 
 
 ```{r}
 # Soma dos quadrados dos residuos  
-# podemos calcular pela equacao: 
-# (Y-Y_est)^T*(Y-Y_est) 
+# podemos calcular pela equacao:
+# (Y-Y_est)^T*(Y-Y_est)
 # ou pela equacao
-# Y^T * Y - betas^T * X^T * Y 
- 
-SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
- 
+# Y^T * Y - betas^T * X^T * Y
+
+SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+
 #note que  
 t(Y)%*%Y - t(betas)%*%t(X)%*%Y
 ```
 
 
 ```{r}
-# Soma dos quadrados totais 
-# vetor unitario para facilitar as contas 
-u <- c(rep(1,n)) 
-SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
- 
-# obs 
+# Soma dos quadrados totais
+# vetor unitario para facilitar as contas
+u <- c(rep(1,n))
+SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
+
+# obs
 # ((t(u)%*%Y)^2)/n = ((sum(y))^2)/n
 ```
 
@@ -371,30 +371,30 @@ $$SQReg = SQT - SQRes = ((sum(y))^2)/n - (Y-Y_est)^T*(Y-Y_est) = betas^T * X^T *
 
 ```{r}
 #Soma dos quadrados da regressao  
- 
+
 SQReg <- SQTotal - SQRes
 ```
 
 
 ```{r}
-#Calculando a anova 
-k <- 2 # covariaveis utilizadas 
+#Calculando a anova
+k <- 2 # covariaveis utilizadas
 p <- k+1
- 
-SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
-gl_sqreg <- k 
-QMReg <- SQReg/gl_sqreg 
- 
-SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
-gl_sqres <- n-p 
-QMRes <- SQRes/gl_sqres 
- 
-SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+
+SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n
+gl_sqreg <- k
+QMReg <- SQReg/gl_sqreg
+
+SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+gl_sqres <- n-p
+QMRes <- SQRes/gl_sqres
+
+SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
 gl_sqtotal <- n-1
- 
- 
-#calculando a estatistica F 
-F_0 <- QMReg/QMRes 
+
+
+#calculando a estatistica F
+F_0 <- QMReg/QMRes
 F_0
 ```
 
@@ -403,23 +403,23 @@ QMTotal <- QMRes + QMReg
 ```
 
 ```{r}
-alpha <- 0.03 
-RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) 
+alpha <- 0.03
+RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F)
 RR
 ```
 
 ```{r}
 # Rejeitamos H0 se F_0 > RR, RR = regiao de rejeicao = quantil teorico da distribuicao F com k e  
 # n-k-1 = n-p g.l.
-if(RR < F_0){ 
-  cat("Rejeita-se H0") 
+if(RR < F_0){
+  cat("Rejeita-se H0")
 }
 ```
 
 ## 5. $R^2$ e $R^2 ajustado$
 * Compare os dois avaliadores para 3 cenários diferentes do modelo.
 ```{r}
-R2 <-  SQReg/SQTotal 
+R2 <-  SQReg/SQTotal
 R2
 ```
 
@@ -467,7 +467,7 @@ R2 ajustado = 1 - qres/qmtotal
 
 ```{r}
 for( i in 1:5)
-  
+
 ```
 
 
@@ -480,22 +480,128 @@ feat <- c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
 r2 <- tibble(x= 1:5, rAdj = 1:5 %>% map(~head(feat,.x)) %>% map_dbl(~lm.anova(dados %>% select(.x), dados$y)$R2adj),
              r2 = 1:5 %>% map(~head(feat,.x)) %>% map_dbl(~lm.anova(dados %>% select(all_of(.x)), dados$y)$R2))
 
-r2 %>% 
+r2 %>%
   ggplot(aes(x = x)) +  geom_point(aes(y = r2, color = "R2"))  +  geom_point(aes(y = rAdj, color = "R2adj"))
 ```
 
 
-## 6. Testes dos Coeficientes de regressão
+## 6. Testes nos Coeficientes de Regressão Individualmente
+
+Usamos o teste t parcial, para saber se realmente todas as covariáveis são diferentes de zero. O teste, testa esta cada beta, mede a contribuição de uma determinada covariável considerando que outras co-variáveis estão no modelo.E, é definido como:
+$H_0:\beta_j=0$ VS $H_1:\beta_j\neq 0$
+Como consequência, Se $H_0$ for rejeitado, $X_i$ é importante dado que as outras covariáveis estão no modelo também.
+
+Vale lembrar, ainda, que este é um teste marginal ou parcial, pois como dito anteriormente $\hat{\beta}_{i-1}$ depende de todas as outras covariáveis.
+
+### Sendo:
+```{r}
+alpha <- 0.03
+beta0_est <- betas[1,1]
+beta1_est <- betas[2,1]
+beta2_est <- betas[3,1]
+beta3_est <- betas[4,1]
+beta4_est <- betas[5,1]
+beta5_est <- betas[6,1]
+```
+
+```{r}
+t1 <- qt(alpha/2, n-p)
+t2 <- qt(1-alpha/2, n-p)
+cbind(t1,t2)
+```
+
+###       t1       t2
+### [1,]  -2.4607 2.4607
+
+Rejeitamos $H_0$ se $t<t_{(\alpha/2;n-p)}$ ou $t>t_{(1-\alpha/2;n-p)}$.
+
+Testando para $\beta1$  
+
+```{r}
+t_b1 <- beta1_est / (sqrt( QMRes* solve(t(X)%*%X)[2,2] ) )
+t_b1
+```
+### [,1]
+### [1,] 2.037315
+
+```{r}
+if(t_b1 < t1 || t_b1>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Não rejeita-se H0
+
+Testando para $\beta2$
+```{r}
+t_b2 <- beta2_est / (sqrt( QMRes* solve(t(X)%*%X)[3,3] ) )
+t_b2
+```
+### [,1]
+### [1,] 5.36493
+
+```{r}
+if(t_b2 < t1 || t_b2>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Rejeita-se H0
+
+Testando para $\beta3$
+```{r}
+t_b3 <- beta3_est / (sqrt( QMRes* solve(t(X)%*%X)[4,4] ) )
+t_b3
+```
+### [,1]
+### [1,] 0.3395525
+
+```{r}
+if(t_b3 < t1 || t_b3>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Não rejeita-se H0
+
+Testando para $\beta4$
+```{r}
+t_b4 <- beta4_est / (sqrt( QMRes* solve(t(X)%*%X)[5,5] ) )
+t_b4
+```
+### [,1]
+### [1,] 3.618999e-14
+
+```{r}
+if(t_b4 < t1 || t_b4>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Não rejeita-se H0
+
+Testando para $\beta5$
+```{r}
+t_b5 <- beta5_est / (sqrt( QMRes* solve(t(X)%*%X)[6,6] ) )
+t_b5
+```
+### [,1]
+### [1,] -12.08807
+```{r}
+if(t_b5 < t1 || t_b5>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Rejeita-se H0
+
+Portanto, seguindo a regra apresentada no início da questão, concluímos que $\beta2$ e $\beta5$ rejeitam $H_0$. Logo, Temperatura e  Tamanho são covariáveis significativas para o modelo, dado que já temos pelo menos uma variável significativa no modelo conforme constatado no teste f anteriormente.
 
 ## 7.  Teste um Subconjunto de Coeficientes
 * Faça análise e Escolha do Melhor Modelo, Qual modelo seu grupo acredita ser o melhor? Apresente omodelo escolhido pelo grupo (Equação do modelo ajustado, com as estimativas dos $\beta$'s e $\sigma^2$ e interpretação do modelo). Justifique a escolha das co-variáveis. Faça uso do teste de um subconjuntode coeficientes nesta questão ilustrado na aula 14 e 15.
-$R^2$
+
+
 
 ## 8. IC Para Coeficientes de Regressão
 
 Faça o intervalo de confiança para os coeficientes de regressão de seu modelo. Apresente conclusões ou interpretação para cada um deles.
 
-Dado que o melhor modelo que encontramos foi aquele com as variáveis, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$ 
+Dado que o melhor modelo que encontramos foi aquele com as variáveis, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$
 
 Definimos o Índice de confiança $\gamma = (100 - \alpha)\%$, também chamado de *coeficiente de confiança*
 
@@ -544,14 +650,14 @@ A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confianç
 
 
 ## 9. IC para E(Y)
-Podemos também construir intervalos de confiança para pontos específicos do nosso conjunto de dados. 
+Podemos também construir intervalos de confiança para pontos específicos do nosso conjunto de dados.
 Seja $\boldsymbol{x}_0=[1,x_{01},x_{02},\ldots,x_{0k}]$, podemos obter uma estimativa de $\hat{y}$ a partir da seguinte equação:
 
 $$\hat{y_0}=x_0^{T}\hat{\beta}$$
 Em seguida, estimamos a variância, ou erro padrão, de $\hat{y_0}$ através da equação:
 
 $$Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0$$
-Desse modo, construímos nosso intervalo de confiança para a média de $y$ no 
+Desse modo, construímos nosso intervalo de confiança para a média de $y$ no
 ponto $x_0$, conforme a seguinte equação:
 
 $$\hat{y_0} - t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}\leq E(y|x_0)\leq \hat{y_0} + t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}$$
@@ -693,4 +799,4 @@ bias_var_m <- data.frame(Viés = vies,
 row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
 bias_var_m |> kable(caption = "Tabela Viés X Variância")
 ```
-Percebemos na tabela acima que ambos os modelos apresentaram $Viés = 0$, o que provavelmente ocorreu devido ao pequeno núemro de observações, mas ainda sim indica que nosso modelo não está enviesado a um modelo em particular. Vale notar também que o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar - a partir do $R_{aj}$ - $98\%$ da variabilidade, enquanto que o **modelo completo**, explicava cerca de $90\%$, apresentando uma variabilidade bem menor, fato esse que, dado esse conjunto de dados, seria um indicativo de *sobreajuste*. 
+Percebemos na tabela acima que ambos os modelos apresentaram $Viés = 0$, o que provavelmente ocorreu devido ao pequeno núemro de observações, mas ainda sim indica que nosso modelo não está enviesado a um modelo em particular. Vale notar também que o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar - a partir do $R_{aj}$ - $98\%$ da variabilidade, enquanto que o **modelo completo**, explicava cerca de $90\%$, apresentando uma variabilidade bem menor, fato esse que, dado esse conjunto de dados, seria um indicativo de *sobreajuste*.

@@ -22,7 +22,7 @@ Significancia: 97%
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
-
+library(ggpubr)
 ```
 
 ## Dataset
@@ -462,8 +462,6 @@ print(paste("R2: ", modelo$R2,
 
 ```
 
-$$A^\prime$$
-
 
 R2 ajustado = 1 - qres/qmtotal
 
@@ -497,34 +495,23 @@ $R^2$
 
 Faça o intervalo de confiança para os coeficientes de regressão de seu modelo. Apresente conclusões ou interpretação para cada um deles.
 
-Dado que o melhor modelo que encontramos foi aquele com as variáveis **Pressão**, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_1, \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$ 
+Dado que o melhor modelo que encontramos foi aquele com as variáveis, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$ 
 
-Definimos o $Índice~de~confiança = (100 - \alpha)\%$, também chamado de *coeficiente de confiança*
+Definimos o Índice de confiança $\gamma = (100 - \alpha)\%$, também chamado de *coeficiente de confiança*
 
 ```{r}
 #Definindo o alpha e o t crítico
 alpha <- 0.03
+#para o melhor modelo temos que k =2
+k <- 2
+p <- k + 1
 t1 <- qt(alpha/2, n-p)
 t2 <- qt(1-alpha/2, n-p)
 ```
 
-Para $\beta_1$ temos que:
-
-$97\%; \hat{\beta}_1=0,055; QMRes=65,05; (X^T X)_{22}^{-1}=1,3747e^-5; T_{(0,975;22)}=2,5274$
-
-
-```{r}
-#Testando para beta1
-dp_b1 <- sqrt(sigma2 * diag(C_jj)[2])
-b1_lim_inf <- betas[2] - t2*dp_b1
-b1_lim_sup <- betas[2] - t1*dp_b1
-IC_b1 <- cbind(b1_lim_inf, b1_lim_sup)
-```
-
-
 Para $\beta_2$ temos que:
 
-$97\%; \hat{\beta}_2=0,2821; QMRes=65,05; (X^T X)_{33}^{-1}=5,1020e^-5; T_{(0,975;22)}=2,5274$
+$97\%; \hat{\beta}_2=0,2821; QM_{Res}=65,05; (X^T X)_{33}^{-1}=5,1020e^-5; T_{(0,975;22)}=2,4358$
 
 ```{r}
 #Testando para o beta2
@@ -536,7 +523,7 @@ IC_b2 <- cbind(b2_lim_inf, b2_lim_sup)
 
 Para $\beta_5$ temos que:
 
-$97\%; \hat{\beta}_5=-16,065; QMRes=65,05; (X^T X)_{66}^{-1}=0,0326; T_{(0,975;22)}=2,5274$
+$97\%; \hat{\beta}_5=-16,065; QM_{Res}=65,05; (X^T X)_{66}^{-1}=0,0326; T_{(0,975;22)}=2,4358$
 
 ```{r}
 #Testando para beta5
@@ -548,19 +535,19 @@ IC_b5 <- cbind(b5_lim_inf, b5_lim_sup)
 
 ```{r}
 #Estruturando em uma tabela
-IC_tab <- rbind(IC_b1, IC_b2, IC_b5)
-row.names(IC_tab) <- c("beta1", "beta2", "beta5")
+IC_tab <- rbind(IC_b2, IC_b5)
+row.names(IC_tab) <- c("beta2", "beta5")
 colnames(IC_tab) <- c("IC (0.015)", "IC (0.985)")
-IC_tab %>%  kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
+IC_tab |> kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
 ```
-A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confiança de que o real valor do parâmetro $\beta_j$ está contido nos intervalos acima.
+A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confiança de que o real valor do parâmetro $\beta_j$ está contido nos intervalos acima. Outro interpretação seria, se realizássemos esse experimento diversas vezes, concluiríamos que em 97% das vezes o real valor de $\beta_j$ estaria dentro do intervalo.
 
 
 ## 9. IC para E(Y)
 Podemos também construir intervalos de confiança para pontos específicos do nosso conjunto de dados. 
 Seja $\boldsymbol{x}_0=[1,x_{01},x_{02},\ldots,x_{0k}]$, podemos obter uma estimativa de $\hat{y}$ a partir da seguinte equação:
 
-$$\hat{y_0}=x_0^{´}\hat{\beta}$$
+$$\hat{y_0}=x_0^{T}\hat{\beta}$$
 Em seguida, estimamos a variância, ou erro padrão, de $\hat{y_0}$ através da equação:
 
 $$Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0$$
@@ -568,7 +555,7 @@ Desse modo, construímos nosso intervalo de confiança para a média de $y$ no
 ponto $x_0$, conforme a seguinte equação:
 
 $$\hat{y_0} - t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}\leq E(y|x_0)\leq \hat{y_0} + t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}$$
-A seguir, calculamos o Intervalo de Confiança (IC) para a média , dado um $x_0$ - ou seja, dado uma observação do nosso conjunto de dados. De início, iremos calcular para o modelo com todas as covariáveis e, em seguida, para o modelo com as covariáveis mais significativas. A fim de comparar os diferentes modelos e seus IC , utilizaremos como métrica de avaliação o **Erro Quadrático Médio (MSE)** e o **Coeficiente de Determinação R^2 Ajustado**
+A seguir, calculamos o Intervalo de Confiança (IC) para a média , dado um $x_0$ - ou seja, dado uma observação do nosso conjunto de dados. De início, iremos calcular para o modelo com todas as covariáveis e, em seguida, para o modelo com as covariáveis mais significativas. A fim de comparar os diferentes modelos e seus IC , utilizaremos como métrica de avaliação o **Erro Quadrático Médio (MSE)** e o **Coeficiente de Determinação $R^2$ Ajustado**
 
 $$MSE = \sum_{i=1}^n\frac{(\hat{y_i} - y_i)^2}{n}$$
 $$R^2_{aj} = 1 -\frac{SQ_{Res}/(n-p)}{SQ_{T}/(n-1)}$$
@@ -577,6 +564,11 @@ $$R^2_{aj} = 1 -\frac{SQ_{Res}/(n-p)}{SQ_{T}/(n-1)}$$
 
 ```{r}
 
+sigma2 <- SQRes/(n-p)
+t3 <- qt(1-alpha/2, n-p)
+
+
+
 mean_IC <- data.frame(low_b = numeric(0), upper_b = numeric(0))
 y_pred <- data.frame(value = numeric(0))
 
@@ -584,8 +576,8 @@ for (row in 1:nrow(X)){
   x0 <- X[row,]
   y0 <- x0%*%betas
   se <- sqrt(sigma2%*%t(x0)%*%C_jj%*%x0)
-  low_b <- y0 - t2*se
-  upper_b <- y0 + t2*se
+  low_b <- y0 - t3*se
+  upper_b <- y0 + t3*se
   tab <- cbind(low_b, upper_b)
   mean_IC <- rbind(mean_IC, tab)
   y_pred <- rbind(y_pred, y0)
@@ -606,7 +598,7 @@ colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicte
 
 mse <- mean(mean_IC$`Absolute Error`**2)
 
-mean_IC %>% kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
+mean_IC |> kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
 ```
 
 O resultado da tabela acima nos diz que, dado qualquer observação do nosso conjunto dados, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, considerando que o nosso modelo leva em conta todas as covariáveis $x_i$.
@@ -614,19 +606,33 @@ O resultado da tabela acima nos diz que, dado qualquer observação do nosso con
 Entretanto, sabemos que o melhor modelo encontrado foi aquele com as covariáveis **Pressão, Temperatura** e **Tamanho**. Considerando apenas essas variáveis explicatórias, obteremos os seguintes intervalos de confiança:
 
 ```{r}
+#O melhor modelo teve os valores dos betas modificados
+#Redefinindo a matrix X
+X_2 <- X[,c(1,3,6)]
+#Redefinindo a matrix C_jj
+C_jj2 <- solve(t(X_2)%*%X_2)
+
+betas2 <- solve(t(X_2)%*%X_2)%*%t(X_2)%*%Y
+betas2
+```
+
+
+```{r}
 mean_IC2 <- data.frame(low_b = numeric(0), upper_b = numeric(0))
 y_pred2 <- data.frame(value = numeric(0))
 
 #recalculando a estatística teste t
 #agora nosso k =4
-t3 <- qt(1-alpha/2, n-4-1)
+t4 <- qt(1-alpha/2, n-3)
+sigma <- SQRes/(n-3)
+
 
 for (row in 1:nrow(X)){
-  x0 <- X[row,c(1,2,3,6)]
-  y0 <- x0%*%t(t(betas[c(1,2,3,6),]))
-  se <- sqrt(sigma2%*%t(x0)%*%C_jj[c(1,2,3,4),c(1,2,3,6)]%*%x0)
-  low_b <- y0 - t3*se
-  upper_b <- y0 + t3*se
+  x0 <- X[row,c(1,3,6)]
+  y0 <- x0%*%t(t(betas2))
+  se <- sqrt(sigma2%*%t(x0)%*%C_jj2%*%x0)
+  low_b <- y0 - t4*se
+  upper_b <- y0 + t4*se
   tab <- cbind(low_b, upper_b)
   mean_IC2 <- rbind(mean_IC2, tab)
   y_pred2 <- rbind(y_pred2, y0)
@@ -647,12 +653,12 @@ colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predict
 
 mse2 <- mean(mean_IC2$`Absolute Error`**2)
 
-mean_IC2 %>% kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 42.6, R^2 = 0.92)")
+mean_IC2 |> kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 55.10, R^2 = 0.985)")
 ```
 
 Do mesmo modo que a tabela anterior, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, dado que o nosso modelo possui as covariáveis mais significativas.
 
-Vale notar que é sempre preferível ter intervalos de confiança menores, uma vez que eles nos dão uma melhor ideia da magnitude da variável dependente $y$. Porém, nosso melhor modelo apresentou intervalos de confiança muito maiores que o modelo completo. Isso ocorre pois o modelo completo apresenta uma **erro padrão** $Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0 \approx 4.3$ enquanto que o melhor modelo, com apenas 3 covariáveis, apresenta um **erro padrão** $Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0 \approx 11.65$. Essa diferença é responsável pelo aumento do comprimento do IC. Ainda sim, vale lembrar que o $R^2_{aj}$ do melhor modelo é maior que o do modelo completo, o que indica que esse modelo é, de fato, melhor.
+Vale notar que é sempre preferível ter intervalos de confiança menores, uma vez que eles nos dão uma melhor ideia da magnitude da variável dependente $y$. Porém, nosso melhor modelo apresentou intervalos de confiança muito maiores que o modelo completo. Isso ocorre pois o modelo completo apresenta uma **erro padrão**, tal que: $Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0 \approx 3.063$ enquanto que o melhor modelo, com apenas 3 covariáveis, apresenta um **erro padrão**: $Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0 \approx 4.33$. Essa diferença é responsável pelo aumento do comprimento do IC. Ainda sim, vale lembrar que o $R^2_{aj}$ do melhor modelo é maior que o do modelo completo, o que indica que esse modelo é, de fato, melhor.
 
 Esse fato ilustra um conceito interessante em modelos preditivos e aprendizado de máquina: **o dilema viés-variância**. Esse dilema estabelece que a diminuição da variãncia de um modelo sempre ocorre às custas do aumento do viés e, vice-versa.
 
@@ -660,6 +666,10 @@ Podemos definir **Viés** como a diferença entre o valor real e o predito. Para
 $$Viés = E(\hat{y_i} - y_i)$$
 E a **Variância** como a média dos desvios quadrados dos valores preditos $\hat{y_i}$ em relação à média dos valores preditos $E(\hat{y_i})$ :
 $$Var(\hat{y_i}) = \frac{\sum_{i=1}^n(\hat{y_i} - E(\hat{y_i}))^2}{n}$$
+Pode-se mostrar que o MSE pode ser decomposto de forma a gerar a seguinte equação:
+
+$$MSE = Viés^2+Variância+Ruído$$
+
 ```{r, echo=FALSE}
 #Viés do modelo completo
 bias_fullm <- abs(mean(mean_IC$`Predicted Value` - mean_IC$`Real Value`))
@@ -681,6 +691,6 @@ bias_var_m <- data.frame(Viés = vies,
                          Variância = variancia)
 
 row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
-bias_var_m %>% kable(caption = "Tabela Viés X Variância")
+bias_var_m |> kable(caption = "Tabela Viés X Variância")
 ```
-Percebemos que na tabela acima, o **modelo completo** apresentou $Viés = 0$, o que provavelmente é um indicativo de ***overfitting***, por outro lado, o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar $92\%$ da variabilidade.
+Percebemos na tabela acima que ambos os modelos apresentaram $Viés = 0$, o que provavelmente ocorreu devido ao pequeno núemro de observações, mas ainda sim indica que nosso modelo não está enviesado a um modelo em particular. Vale notar também que o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar - a partir do $R_{aj}$ - $98\%$ da variabilidade, enquanto que o **modelo completo**, explicava cerca de $90\%$, apresentando uma variabilidade bem menor, fato esse que, dado esse conjunto de dados, seria um indicativo de *sobreajuste*. 

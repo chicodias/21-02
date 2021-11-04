@@ -9,11 +9,12 @@ date: "Novembro de 2021"
 output: pdf_document
 ---
 
+
 Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
 
-##### Informações do dataset
+## Conjunto de dados
 
-Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
+O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
 
 Significância: 97%
 
@@ -27,8 +28,6 @@ library(gridExtra)
 library(GGally)
 library(pander)
 ```
-
-## Dataset
 
 ```{r, echo=TRUE, warning=FALSE}
 dados <- read_csv("dados/data-table-B7.csv", locale = locale(decimal_mark = ","))
@@ -403,9 +402,6 @@ Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o a
 ```{r}
 alpha <- 0.03 
 (RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) )
-=======
-alpha <- 0.03
-RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F)
 ```
 
 Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teorico da distribuicao F com $k$ e $n-p$ graus de liberdade.
@@ -457,19 +453,13 @@ lm.anova <- function(x,y){
   SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
   
   SQReg <- SQTotal - SQRes
-  
-  
-  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
+
   gl_sqreg <- k 
   QMReg <- SQReg/gl_sqreg 
-   
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
   gl_sqres <- n-p 
   QMRes <- SQRes/gl_sqres 
-   
   SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
   gl_sqtotal <- n-1
-   
    
   #calculando a estatistica F 
   F_0 <- QMReg/QMRes
@@ -483,7 +473,6 @@ lm.anova <- function(x,y){
   #retorna uma lista com objetos relevantes ao modelo
   list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est, 
        anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
-  
 }
 ```
 

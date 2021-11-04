@@ -11,18 +11,18 @@ output: pdf_document
 
 Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
 
-##### Informações do dataset
+##### Informações do dataset 
 
 Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
 
 Significancia: 97%
 
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
-library(ggplot2)
+
 ```
 
 ## Dataset
@@ -167,8 +167,77 @@ ggplot(tabela01, aes(x = "", y = x1)) +
 
 ```
 
+
+
+```{r message =F}
+dados %>% pivot_longer(!y) %>% 
+  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x")
+```
+
+```{r}
+dados %>% pivot_longer(!c(Tamanho, y)) %>% 
+  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x")
+```
+
+```{r}
+dados %>% pivot_longer(cols = everything()) %>% 
+  ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
+  facet_wrap(~name, scales = "free_x")
+```
+
+```{r}
+GGally::ggparcoord(dados[,c(2, 4, 6, 1, 3)])
+```
+
+```{r}
+GGally::ggcorr(dados)
+```
+
+```{r message = F}
+GGally::ggpairs(dados, columns = c(1:4,6), aes(colour = as_factor(Tamanho)))
+```
+
+
 ## 2. ajuste do modelo de Regressão Linear Múltipla
-* Qual a diferença entre o EMV e o EMMQ
+
+
+Ajustaremos um modelo de regressão utilizando todas as covariáveis presentes em nosso conjunto de dados.
+
+Definimos um modelo de regressão linear múltipla com $k$ covariáveis através da fórmula $Y=\beta_0+\beta_1X_1+\ldots+\beta_kX_k+\xi$, onde $\beta_j, j=1,\ldots,k$ são os coeficientes de regressão e representam a mudança esperada na variável resposta $Y$ por unidade de mudança em $X_i$ quando todas as outras covariáveis $X_i (i\neq j)$ são mantidas constantes.
+
+Podemos também representar o modelo da seguinte forma:
+
+$$\boldsymbol{Y}=\boldsymbol{X}\boldsymbol{\beta}+\boldsymbol{\xi}$$
+
+Onde:
+
+$\boldsymbol{Y}=$ Vetor de $(n\times 1)$ observações;
+
+$\boldsymbol{X}=$ Matriz $(n\times p)$ de covariáveis;
+
+$\boldsymbol{\beta=}$ Vetor $P\times 1$ de coeficientes de regressão;
+
+$\xi=$ Vetor n\time 1 de erros aleatórios;
+
+$p=k+1$.
+
+
+As variáveis de nosso conjunto de dados são definidas como sendo:
+
+
+- $Y:$ Rendimento total de azeite por lote de amendoim*
+
+- $X_1:$ Tamanho
+
+- $X_2:$ Temperatura
+
+- $X_3:$ Pressão
+
+- $X_4:$ Fluxo de CO2
+
+- $X_5:$ Umidade
 
 ```{r}
 #Definindo os betas do modelo de regressão múltipla
@@ -208,39 +277,6 @@ sigma2
 
 
 ## 4. ANOVA
-
-```{r}
-library(mlbench)
-library(caret)
-```
-
-
-```{r}
-set.seed(42)
-control <- trainControl(method="repeatedcv", number=10, repeats=3)
-# train the model
-model <- train(y~., data=dados, method = 'lm', preProcess="scale", trControl=control)
-# estimate variable importance
-importance <- varImp(model, scale=FALSE)
-
-# plot importance
-plot(importance)
-```
-```{r}
-c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
-```
-
-```{r}
-base.mod <- lm(y ~ 1 , data= dados)  # base intercept only model
-all.mod <- lm(y ~ . , data= dados) # full model with all predictors
-stepMod <- step(base.mod, scope = list(lower = base.mod, upper = all.mod), direction = "both", trace = 0, steps = 1000)  # perform step-wise algorithm
-shortlistedVars <- names(unlist(stepMod[[1]])) # get the shortlisted variable.
-shortlistedVars <- shortlistedVars[!shortlistedVars %in% "(Intercept)"]  # remove intercept 
-print(shortlistedVars)
-```
-```{r}
-stepMod$anova
-```
 
 ```{r}
 lm.anova <- function(x,y){
@@ -292,15 +328,6 @@ lm.anova <- function(x,y){
 }
 ```
 
-
-```{r}
-
-```
-
-```{r}
-
-```
-
 ```{r}
 #Obtendo os valores dos residuos, SQres, SQreg , SQTotal do nosso modelo  
 # No modelo de regressao linear multipla  
@@ -339,7 +366,9 @@ SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
 
 
 $$SQReg = SQT - SQRes = ((sum(y))^2)/n - (Y-Y_est)^T*(Y-Y_est) = betas^T * X^T * Y - ((t(u)%*%Y)^
-2)/n $$
+2)/n$$
+
+
 ```{r}
 #Soma dos quadrados da regressao  
  
@@ -349,7 +378,7 @@ SQReg <- SQTotal - SQRes
 
 ```{r}
 #Calculando a anova 
-k <- 3 # covariaveis utilizadas 
+k <- 2 # covariaveis utilizadas 
 p <- k+1
  
 SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
@@ -374,7 +403,7 @@ QMTotal <- QMRes + QMReg
 ```
 
 ```{r}
-alpha <- 0.05 
+alpha <- 0.03 
 RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) 
 RR
 ```
@@ -411,7 +440,7 @@ print(paste("R2: ", modelo$R2,
 ### Cenário 2: Modelo de regressão linear com três variáveis
 
 ```{r}
-x <- dados %>% select("Tamanho", "Temp","Pressao")
+x <- dados %>% select("Tamanho", "Temp")
 y <- dados$y
 
 modelo <- lm.anova(x,y)
@@ -433,7 +462,16 @@ print(paste("R2: ", modelo$R2,
 
 ```
 
+$$A^\prime$$
+
+
 R2 ajustado = 1 - qres/qmtotal
+
+```{r}
+for( i in 1:5)
+  
+```
+
 
 ```{r}
 (R2adj <- 1 - QMRes/QMTotal)
@@ -441,7 +479,11 @@ R2 ajustado = 1 - qres/qmtotal
 ```{r}
 feat <- c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
 
-1:5 %>% map(~head(feat,.x)) %>% map(~lm.anova(dados$y, dados %>% select(.x))$R2adj)
+r2 <- tibble(x= 1:5, rAdj = 1:5 %>% map(~head(feat,.x)) %>% map_dbl(~lm.anova(dados %>% select(.x), dados$y)$R2adj),
+             r2 = 1:5 %>% map(~head(feat,.x)) %>% map_dbl(~lm.anova(dados %>% select(all_of(.x)), dados$y)$R2))
+
+r2 %>% 
+  ggplot(aes(x = x)) +  geom_point(aes(y = r2, color = "R2"))  +  geom_point(aes(y = rAdj, color = "R2adj"))
 ```
 
 
@@ -509,7 +551,7 @@ IC_b5 <- cbind(b5_lim_inf, b5_lim_sup)
 IC_tab <- rbind(IC_b1, IC_b2, IC_b5)
 row.names(IC_tab) <- c("beta1", "beta2", "beta5")
 colnames(IC_tab) <- c("IC (0.015)", "IC (0.985)")
-IC_tab |> kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
+IC_tab %>%  kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
 ```
 A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confiança de que o real valor do parâmetro $\beta_j$ está contido nos intervalos acima.
 
@@ -564,7 +606,7 @@ colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicte
 
 mse <- mean(mean_IC$`Absolute Error`**2)
 
-mean_IC |> kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
+mean_IC %>% kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
 ```
 
 O resultado da tabela acima nos diz que, dado qualquer observação do nosso conjunto dados, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, considerando que o nosso modelo leva em conta todas as covariáveis $x_i$.
@@ -605,7 +647,7 @@ colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predict
 
 mse2 <- mean(mean_IC2$`Absolute Error`**2)
 
-mean_IC2 |> kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 42.6, R^2 = 0.92)")
+mean_IC2 %>% kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 42.6, R^2 = 0.92)")
 ```
 
 Do mesmo modo que a tabela anterior, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, dado que o nosso modelo possui as covariáveis mais significativas.
@@ -639,6 +681,6 @@ bias_var_m <- data.frame(Viés = vies,
                          Variância = variancia)
 
 row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
-bias_var_m |> kable(caption = "Tabela Viés X Variância")
+bias_var_m %>% kable(caption = "Tabela Viés X Variância")
 ```
 Percebemos que na tabela acima, o **modelo completo** apresentou $Viés = 0$, o que provavelmente é um indicativo de ***overfitting***, por outro lado, o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar $92\%$ da variabilidade.

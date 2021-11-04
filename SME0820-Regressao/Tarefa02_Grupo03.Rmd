@@ -1,11 +1,11 @@
 ---
-title: "Tarefa02_Grupo03_SME0820"
+title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Exercício 2"
 author:
   - Brenda da Silva Muniz 11811603
   - Francisco Rosa Dias de Miranda 4402962
   - Heitor Carvalho Pinheiro 11833351
   - Mônica Amaral Novelli 11810453
-date: "Outubro de 2021"
+date: "Novembro de 2021"
 output: pdf_document
 ---
 
@@ -15,7 +15,7 @@ Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla
 
 Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
 
-Significancia: 97%
+Significância: 97%
 
 
 ```{r setup, include=FALSE, warning=FALSE}
@@ -23,6 +23,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
 library(ggpubr)
+library(gridExtra)
+library(GGally)
+library(pander)
 ```
 
 ## Dataset
@@ -170,33 +173,36 @@ ggplot(tabela01, aes(x = "", y = x1)) +
 
 
 ```{r message =F}
-dados %>% pivot_longer(!y) %>%
-  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x")
+dados %>% pivot_longer(!y) %>% 
+  ggplot(aes(x = value, y = y)) + geom_point() +
+  geom_smooth(formula = y ~ x, method = "lm") +
+  facet_wrap(~name, scales = "free_x") +
+  theme_pubclean()
 ```
 
 ```{r}
 dados %>% pivot_longer(!c(Tamanho, y)) %>%
   ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x")
+  facet_wrap(~name, scales = "free_x") +
+  labs(color = "Tamanho")+
+  theme_pubclean()
 ```
 
 ```{r}
 dados %>% pivot_longer(cols = everything()) %>%
   ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
-  facet_wrap(~name, scales = "free_x")
+  facet_wrap(~name, scales = "free_x") +
+  labs( y = "Freq. Absoluta",
+        x = "Valor") +
+  theme_pubclean()
 ```
 
 ```{r}
-GGally::ggparcoord(dados[,c(2, 4, 6, 1, 3)])
-```
-
-```{r}
-GGally::ggcorr(dados)
+ggparcoord(dados)
 ```
 
 ```{r message = F}
-GGally::ggpairs(dados, columns = c(1:4,6), aes(colour = as_factor(Tamanho)))
+ggpairs(dados)
 ```
 
 
@@ -278,101 +284,82 @@ sigma2
 
 ## 4. ANOVA
 
-```{r}
-lm.anova <- function(x,y){
-  x<- as.matrix(x)
-  y<- as.matrix(y)
-
-  n <- length(y)
-  k <- ncol(x) # covariaveis utilizadas
-  p <- k+1
-
-  X <- matrix(c(rep(1,n), x), ncol = p, nrow = n, byrow = FALSE)
-  Y <- matrix(y, ncol = 1, nrow = n)
-
-  betas <- solve(t(X)%*%X)%*%t(X)%*%Y
-
-  Y_est <- X%*%betas
-
-  res <- Y - Y_est
-
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
-
-  u <- c(rep(1,n))
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
-
-  SQReg <- SQTotal - SQRes
-
-
-  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n
-  gl_sqreg <- k
-  QMReg <- SQReg/gl_sqreg
-
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
-  gl_sqres <- n-p
-  QMRes <- SQRes/gl_sqres
-
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
-  gl_sqtotal <- n-1
-
-
-  #calculando a estatistica F
-  F_0 <- QMReg/QMRes
-
-  R2 <-  SQReg/SQTotal
-  QMTotal <- QMRes + QMReg
-  R2adj <- 1 - QMRes/QMTotal
-  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est,
-       anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
-
-}
-```
+Agora que ajustamos um modelo inicial, é necessário que verifiquemos se ele é adequado em explicar a variabilidade de nossa amostra. Vamos assumir que $\xi\sim N_n(0,\sigma^2I)$. Precisamos agora verificar nossa suposição graficamente:
 
 ```{r}
-#Obtendo os valores dos residuos, SQres, SQreg , SQTotal do nosso modelo  
-# No modelo de regressao linear multipla  
-# Forma matricial:
-# Y_estimado = X*betas = X * (X^T*X)^(-1)*X^T*Y = H*Y
-#SQtotal <-  
-Y_est <- X%*%betas
 
+# Obtendo uma estimativa para Y a partir do modelo ajustado
+Y_est <- X%*%betas 
+
+# Cálculo dos resíduos
 res <- Y - Y_est
 ```
+
+```{r}
+p <- ggplot(tibble(res), aes(sample = res)) + stat_qq() + stat_qq_line() +
+  labs(x = "Amostra",
+       y = "Quantis Teóricos",
+       title = "Normal Q-Q Plot") +
+  theme_pubclean()
+
+q <- ggplot(tibble(res), aes(res)) +
+  geom_histogram(aes(y=..density..), binwidth = 4, stat = "bin") +
+  labs(title = "Histograma dos resíduos",
+       y = "Densidade",
+       x = "Valor") +
+  theme_pubclean()
+
+grid.arrange(p,q, ncol = 2)
+
+```
+
+O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado que os dados têm distribuição normal, enquanto que o histograma dos resíduos nos fornece aproximações a respeito da distribuição de $\xi$.
+
+A partir dos gráficos acima, podemos notar que os resíduos não estão muito afastados dos quantis teóricos, embora sua distribuição seja ligeiramente assimétrica, conforme constatado no histograma. Podemos também utilizar o teste de Shapiro-Wilk para verificar a normalidade dos dados.
+
+```{r}
+pander(shapiro.test(res), style='rmarkdown', 
+       caption = "Teste de normalidade Shapiro-Wilk para os resíduos")
+```
+
+
+O teste acima confirma nossa suposição de que os resíduos têm distribuição Normal, pois, para um nível de significância de 97%, o valor-p obtido, 0,2754, não rejeita a hipótese nula, de normalidade dos dados.
+
+Além disso, para determinar matematicamente se existe uma relação linear entre a variável resposta $\boldsymbol{Y}$ e qualquer as outras covariáveis $\boldsymbol{X}_1,\ldots,\boldsymbol{X}_k$, é possível utilizar o teste **ANOVA**. Nele, queremos testar:
+
+**$H_0$**: Nenhuma das variáveis contribui significativamente ao modelo, versus:
+
+**$H_a$**: Pelo menos uma das covariáveis contribui significativamente ao modelo.
+
+
+Tabela *ANOVA*:
+
+| **F.V.** | **G.L** | **S.Q.** | **Q.M.** | **F** |
+|:---:|:---:|:---:|:---:|:---:|
+| **Regressão** | $k$ | $SQ_{reg}$ | $QMreg=\dfrac{SQreg}{k}$ | $F=\dfrac{QMreg}{QMres}$ |
+| **Resíduo** | $n-p$ | $SQ_{res}$ | $QMres=\dfrac{SQres}{n-p}$ |  |
+| **Total** | $n-1$ | $SQ_{total}$ |  $QM_{Total}$  |  |
+Table: Tabela ANOVA
 
 
 ```{r}
 # Soma dos quadrados dos residuos  
-# podemos calcular pela equacao:
-# (Y-Y_est)^T*(Y-Y_est)
-# ou pela equacao
-# Y^T * Y - betas^T * X^T * Y
-
-SQRes <- t(Y-Y_est)%*%(Y-Y_est)
-
-#note que  
-t(Y)%*%Y - t(betas)%*%t(X)%*%Y
+(SQRes <- t(Y-Y_est)%*%(Y-Y_est))
 ```
 
+
+$$SQ_{Reg} = SQ_{Total} - SQ_{Res} = \frac 1n \sum_{i=1}^n y_i^2 - (Y-\hat{Y})^T\cdot(Y-\hat{Y}) =$$
+$$\beta^T \cdot X^T \cdot Y - \frac1n (u^T \cdot Y)^2$$
 
 ```{r}
-# Soma dos quadrados totais
-# vetor unitario para facilitar as contas
-u <- c(rep(1,n))
-SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
-
-# obs
-# ((t(u)%*%Y)^2)/n = ((sum(y))^2)/n
+# Soma dos quadrados totais 
+u <- c(rep(1,n)) 
+(SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n) 
 ```
-
-
-$$SQReg = SQT - SQRes = ((sum(y))^2)/n - (Y-Y_est)^T*(Y-Y_est) = betas^T * X^T * Y - ((t(u)%*%Y)^
-2)/n$$
-
 
 ```{r}
 #Soma dos quadrados da regressao  
-
-SQReg <- SQTotal - SQRes
+(SQReg <- SQTotal - SQRes)
 ```
 
 
@@ -381,109 +368,160 @@ SQReg <- SQTotal - SQRes
 k <- 2 # covariaveis utilizadas
 p <- k+1
 
-SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n
-gl_sqreg <- k
-QMReg <- SQReg/gl_sqreg
-
-SQRes <- t(Y-Y_est)%*%(Y-Y_est)
-gl_sqres <- n-p
-QMRes <- SQRes/gl_sqres
-
-SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
+ 
+gl_sqreg <- k 
+QMReg <- SQReg/gl_sqreg 
+ 
+gl_sqres <- n-p 
+QMRes <- SQRes/gl_sqres 
+ 
 gl_sqtotal <- n-1
+```
 
 
-#calculando a estatistica F
-F_0 <- QMReg/QMRes
-F_0
+```{r}
+#calculando a estatistica F 
+(F_0 <- QMReg/QMRes)
 ```
 
 ```{r}
-QMTotal <- QMRes + QMReg
+(QMTotal <- QMRes + QMReg)
 ```
 
+Apresentamos os resultados obtidos na forma de tabela.
+
+| **F.V.** | **G.L** | **S.Q.** | **Q.M.** | **F** |
+|:---:|:---:|:---:|:---:|:---:|
+| **Regressão** | $2$ | $9712.5$ | $4856.25$ | $97.05035$ |
+| **Resíduo** | $13$ | $650.5$ | $50.03846$ |  |
+| **Total** | $15$ | $10363$ |  $4906.288$  |  |
+Table: Tabela ANOVA para o modelo ajustado.
+
+
+Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o auxílio do R:
+
 ```{r}
+alpha <- 0.03 
+(RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) )
+=======
 alpha <- 0.03
 RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F)
-RR
 ```
 
+Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teorico da distribuicao F com $k$ e $n-p$ graus de liberdade.
+
 ```{r}
-# Rejeitamos H0 se F_0 > RR, RR = regiao de rejeicao = quantil teorico da distribuicao F com k e  
-# n-k-1 = n-p g.l.
-if(RR < F_0){
-  cat("Rejeita-se H0")
+
+if(RR < F_0){ 
+  cat("Rejeita-se H0") 
 }
 ```
 
+Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das variáveis contribui significativamente ao modelo. 
+
 ## 5. $R^2$ e $R^2 ajustado$
-* Compare os dois avaliadores para 3 cenários diferentes do modelo.
+
+Agora que sabemos que nosso modelo de regressão linear múltipla é adequado, estamos interessados em medir quais covariavéis têm maior contribuição em resumir a variabilidade de nossa amostra.
+
+Uma das formas de fazer isso, é utilizando o *coeficiente de determinação*, também conhecido como $R^2$, definido como:
+
+$$ R^2 =  \frac{SQ_{Reg}}{SQ_{Total}}$$
+
+$R^2$ é útil para quantificar o percentual da variabilidade dos dados explicado pelo modelo, contudo, como ele tende a aumentar conforme se adicionam mais covariáveis, sendo elas explicativas ou não. Uma forma de contornar esse impasse é através da utilização do $R^2$ ajustado:
+
+$$R^2_{adj} = 1-  \frac{QM_{Res}}{QM_{Total}}$$
+
+Para evitar duplicar o código utilizado para ajuste dos modelos, criamos uma função com este intuito:
+
 ```{r}
-R2 <-  SQReg/SQTotal
-R2
+lm.anova <- function(x,y){
+  x<- as.matrix(x)
+  y<- as.matrix(y)
+  
+  n <- length(y)
+  k <- ncol(x) # covariaveis utilizadas
+  p <- k+1
+
+  X <- matrix(c(rep(1,n), x), ncol = p, nrow = n, byrow = FALSE)
+  Y <- matrix(y, ncol = 1, nrow = n)
+  
+  betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+  
+  Y_est <- X%*%betas 
+ 
+  res <- Y - Y_est
+  
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
+  
+  u <- c(rep(1,n)) 
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+  
+  SQReg <- SQTotal - SQRes
+  
+  
+  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
+  gl_sqreg <- k 
+  QMReg <- SQReg/gl_sqreg 
+   
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
+  gl_sqres <- n-p 
+  QMRes <- SQRes/gl_sqres 
+   
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+  gl_sqtotal <- n-1
+   
+   
+  #calculando a estatistica F 
+  F_0 <- QMReg/QMRes
+  
+  # calculo de R2
+  R2 <-  SQReg/SQTotal
+  
+  QMTotal <- QMRes + QMReg
+  #R2 ajustado
+  R2adj <- 1 - QMRes/QMTotal
+  #retorna uma lista com objetos relevantes ao modelo
+  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est, 
+       anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
+  
+}
 ```
 
-### Cenário 1: Modelo de regressão linear simples
+Vamos criar uma lista com os cinco atributos presentes em nosso conjunto de dados, e ajustaremos modelos incrementalmente com as seguintes variáveis:
 
 ```{r}
-x <- dados$Tamanho
-y <- dados$y
-
-modelo <- lm.anova(x,y)
-
-print(paste("R2: ", modelo$R2,
-            "R2_adj:", modelo$R2adj))
-
+feat <- c("Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
+stepmodel <- 1:5 %>% map(~head(feat,.x))
 ```
-
-
-### Cenário 2: Modelo de regressão linear com três variáveis
-
 ```{r}
-x <- dados %>% select("Tamanho", "Temp")
-y <- dados$y
-
-modelo <- lm.anova(x,y)
-
-print(paste("R2: ", modelo$R2,
-            "R2_adj:", modelo$R2adj))
-
-```
-
-### Cenário 3: Modelo de regressão linear com cinco variáveis
-```{r}
-x <- dados %>% select(-"y")
-y <- dados$y
-
-modelo <- lm.anova(x,y)
-
-print(paste("R2: ", modelo$R2,
-            "R2_adj:", modelo$R2adj))
-
-```
-
-
-R2 ajustado = 1 - qres/qmtotal
-
-```{r}
-for( i in 1:5)
-
+# Calcula R2 e R2adj para os cinco modelos
+r2 <- stepmodel %>% map_dfr(~lm.anova(x = dados %>%
+                                            select(all_of(.x)),
+                                      y = dados$y)[c("R2adj", "R2")]) %>%
+  cbind(x = 1:5) 
 ```
 
 
 ```{r}
-(R2adj <- 1 - QMRes/QMTotal)
-```
-```{r}
-feat <- c(  "Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
-
-r2 <- tibble(x= 1:5, rAdj = 1:5 %>% map(~head(feat,.x)) %>% map_dbl(~lm.anova(dados %>% select(.x), dados$y)$R2adj),
-             r2 = 1:5 %>% map(~head(feat,.x)) %>% map_dbl(~lm.anova(dados %>% select(all_of(.x)), dados$y)$R2))
-
+# gráfico de R2 e R2adj
 r2 %>%
-  ggplot(aes(x = x)) +  geom_point(aes(y = r2, color = "R2"))  +  geom_point(aes(y = rAdj, color = "R2adj"))
+  pivot_longer(cols = !x) %>% 
+  ggplot(aes(x = x, y = value, color = name, label =  round(value, 3))) +
+  geom_line()  +
+  labs(title = "Variabilidade explicada pelos modelos de Regressão Linear Múltipla",
+       x = "Número de covariáveis",
+       y = "",
+       color = "Métrica") +
+  scale_color_brewer(palette = "Dark2",labels = c("R²", "R² ajustado")) +
+  geom_label(show.legend = FALSE) +
+  theme_pubclean()
+
 ```
 
+
+Diferentemente do esperado, o valor de $R^2$ não aumentou com a inclusão de mais variáveis, e o valor de $R^2_{adj}$ apenas diminuiu após a inclusão da terceira variável. Temos aqui fortes indícios que nem todas as variáveis são significativas ao modelo.
+
+O modelo que foi capaz de melhor explicar a fonte de variabilidade dos dados de acordo com o critério de maior $R^2_{adj}$ foi o modelo com apenas duas covariáveis, que apresentou $R^2_{adj} = 0.986$. 
 
 ## 6. Testes nos Coeficientes de Regressão Individualmente
 
@@ -644,7 +682,7 @@ IC_b5 <- cbind(b5_lim_inf, b5_lim_sup)
 IC_tab <- rbind(IC_b2, IC_b5)
 row.names(IC_tab) <- c("beta2", "beta5")
 colnames(IC_tab) <- c("IC (0.015)", "IC (0.985)")
-IC_tab |> kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
+IC_tab %>% kable(caption = "Intervalos de Confiança para os coeficientes do modelo")
 ```
 A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confiança de que o real valor do parâmetro $\beta_j$ está contido nos intervalos acima. Outro interpretação seria, se realizássemos esse experimento diversas vezes, concluiríamos que em 97% das vezes o real valor de $\beta_j$ estaria dentro do intervalo.
 
@@ -704,7 +742,7 @@ colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicte
 
 mse <- mean(mean_IC$`Absolute Error`**2)
 
-mean_IC |> kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
+mean_IC %>% kable(caption = "**Estimação do IC de E(Y) para cada observação do conjunto de dados considerando todas as covariáveis** (MSE = 40.65, R^2 = 0.90)")
 ```
 
 O resultado da tabela acima nos diz que, dado qualquer observação do nosso conjunto dados, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, considerando que o nosso modelo leva em conta todas as covariáveis $x_i$.
@@ -759,7 +797,7 @@ colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predict
 
 mse2 <- mean(mean_IC2$`Absolute Error`**2)
 
-mean_IC2 |> kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 55.10, R^2 = 0.985)")
+mean_IC2 %>% kable(caption = "**Estimação do IC para cada observação do conjunto de dados considerando apenas as covariáveis significativas** (MSE = 55.10, R^2 = 0.985)")
 ```
 
 Do mesmo modo que a tabela anterior, podemos afirmar com 97% de confiança que o verdadeiro valor de $y = rendimento~de~azeite~por~lote~de~amendoim|x_0$ está contido neste intervalo, dado que o nosso modelo possui as covariáveis mais significativas.
@@ -797,6 +835,6 @@ bias_var_m <- data.frame(Viés = vies,
                          Variância = variancia)
 
 row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
-bias_var_m |> kable(caption = "Tabela Viés X Variância")
+bias_var_m %>% kable(caption = "Tabela Viés X Variância")
 ```
 Percebemos na tabela acima que ambos os modelos apresentaram $Viés = 0$, o que provavelmente ocorreu devido ao pequeno núemro de observações, mas ainda sim indica que nosso modelo não está enviesado a um modelo em particular. Vale notar também que o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar - a partir do $R_{aj}$ - $98\%$ da variabilidade, enquanto que o **modelo completo**, explicava cerca de $90\%$, apresentando uma variabilidade bem menor, fato esse que, dado esse conjunto de dados, seria um indicativo de *sobreajuste*.

@@ -11,7 +11,7 @@ output: pdf_document
 
 Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
 
-##### Informações do dataset 
+##### Informações do dataset
 
 Informações sobre o conjunto de dados: O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
 
@@ -166,7 +166,7 @@ h5 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
 ### Box Plots
 ```{r}
 ggplot(tabela01, aes(x = "", y = x1)) +
-    geom_boxplot(color = "blue") 
+    geom_boxplot(color = "blue")
 
 ```
 
@@ -181,7 +181,7 @@ dados %>% pivot_longer(!y) %>%
 ```
 
 ```{r}
-dados %>% pivot_longer(!c(Tamanho, y)) %>% 
+dados %>% pivot_longer(!c(Tamanho, y)) %>%
   ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
   facet_wrap(~name, scales = "free_x") +
   labs(color = "Tamanho")+
@@ -189,7 +189,7 @@ dados %>% pivot_longer(!c(Tamanho, y)) %>%
 ```
 
 ```{r}
-dados %>% pivot_longer(cols = everything()) %>% 
+dados %>% pivot_longer(cols = everything()) %>%
   ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
   facet_wrap(~name, scales = "free_x") +
   labs( y = "Freq. Absoluta",
@@ -287,6 +287,7 @@ sigma2
 Agora que ajustamos um modelo inicial, é necessário que verifiquemos se ele é adequado em explicar a variabilidade de nossa amostra. Vamos assumir que $\xi\sim N_n(0,\sigma^2I)$. Precisamos agora verificar nossa suposição graficamente:
 
 ```{r}
+
 # Obtendo uma estimativa para Y a partir do modelo ajustado
 Y_est <- X%*%betas 
 
@@ -309,6 +310,7 @@ q <- ggplot(tibble(res), aes(res)) +
   theme_pubclean()
 
 grid.arrange(p,q, ncol = 2)
+
 ```
 
 O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado que os dados têm distribuição normal, enquanto que o histograma dos resíduos nos fornece aproximações a respeito da distribuição de $\xi$.
@@ -362,9 +364,10 @@ u <- c(rep(1,n))
 
 
 ```{r}
-#Calculando a anova 
-k <- 2 # covariaveis utilizadas 
+#Calculando a anova
+k <- 2 # covariaveis utilizadas
 p <- k+1
+
  
 gl_sqreg <- k 
 QMReg <- SQReg/gl_sqreg 
@@ -400,11 +403,15 @@ Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o a
 ```{r}
 alpha <- 0.03 
 (RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) )
+=======
+alpha <- 0.03
+RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F)
 ```
 
 Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teorico da distribuicao F com $k$ e $n-p$ graus de liberdade.
 
 ```{r}
+
 if(RR < F_0){ 
   cat("Rejeita-se H0") 
 }
@@ -516,17 +523,123 @@ Diferentemente do esperado, o valor de $R^2$ não aumentou com a inclusão de ma
 
 O modelo que foi capaz de melhor explicar a fonte de variabilidade dos dados de acordo com o critério de maior $R^2_{adj}$ foi o modelo com apenas duas covariáveis, que apresentou $R^2_{adj} = 0.986$. 
 
-## 6. Testes dos Coeficientes de regressão
+## 6. Testes nos Coeficientes de Regressão Individualmente
+
+Usamos o teste t parcial, para saber se realmente todas as covariáveis são diferentes de zero. O teste, testa esta cada beta, mede a contribuição de uma determinada covariável considerando que outras co-variáveis estão no modelo.E, é definido como:
+$H_0:\beta_j=0$ VS $H_1:\beta_j\neq 0$
+Como consequência, Se $H_0$ for rejeitado, $X_i$ é importante dado que as outras covariáveis estão no modelo também.
+
+Vale lembrar, ainda, que este é um teste marginal ou parcial, pois como dito anteriormente $\hat{\beta}_{i-1}$ depende de todas as outras covariáveis.
+
+### Sendo:
+```{r}
+alpha <- 0.03
+beta0_est <- betas[1,1]
+beta1_est <- betas[2,1]
+beta2_est <- betas[3,1]
+beta3_est <- betas[4,1]
+beta4_est <- betas[5,1]
+beta5_est <- betas[6,1]
+```
+
+```{r}
+t1 <- qt(alpha/2, n-p)
+t2 <- qt(1-alpha/2, n-p)
+cbind(t1,t2)
+```
+
+###       t1       t2
+### [1,]  -2.4607 2.4607
+
+Rejeitamos $H_0$ se $t<t_{(\alpha/2;n-p)}$ ou $t>t_{(1-\alpha/2;n-p)}$.
+
+Testando para $\beta1$  
+
+```{r}
+t_b1 <- beta1_est / (sqrt( QMRes* solve(t(X)%*%X)[2,2] ) )
+t_b1
+```
+### [,1]
+### [1,] 2.037315
+
+```{r}
+if(t_b1 < t1 || t_b1>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Não rejeita-se H0
+
+Testando para $\beta2$
+```{r}
+t_b2 <- beta2_est / (sqrt( QMRes* solve(t(X)%*%X)[3,3] ) )
+t_b2
+```
+### [,1]
+### [1,] 5.36493
+
+```{r}
+if(t_b2 < t1 || t_b2>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Rejeita-se H0
+
+Testando para $\beta3$
+```{r}
+t_b3 <- beta3_est / (sqrt( QMRes* solve(t(X)%*%X)[4,4] ) )
+t_b3
+```
+### [,1]
+### [1,] 0.3395525
+
+```{r}
+if(t_b3 < t1 || t_b3>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Não rejeita-se H0
+
+Testando para $\beta4$
+```{r}
+t_b4 <- beta4_est / (sqrt( QMRes* solve(t(X)%*%X)[5,5] ) )
+t_b4
+```
+### [,1]
+### [1,] 3.618999e-14
+
+```{r}
+if(t_b4 < t1 || t_b4>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Não rejeita-se H0
+
+Testando para $\beta5$
+```{r}
+t_b5 <- beta5_est / (sqrt( QMRes* solve(t(X)%*%X)[6,6] ) )
+t_b5
+```
+### [,1]
+### [1,] -12.08807
+```{r}
+if(t_b5 < t1 || t_b5>t2){
+ cat("Rejeita-se H0")
+}
+```
+### Rejeita-se H0
+
+Portanto, seguindo a regra apresentada no início da questão, concluímos que $\beta2$ e $\beta5$ rejeitam $H_0$. Logo, Temperatura e  Tamanho são covariáveis significativas para o modelo, dado que já temos pelo menos uma variável significativa no modelo conforme constatado no teste f anteriormente.
 
 ## 7.  Teste um Subconjunto de Coeficientes
 * Faça análise e Escolha do Melhor Modelo, Qual modelo seu grupo acredita ser o melhor? Apresente omodelo escolhido pelo grupo (Equação do modelo ajustado, com as estimativas dos $\beta$'s e $\sigma^2$ e interpretação do modelo). Justifique a escolha das co-variáveis. Faça uso do teste de um subconjuntode coeficientes nesta questão ilustrado na aula 14 e 15.
-$R^2$
+
+
 
 ## 8. IC Para Coeficientes de Regressão
 
 Faça o intervalo de confiança para os coeficientes de regressão de seu modelo. Apresente conclusões ou interpretação para cada um deles.
 
-Dado que o melhor modelo que encontramos foi aquele com as variáveis, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$ 
+Dado que o melhor modelo que encontramos foi aquele com as variáveis, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$
 
 Definimos o Índice de confiança $\gamma = (100 - \alpha)\%$, também chamado de *coeficiente de confiança*
 
@@ -575,14 +688,14 @@ A tabela acima pode ser interpretada da seguinte maneira: Temos 97% de confianç
 
 
 ## 9. IC para E(Y)
-Podemos também construir intervalos de confiança para pontos específicos do nosso conjunto de dados. 
+Podemos também construir intervalos de confiança para pontos específicos do nosso conjunto de dados.
 Seja $\boldsymbol{x}_0=[1,x_{01},x_{02},\ldots,x_{0k}]$, podemos obter uma estimativa de $\hat{y}$ a partir da seguinte equação:
 
 $$\hat{y_0}=x_0^{T}\hat{\beta}$$
 Em seguida, estimamos a variância, ou erro padrão, de $\hat{y_0}$ através da equação:
 
 $$Var(\hat{y_0})=\hat{\sigma}^2x_0^T(X^TX)^{-1}x_0$$
-Desse modo, construímos nosso intervalo de confiança para a média de $y$ no 
+Desse modo, construímos nosso intervalo de confiança para a média de $y$ no
 ponto $x_0$, conforme a seguinte equação:
 
 $$\hat{y_0} - t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}\leq E(y|x_0)\leq \hat{y_0} + t_{\alpha/2, n-p}\sqrt{\hat{\sigma}^2x_0^{T}(X^TX)^{-1}x_0}$$
@@ -724,4 +837,4 @@ bias_var_m <- data.frame(Viés = vies,
 row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
 bias_var_m %>% kable(caption = "Tabela Viés X Variância")
 ```
-Percebemos na tabela acima que ambos os modelos apresentaram $Viés = 0$, o que provavelmente ocorreu devido ao pequeno núemro de observações, mas ainda sim indica que nosso modelo não está enviesado a um modelo em particular. Vale notar também que o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar - a partir do $R_{aj}$ - $98\%$ da variabilidade, enquanto que o **modelo completo**, explicava cerca de $90\%$, apresentando uma variabilidade bem menor, fato esse que, dado esse conjunto de dados, seria um indicativo de *sobreajuste*. 
+Percebemos na tabela acima que ambos os modelos apresentaram $Viés = 0$, o que provavelmente ocorreu devido ao pequeno núemro de observações, mas ainda sim indica que nosso modelo não está enviesado a um modelo em particular. Vale notar também que o **melhor modelo**, mesmo apresentando maior variância é capaz de explicar - a partir do $R_{aj}$ - $98\%$ da variabilidade, enquanto que o **modelo completo**, explicava cerca de $90\%$, apresentando uma variabilidade bem menor, fato esse que, dado esse conjunto de dados, seria um indicativo de *sobreajuste*.

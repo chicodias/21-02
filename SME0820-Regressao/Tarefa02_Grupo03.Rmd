@@ -173,7 +173,7 @@ ggplot(tabela01, aes(x = "", y = x1)) +
 
 
 ```{r message =F}
-dados %>% pivot_longer(!y) %>% 
+dados %>% pivot_longer(!y) %>%
   ggplot(aes(x = value, y = y)) + geom_point() +
   geom_smooth(formula = y ~ x, method = "lm") +
   facet_wrap(~name, scales = "free_x") +
@@ -289,7 +289,7 @@ Agora que ajustamos um modelo inicial, é necessário que verifiquemos se ele é
 ```{r}
 
 # Obtendo uma estimativa para Y a partir do modelo ajustado
-Y_est <- X%*%betas 
+Y_est <- X%*%betas
 
 # Cálculo dos resíduos
 res <- Y - Y_est
@@ -318,7 +318,7 @@ O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado qu
 A partir dos gráficos acima, podemos notar que os resíduos não estão muito afastados dos quantis teóricos, embora sua distribuição seja ligeiramente assimétrica, conforme constatado no histograma. Podemos também utilizar o teste de Shapiro-Wilk para verificar a normalidade dos dados.
 
 ```{r}
-pander(shapiro.test(res), style='rmarkdown', 
+pander(shapiro.test(res), style='rmarkdown',
        caption = "Teste de normalidade Shapiro-Wilk para os resíduos")
 ```
 
@@ -352,9 +352,9 @@ $$SQ_{Reg} = SQ_{Total} - SQ_{Res} = \frac 1n \sum_{i=1}^n y_i^2 - (Y-\hat{Y})^T
 $$\beta^T \cdot X^T \cdot Y - \frac1n (u^T \cdot Y)^2$$
 
 ```{r}
-# Soma dos quadrados totais 
-u <- c(rep(1,n)) 
-(SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n) 
+# Soma dos quadrados totais
+u <- c(rep(1,n))
+(SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n)
 ```
 
 ```{r}
@@ -368,19 +368,19 @@ u <- c(rep(1,n))
 k <- 2 # covariaveis utilizadas
 p <- k+1
 
- 
-gl_sqreg <- k 
-QMReg <- SQReg/gl_sqreg 
- 
-gl_sqres <- n-p 
-QMRes <- SQRes/gl_sqres 
- 
+
+gl_sqreg <- k
+QMReg <- SQReg/gl_sqreg
+
+gl_sqres <- n-p
+QMRes <- SQRes/gl_sqres
+
 gl_sqtotal <- n-1
 ```
 
 
 ```{r}
-#calculando a estatistica F 
+#calculando a estatistica F
 (F_0 <- QMReg/QMRes)
 ```
 
@@ -401,7 +401,7 @@ Table: Tabela ANOVA para o modelo ajustado.
 Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o auxílio do R:
 
 ```{r}
-alpha <- 0.03 
+alpha <- 0.03
 (RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) )
 =======
 alpha <- 0.03
@@ -412,12 +412,12 @@ Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teorico da dist
 
 ```{r}
 
-if(RR < F_0){ 
-  cat("Rejeita-se H0") 
+if(RR < F_0){
+  cat("Rejeita-se H0")
 }
 ```
 
-Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das variáveis contribui significativamente ao modelo. 
+Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das variáveis contribui significativamente ao modelo.
 
 ## 5. $R^2$ e $R^2 ajustado$
 
@@ -437,53 +437,53 @@ Para evitar duplicar o código utilizado para ajuste dos modelos, criamos uma fu
 lm.anova <- function(x,y){
   x<- as.matrix(x)
   y<- as.matrix(y)
-  
+
   n <- length(y)
   k <- ncol(x) # covariaveis utilizadas
   p <- k+1
 
   X <- matrix(c(rep(1,n), x), ncol = p, nrow = n, byrow = FALSE)
   Y <- matrix(y, ncol = 1, nrow = n)
-  
+
   betas <- solve(t(X)%*%X)%*%t(X)%*%Y
-  
-  Y_est <- X%*%betas 
- 
+
+  Y_est <- X%*%betas
+
   res <- Y - Y_est
-  
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
-  
-  u <- c(rep(1,n)) 
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
-  
+
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+
+  u <- c(rep(1,n))
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
+
   SQReg <- SQTotal - SQRes
-  
-  
-  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n 
-  gl_sqreg <- k 
-  QMReg <- SQReg/gl_sqreg 
-   
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est) 
-  gl_sqres <- n-p 
-  QMRes <- SQRes/gl_sqres 
-   
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
+
+
+  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n
+  gl_sqreg <- k
+  QMReg <- SQReg/gl_sqreg
+
+  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+  gl_sqres <- n-p
+  QMRes <- SQRes/gl_sqres
+
+  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
   gl_sqtotal <- n-1
-   
-   
-  #calculando a estatistica F 
+
+
+  #calculando a estatistica F
   F_0 <- QMReg/QMRes
-  
+
   # calculo de R2
   R2 <-  SQReg/SQTotal
-  
+
   QMTotal <- QMRes + QMReg
   #R2 ajustado
   R2adj <- 1 - QMRes/QMTotal
   #retorna uma lista com objetos relevantes ao modelo
-  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est, 
+  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est,
        anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
-  
+
 }
 ```
 
@@ -498,14 +498,14 @@ stepmodel <- 1:5 %>% map(~head(feat,.x))
 r2 <- stepmodel %>% map_dfr(~lm.anova(x = dados %>%
                                             select(all_of(.x)),
                                       y = dados$y)[c("R2adj", "R2")]) %>%
-  cbind(x = 1:5) 
+  cbind(x = 1:5)
 ```
 
 
 ```{r}
 # gráfico de R2 e R2adj
 r2 %>%
-  pivot_longer(cols = !x) %>% 
+  pivot_longer(cols = !x) %>%
   ggplot(aes(x = x, y = value, color = name, label =  round(value, 3))) +
   geom_line()  +
   labs(title = "Variabilidade explicada pelos modelos de Regressão Linear Múltipla",
@@ -521,7 +521,7 @@ r2 %>%
 
 Diferentemente do esperado, o valor de $R^2$ não aumentou com a inclusão de mais variáveis, e o valor de $R^2_{adj}$ apenas diminuiu após a inclusão da terceira variável. Temos aqui fortes indícios que nem todas as variáveis são significativas ao modelo.
 
-O modelo que foi capaz de melhor explicar a fonte de variabilidade dos dados de acordo com o critério de maior $R^2_{adj}$ foi o modelo com apenas duas covariáveis, que apresentou $R^2_{adj} = 0.986$. 
+O modelo que foi capaz de melhor explicar a fonte de variabilidade dos dados de acordo com o critério de maior $R^2_{adj}$ foi o modelo com apenas duas covariáveis, que apresentou $R^2_{adj} = 0.986$.
 
 ## 6. Testes nos Coeficientes de Regressão Individualmente
 
@@ -633,6 +633,52 @@ Portanto, seguindo a regra apresentada no início da questão, concluímos que $
 ## 7.  Teste um Subconjunto de Coeficientes
 * Faça análise e Escolha do Melhor Modelo, Qual modelo seu grupo acredita ser o melhor? Apresente omodelo escolhido pelo grupo (Equação do modelo ajustado, com as estimativas dos $\beta$'s e $\sigma^2$ e interpretação do modelo). Justifique a escolha das co-variáveis. Faça uso do teste de um subconjuntode coeficientes nesta questão ilustrado na aula 14 e 15.
 
+Equação de melhor modelo: $Y = \beta2x^2 + \beta5x^5$
+
+Dando início as interpretações,consideremos um exemplo com $\beta2$. Sabemos, que se todo resto da equação fica constante o $\beta2$ representa o incremento de y dado a variação de uma unidade em $x_1$, com $x_y$ diferente de i mantido com todas as constantes.
+
+Estimando os Betas para o melhor modelo
+```{r}
+x <- dados%>%select(Temp, Tamanho)
+y <- dados$y
+modelo <- lm.anova(x,y)
+modelo$betas
+```
+###             [,1]
+### [1,]  80.1346055
+### [2,]   0.2821429
+### [3,] -16.0649819
+
+Estimando $\sigma2$ para o melhor modelo
+```{r}
+modelo$anov$SQRes/13
+```
+###          [,1]
+### [1,] 67.82692
+
+Realizando o teste de um subconjunto de coeficientes
+```{r}
+F_testeparcial <- modelo$anov$F_0
+```
+
+```{r}
+alpha <- 0.03
+gl_modredu <- 2
+RR <- qf(alpha, df1 = gl_modredu, df2 = n - gl_modredu -1, lower.tail = F)
+RR
+```
+### 4.648139
+
+Seguindo a regra, se $F>F_\text{Tabelado}$ rejeitamos $H_0$.
+
+```{r}
+if(RR < F_testeparcial){
+    cat("Rejeita-se H0")
+}
+```
+### Reita-se H0
+
+Como foi rejeitada $H_0$ temos que o subconjunto de coeficientes testados (variáveis Temperatura e Tamanho) contribui significativamente para o modelo.Vale ressaltar que este teste é análogo ao teste feito anteriormente usando a estatística t.
 
 
 ## 8. IC Para Coeficientes de Regressão

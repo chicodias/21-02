@@ -97,7 +97,7 @@ p <- k + 1
 ```
 
 
-Uma vez definidos tais pontos, podemos iniciar nossa análise descritiva dos dados, fazendo a montagem dos gráficos visando o estudo de como tais variáveis se comportam. 
+Uma vez definidos tais pontos, podemos iniciar nossa análise descritiva dos dados, fazendo a montagem dos gráficos visando o estudo de como tais variáveis se comportam.
 
 
 *Teste de Correlação de Pearson entre as covariáveis e $y$*
@@ -169,27 +169,19 @@ ggplot(tabela01, aes(x = "", y = x1)) +
 
 
 ```{r message =F}
-<<<<<<< HEAD
 dados %>% pivot_longer(!y) %>%
-  ggplot(aes(x = value, y = y)) + geom_point() +
-  geom_smooth(formula = y ~ x, method = "lm") +
-  facet_wrap(~name, scales = "free_x") +
-  theme_pubclean()
-=======
-dados %>% pivot_longer(!y) %>% 
-  ggplot(aes(y = y)) + geom_point(aes(x = value)) + 
-  facet_wrap(~name, scales = "free_x") 
+  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x")
 ```
 
 ```{r}
-dados %>% pivot_longer(!c(Tamanho, y)) %>% 
-  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) + 
-  facet_wrap(~name, scales = "free_x") 
+dados %>% pivot_longer(!c(Tamanho, y)) %>%
+  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x")
 
 dados %>% pivot_longer(!y) %>%
   ggplot(aes(y = y)) + geom_point(aes(x = value)) +
   facet_wrap(~name, scales = "free_x")
->>>>>>> 383271d1c1467286d90fea2b1b7d9449315b7777
 ```
 
 ```{r}
@@ -451,31 +443,14 @@ lm.anova <- function(x,y){
 
   SQReg <- SQTotal - SQRes
 
-<<<<<<< HEAD
-
-  SQReg <- t(betas)%*%t(X)%*%Y-((t(u)%*%Y)^2)/n
   gl_sqreg <- k
   QMReg <- SQReg/gl_sqreg
-
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
   gl_sqres <- n-p
   QMRes <- SQRes/gl_sqres
-
   SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
   gl_sqtotal <- n-1
 
-
   #calculando a estatistica F
-=======
-  gl_sqreg <- k 
-  QMReg <- SQReg/gl_sqreg 
-  gl_sqres <- n-p 
-  QMRes <- SQRes/gl_sqres 
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n 
-  gl_sqtotal <- n-1
-   
-  #calculando a estatistica F 
->>>>>>> 383271d1c1467286d90fea2b1b7d9449315b7777
   F_0 <- QMReg/QMRes
 
   # calculo de R2
@@ -487,10 +462,6 @@ lm.anova <- function(x,y){
   #retorna uma lista com objetos relevantes ao modelo
   list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est,
        anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg))
-<<<<<<< HEAD
-
-=======
->>>>>>> 383271d1c1467286d90fea2b1b7d9449315b7777
 }
 ```
 
@@ -556,7 +527,7 @@ cbind(t1,t2)
 ```
 
 ###       t1       t2
-### [1,]  -2.4607 2.4607
+### [1,]  -2.435845 2.435845
 
 Rejeitamos $H_0$ se $t<t_{(\alpha/2;n-p)}$ ou $t>t_{(1-\alpha/2;n-p)}$.
 
@@ -567,7 +538,7 @@ t_b1 <- beta1_est / (sqrt( QMRes* solve(t(X)%*%X)[2,2] ) )
 t_b1
 ```
 ### [,1]
-### [1,] 2.037315
+### [1,] 2.120505
 
 ```{r}
 if(t_b1 < t1 || t_b1>t2){
@@ -582,7 +553,7 @@ t_b2 <- beta2_est / (sqrt( QMRes* solve(t(X)%*%X)[3,3] ) )
 t_b2
 ```
 ### [,1]
-### [1,] 5.36493
+### [1,] 5.583996
 
 ```{r}
 if(t_b2 < t1 || t_b2>t2){
@@ -597,7 +568,7 @@ t_b3 <- beta3_est / (sqrt( QMRes* solve(t(X)%*%X)[4,4] ) )
 t_b3
 ```
 ### [,1]
-### [1,] 0.3395525
+### [1,] 0.3534175
 
 ```{r}
 if(t_b3 < t1 || t_b3>t2){
@@ -612,7 +583,7 @@ t_b4 <- beta4_est / (sqrt( QMRes* solve(t(X)%*%X)[5,5] ) )
 t_b4
 ```
 ### [,1]
-### [1,] 3.618999e-14
+### [1,] 3.766773e-14
 
 ```{r}
 if(t_b4 < t1 || t_b4>t2){
@@ -627,7 +598,7 @@ t_b5 <- beta5_est / (sqrt( QMRes* solve(t(X)%*%X)[6,6] ) )
 t_b5
 ```
 ### [,1]
-### [1,] -12.08807
+### [1,] -12.58166
 ```{r}
 if(t_b5 < t1 || t_b5>t2){
  cat("Rejeita-se H0")

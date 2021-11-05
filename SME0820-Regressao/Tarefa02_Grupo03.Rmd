@@ -99,6 +99,20 @@ p <- k + 1
 
 Uma vez definidos tais pontos, podemos iniciar nossa análise descritiva dos dados, fazendo a montagem dos gráficos visando o estudo de como tais variáveis se comportam. 
 
+
+*Teste de Correlação de Pearson entre as covariáveis e $y$*
+
+  Na tabela abaixo, podemos observar as correlações de todas as covariáveis entre si e com a variável preditora. Analisando esses resultados, vemos que nenhuma das covariáveis se correlacionam entre si, e apresentam uma correlação muito baixa com a variável preditora - com exceção de x5 (Tamanho) com y.
+
+```{r}
+
+tabela_correlacao <- round(stats::cor(tabela01), 5)
+
+tabela_correlacao
+```
+
+Fazendo uso das correlações, podemos dispor graficamente uma matriz de gráficos para expor as relações entre as variáveis, de modo que teremos histogramas de frequência nas diagonais, gráficos de dispersão no painel triangular inferior e  coeficientes das correlações no superior, de modo que o tamanho dos números é condicionado ao valor da correlação.
+
 ```{r}
 
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
@@ -127,18 +141,6 @@ pairs(dados, diag.panel = panel.hist, upper.panel = panel.cor,
       lower.panel = panel.smooth)
 
 ```
-
-*Teste de Correlação de Pearson entre as covariáveis e $y$*
-
-  Na tabela abaixo, podemos observar as correlações de todas as covariáveis entre si e com a variável preditora. Analisando esses resultados, vemos que nenhuma das covariáveis se correlacionam entre si, e apresentam uma correlação muito baixa com a variável preditora - com exceção de x5 (Tamanho) com y.
-
-```{r}
-
-tabela_correlacao <- round(stats::cor(tabela01), 5)
-
-tabela_correlacao
-```
-
 ### Histogramas
 
 ```{r}

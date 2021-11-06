@@ -141,74 +141,52 @@ pairs(dados, diag.panel = panel.hist, upper.panel = panel.cor,
       lower.panel = panel.smooth)
 
 ```
-### Histogramas
-
-```{r}
-h1 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
-  xlab("Pressao") + ylab("Frequencia")
-
-h2 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
-  xlab("Temperatura") + ylab("Frequencia")
-
-h3 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
-  xlab("Fluxo de CO^2") + ylab("Frequencia")
-
-h4 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
-  xlab("Umidade") + ylab("Frequencia")
-
-h5 <- ggplot(tabela01, aes(x1)) + geom_histogram() +
-  xlab("Tamanho") + ylab("Frequencia")
-
-```
-
-
-```{r}
-ggplot(tabela01, aes(x = "", y = x1)) +
-    geom_boxplot(color = "blue")
-```
-
-
-```{r message =F}
-dados %>% pivot_longer(!y) %>%
-  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x")
-```
-
-```{r}
-dados %>% pivot_longer(!c(Tamanho, y)) %>%
-  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x")
-
-dados %>% pivot_longer(!y) %>%
-  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x")
-```
-
-```{r}
-dados %>% pivot_longer(!c(Tamanho, y)) %>%
-  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x")
-```
-
-
-```{r}
-dados %>% pivot_longer(cols = everything()) %>%
-  ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
-  facet_wrap(~name, scales = "free_x")
-```
-
-```{r}
-GGally::ggparcoord(dados)
-```
-
-```{r}
-GGally::ggcorr(dados)
-```
+Outra versão dessa matriz de gráficos pode ser disposta abaixo, atribuindo cor a covariável Tamanho.
 
 ```{r message = F}
 GGally::ggpairs(dados, columns = c(1:4,6), aes(colour = as_factor(Tamanho)))
 ```
 
+Também podemos observar individualmente os gráficos de dispersão - na versão original e atribuindo cor a covariável Tamanho -, que comprovam e ilustram os resultados da nossa tabela de correlação, onde temos que as variáveis são pouco ou nada correlacionadas.
+
+```{r}
+dados %>% pivot_longer(!c(Tamanho, y)) %>%
+  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x") + labs(x       = "Variáveis",
+         y       = "Valores", 
+         title   = "Gráficos de dispersão - Dados") + 
+    theme_minimal() 
+
+dados %>% pivot_longer(!y) %>%
+  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x") + labs(x       = "Variáveis",
+         y       = "Valores", 
+         title   = "Gráficos de dispersão - Dados") + 
+    theme_minimal() 
+```
+
+
+Do mesmo modo, temos predisposto para visualização uma matriz de nossos histogramas.
+
+```{r}
+dados %>% pivot_longer(cols = everything()) %>%
+  ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
+  facet_wrap(~name, scales = "free_x")+ labs(x       = "Variáveis",
+         y       = "Valores", 
+         title   = "Histogramas - Dados") + 
+    theme_minimal() 
+```
+Outros gráficos que comparam as relações entre nossas variáveis é o gráfico de coordenadas paralelas e nossa matriz de correlação, ambos também explicitando a falta de correlação entre as covariáveis.
+```{r}
+GGally::ggparcoord(dados) + labs(x       = "Variáveis",
+         y       = "Valores", 
+         title   = "Coordenadas Paralelas - Dados") + 
+    theme_minimal() 
+```
+
+```{r}
+GGally::ggcorr(dados)
+```
 ## 2. ajuste do modelo de Regressão Linear Múltipla
 
 

@@ -167,8 +167,6 @@ Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y
 
 ## 2. Ajuste do modelo de Regressão Linear Múltipla
 
-**FALTA**  Explique se existe diferença entre o EMV e o estimador de mínimos quadrados de beta
-
 Ajustaremos um modelo de regressão utilizando todas as covariáveis presentes em nosso conjunto de dados.
 
 Definimos um modelo de regressão linear múltipla com $k$ covariáveis através da fórmula $Y=\beta_0+\beta_1X_1+\ldots+\beta_kX_k+\xi$, onde $\beta_j, j=1,\ldots,k$ são os coeficientes de regressão e representam a mudança esperada na variável resposta $Y$ por unidade de mudança em $X_i$ quando todas as outras covariáveis $X_i (i\neq j)$ são mantidas constantes.
@@ -214,10 +212,24 @@ betas
 lm(formula = y ~ ., data = dados)
 ```
 
+ Em relação à diferença entre o EMV e o estimador de mínimos quadrados de beta é, basicamente, que, estando sob a suposição de erro normal, como normalmente assumimos em regressão linear, o estimador de mínimos quadrados e a máxima verossimilhança são os mesmos. Ou seja, minimizar o erro ao quadrado é equivalente a maximizar a probabilidade caso as seguintes condições sejam cumpridas:
+- O modelo de regressão é linear nos parâmetros,
+ou seja, o modelo na população pode ser escrito como
+$y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ... + \beta_k x_k + \varepsilon$,
+em que $\beta_0,\beta_1,...,\beta_k$ são parâmetros desconhecidos e $\varepsilon$ é o termo de erro aleatório não observável.
+- Amostragem Aleatória
+ou seja, possuimos uma amostra aleatória de n observações
+$(x_{1i}, x_{2i}, ..., x_{ki}, y_i), i = 1, 2, ..., n,$
+desse modelo de regressão descrito acima - linear.
+- Ausência de Colinearidade Perfeita.
+ou seja, temos que, como nenhum regressor é constante; não teremos uma relação linear perfeita entre os mesmos.
+- Média Condicional Zero
+ou seja, valor esperado do termo de erro aleatório, $\varepsilon$, condicionado na matriz de explicação X, tem que ser igual a zero. Logo,
+$E( \varepsilon | X ) = 0.$
+Em um modelo linear, se os erros pertencem a uma distribuição normal, os estimadores de mínimos quadrados também são os estimadores de probabilidade máxima.
+
 
 ## 3. Estimação de $\sigma^2$
-
-**FALTA** Descreva e justifique as características deste estimador, é viciado?
 
 $SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$
 

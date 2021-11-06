@@ -1,0 +1,26 @@
+---
+title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Exercício 2"
+author:
+  - Brenda da Silva Muniz 11811603
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351
+  - Mônica Amaral Novelli 11810453
+date: "Novembro 2021"
+output: pdf_document
+---
+
+# Exercício 4
+
+Queremos mostrar que o estimador $F_0$ pode ser escrito na forma $F_0 = \frac{R^2(n-p)}{k(1-R^2)}$
+
+Note que podemos escrever $SQ_{reg} = SQ_{total} R^2$. Por definição, temos que 
+
+$$\begin{aligned}
+F_0 = \frac{QM_{reg}}{QM_{res}} = \frac{\frac{SQ_{reg}}{k}}{\frac{SQ_{res}}{n-p}} = \frac{SQ_{reg}}{SQ_{res}} \frac{n-p}k = \frac{SQ_{total}\ R^2}{SQ_{total} - SQ_{reg}}  \frac{n-p}{k} = \\
+\frac{SQ_{total}\ R^2}{SQ_{total} - SQ_{total}\ R^2}  \frac{n-p}{k} = 
+\frac{SQ_{total}\ R^2}{SQ_{total} ( 1- R^2)}  \frac{n-p}{k} = \\
+\frac{R^2(n-p)}{k (1- R^2)}.
+\end{aligned}$$
+
+Portanto, os dois são equivalentes.
+

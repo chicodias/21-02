@@ -117,7 +117,7 @@ dados %>%
   theme_minimal()
 ```
 
-A partir dos gráficos de barras, podemos ver que nossas cinco covariáveis, apesar de serem quantitativas, assumem apenas dois valores. A única variável que assume mais valores do que isso é $y$, que apararenta ter uma distribuição quase uniforme.
+A partir dos gráficos de barras, podemos ver que nossas cinco covariáveis, apesar de serem quantitativas, assumem apenas dois valores, com a mesma proporção. A única variável que assume mais valores do que isso é $y$, que apararenta ter uma distribuição quase uniforme.
 
 Outros gráficos que comparam as relações entre nossas variáveis é o gráfico de coordenadas paralelas e nossa matriz de correlação, ambos também explicitando a falta de correlação entre as covariáveis.
 
@@ -183,7 +183,7 @@ $\boldsymbol{X}=$ Matriz $(n\times p)$ de covariáveis;
 
 $\boldsymbol{\beta=}$ Vetor $P\times 1$ de coeficientes de regressão;
 
-$\xi=$ Vetor n\time 1 de erros aleatórios;
+$\xi=$ Vetor n $\times$ 1 de erros aleatórios;
 
 $p=k+1$.
 
@@ -193,6 +193,7 @@ $p=k+1$.
 betas <- solve(t(X) %*% X) %*% t(X) %*% Y
 betas
 ```
+
 
 
 ```{r}
@@ -212,18 +213,24 @@ betas
 lm(formula = y ~ ., data = dados)
 ```
 
- Em relação à diferença entre o EMV e o estimador de mínimos quadrados de beta é, basicamente, que, estando sob a suposição de erro normal, como normalmente assumimos em regressão linear, o estimador de mínimos quadrados e a máxima verossimilhança são os mesmos. Ou seja, minimizar o erro ao quadrado é equivalente a maximizar a probabilidade caso as seguintes condições sejam cumpridas:
-- O modelo de regressão é linear nos parâmetros,
+Em relação à diferença entre o EMV e o estimador de mínimos quadrados de beta é, basicamente, que, estando sob a suposição de erro normal, como normalmente assumimos em regressão linear, o estimador de mínimos quadrados e a máxima verossimilhança são os mesmos. Ou seja, minimizar o erro ao quadrado é equivalente a maximizar a probabilidade caso as seguintes condições de regularidade sejam cumpridas:
+
+ 1. O modelo de regressão é linear nos parâmetros,
+
 ou seja, o modelo na população pode ser escrito como
 $y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ... + \beta_k x_k + \varepsilon$,
 em que $\beta_0,\beta_1,...,\beta_k$ são parâmetros desconhecidos e $\varepsilon$ é o termo de erro aleatório não observável.
-- Amostragem Aleatória
+
+  2. Amostragem Aleatória
+  
 ou seja, possuimos uma amostra aleatória de n observações
 $(x_{1i}, x_{2i}, ..., x_{ki}, y_i), i = 1, 2, ..., n,$
 desse modelo de regressão descrito acima - linear.
 - Ausência de Colinearidade Perfeita.
 ou seja, temos que, como nenhum regressor é constante; não teremos uma relação linear perfeita entre os mesmos.
-- Média Condicional Zero
+
+
+  3. Média Condicional Zero
 ou seja, valor esperado do termo de erro aleatório, $\varepsilon$, condicionado na matriz de explicação X, tem que ser igual a zero. Logo,
 $E( \varepsilon | X ) = 0.$
 Em um modelo linear, se os erros pertencem a uma distribuição normal, os estimadores de mínimos quadrados também são os estimadores de probabilidade máxima.
@@ -232,18 +239,25 @@ Em um modelo linear, se os erros pertencem a uma distribuição normal, os estim
 ## 3. Estimação de $\sigma^2$
 
 Temos que:
-$SQ_{res} = \sum_{i=1}^{n}(Y_i - \hat{Y})^2 = (\boldsymbol{y-\hat{y}})^T(\boldsymbol{y-\hat{y}}) = (\boldsymbol{y}-X\hat{\beta})^T(\boldsymbol{y}-X\hat{\beta}) = (\boldsymbol{y}^T-X^T\hat{\beta}^T)(\boldsymbol{y}-X\hat{\beta}) = \boldsymbol{y^Ty - Y^T}X\hat{\beta}-\hat{\beta}^TX^T \boldsymbol{y}+\hat{\beta}^TX^TX\hat{\beta} = \boldsymbol{y^Ty} - 2\hat{\beta}^TX^T\boldsymbol{y} + \hat{\beta}^TX^TX\hat{\beta}$
+
+$$SQ_{res} = \sum_{i=1}^{n}(Y_i - \hat{Y})^2 = (\boldsymbol{y-\hat{y}})^T(\boldsymbol{y-\hat{y}}) =$$
+
+$$(\boldsymbol{y}-X\hat{\beta})^T(\boldsymbol{y}-X\hat{\beta}) = (\boldsymbol{y}^T-X^T\hat{\beta}^T)(\boldsymbol{y}-X\hat{\beta}) =$$
+
+$$\boldsymbol{y^Ty - Y^T}X\hat{\beta}-\hat{\beta}^TX^T \boldsymbol{y}+\hat{\beta}^TX^TX\hat{\beta} =$$
+
+$$\boldsymbol{y^Ty} - 2\hat{\beta}^TX^T\boldsymbol{y} + \hat{\beta}^TX^TX\hat{\beta}$$
 
 A partir disso, considerando que:
 
-$\hat{\beta} = (X^TX)^{-1}X^T\boldsymbol{y} $ ;
+$\hat{\beta} = (X^TX)^{-1}X^T\boldsymbol{y}$ ;
 $(X^TX)\hat{\beta} = X^TY$ e, portanto,
 
-$SQ_{res} =\boldsymbol{y^Ty} - 2\hat{\beta}^TX^T\boldsymbol{y}+\hat{\beta}^TX^T\boldsymbol{y} $
+$$SQ_{res} =\boldsymbol{y^Ty} - 2\hat{\beta}^TX^T\boldsymbol{y}+\hat{\beta}^TX^T\boldsymbol{y}$$
 
 resultando em:
 
-$SQ_{res}=\boldsymbol{y}^{T}\boldsymbol{y}-\widehat{\boldsymbol{\beta}}^{T}X^{T}\boldsymbol{y}$
+$$SQ_{res}=\boldsymbol{y}^{T}\boldsymbol{y}-\widehat{\boldsymbol{\beta}}^{T}X^{T}\boldsymbol{y}$$
 
 Com isso,
 
@@ -254,26 +268,33 @@ SQRes
 
 Agora, tomando:
 
-$SQ_{res}=\boldsymbol{y}^{T}\boldsymbol{y}-\widehat{\boldsymbol{\beta}}^{T}X^{T}\boldsymbol{y}$
+$$SQ_{res}=\boldsymbol{y}^{T}\boldsymbol{y}-\widehat{\boldsymbol{\beta}}^{T}X^{T}\boldsymbol{y}$$
 
 podemos fazer:
 
-$SQ_{res}= \boldsymbol{y}^{T}\boldsymbol{y} - ((X^TX)^{-1}X^T\boldsymbol{y})^TX^T\boldsymbol{y} = \boldsymbol{y}^{T}\boldsymbol{y} - \boldsymbol{y}^TX(X^TX)^{-1}X^T\boldsymbol{y} = \boldsymbol{y}^{T}\boldsymbol{y} - \boldsymbol{y}^{T}H\boldsymbol{y}$
+$$SQ_{res}= \boldsymbol{y}^{T}\boldsymbol{y} - ((X^TX)^{-1}X^T\boldsymbol{y})^TX^T\boldsymbol{y} =$$
+
+$$\boldsymbol{y}^{T}\boldsymbol{y} - \boldsymbol{y}^TX(X^TX)^{-1}X^T\boldsymbol{y} = \boldsymbol{y}^{T}\boldsymbol{y} - \boldsymbol{y}^{T}H\boldsymbol{y}$$
+
 
 Dessa forma:
 
-$E(SQ_{res}) = E(\boldsymbol{y}^{T}\boldsymbol{y}) - E(\boldsymbol{y}^{T}H\boldsymbol{y})$
+$$E(SQ_{res}) = E(\boldsymbol{y}^{T}\boldsymbol{y}) - E(\boldsymbol{y}^{T}H\boldsymbol{y})$$
 
 - Desenvolvendo $E(\boldsymbol{y}^{T}\boldsymbol{y})$:
 
-  $E(\boldsymbol{y}^{T}\boldsymbol{y}) = E(\boldsymbol{y}^{T}I\boldsymbol{y}) = tr(I\sigma^2I)+ (X\beta)^TIX\beta = \sigma^2tr(I)+\beta^TX^TX\beta = n\sigma^2 + \beta^TX^TX\beta$
+$$E(\boldsymbol{y}^{T}\boldsymbol{y}) = E(\boldsymbol{y}^{T}I\boldsymbol{y}) = tr(I\sigma^2I)+ (X\beta)^TIX\beta =$$
+$$\sigma^2tr(I)+\beta^TX^TX\beta = n\sigma^2 + \beta^TX^TX\beta$$
   
 - Desenvolvendo $E(\boldsymbol{y}^{T}H\boldsymbol{y})$:
-  $E(\boldsymbol{y}^{T}H\boldsymbol{y}) = tr(H\sigma^2I) + (X\beta)^TX(X^TX)^{-1}X^TX\beta = \sigma^2tr(H) + \beta^TX^TX(X^TX)^{-1}X^TX\beta = \sigma^2p + \beta^TX^TX\beta$
-  
+
+$$E(\boldsymbol{y}^{T}H\boldsymbol{y}) = tr(H\sigma^2I) + (X\beta)^TX(X^TX)^{-1}X^TX\beta =$$
+
+$$\sigma^2tr(H) + \beta^TX^TX(X^TX)^{-1}X^TX\beta = \sigma^2p + \beta^TX^TX\beta$$
+
 Realizando tais substituições, chegamos em:
 
-$E(SQ_{res}) = n\sigma^2 + \beta^TX^TX\beta - (\sigma^2p + \beta^TX^TX\beta) = (n-p)\sigma^2$
+$$E(SQ_{res}) = n\sigma^2 + \beta^TX^TX\beta - (\sigma^2p + \beta^TX^TX\beta) = (n-p)\sigma^2$$
 
 Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p} = QM_{res}$ é um estimador não viciado para sigma^2. 
 
@@ -866,7 +887,7 @@ Vale notar que é sempre preferível ter intervalos de confiança menores, uma v
 Esse fato ilustra um conceito interessante em modelos preditivos e aprendizado de máquina: **o dilema viés-variância**. Esse dilema estabelece que a diminuição da variãncia de um modelo sempre ocorre às custas do aumento do viés e, vice-versa.
 
 Podemos definir **Viés** como a diferença entre o valor real e o predito. Para múltiplas observações, computamos a média desta diferença:
-$$Viés = E(\hat{y_i} - y_i)$$
+$$Vies = E(\hat{y_i} - y_i)$$
 E a **Variância** como a média dos desvios quadrados dos valores preditos $\hat{y_i}$ em relação à média dos valores preditos $E(\hat{y_i})$ :
 $$Var(\hat{y_i}) = \frac{\sum_{i=1}^n(\hat{y_i} - E(\hat{y_i}))^2}{n}$$
 Pode-se mostrar que o MSE pode ser decomposto de forma a gerar a seguinte equação:

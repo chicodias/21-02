@@ -33,29 +33,29 @@ library(pander)
 dados <- read_csv("dados/data-table-B7.csv", locale = locale(decimal_mark = ","))
 dim(dados)
 
-#Renomeando as colunas
-names(dados) <- c('Pressao', 'Temp', 'FluxoCO2', 'Umidade', 'Tamanho', 'y')
+# Renomeando as colunas
+names(dados) <- c("Pressao", "Temp", "FluxoCO2", "Umidade", "Tamanho", "y")
 
 head(dados)
 ```
-Temos cinco covariáveis e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de azeite por lote de amendoim**
+Temos cinco covariáveis quantitativas e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de azeite por lote de amendoim**
 
 
 ## 1. Análise Descritiva dos dados
 
-Para facilitar nosso trabalho em termos computacionais, estaremos nomeando nossas variáveis e criando um data frame com as mesmas; sendo:
+Para facilitar nosso trabalho em termos computacionais, vamos nomear nossas variáveis e concatená-las num data frame, sendo:
 
-- $Y:$ Rendimento total de azeite por lote de amendoim*
+- $Y:$ Rendimento total de azeite por lote de amendoim*.
 
-- $X_1:$ Tamanho
+- $X_1:$ Pressão
 
 - $X_2:$ Temperatura
 
-- $X_3:$ Pressão
+- $X_3:$ Fluxo de CO2
 
-- $X_4:$ Fluxo de CO2
+- $X_4:$ Umidade
 
-- $X_5:$ Umidade
+- $X_5:$ Tamanho
 
 ```{r}
 x1 <- dados$Pressao
@@ -69,17 +69,19 @@ tabela01 <- data.frame(cbind(x1, x2, x3, x4, x5, y))
 ```
 
 
-Devido à complexidade das fórmulas envolvidas para realizarmos uma regressão linear múltima, utilizaremos uma abordagem matricial. Desse modo, poderemos escrever
+Devido a complexidade das fórmulas envolvidas para realizarmos uma regressão linear múltima, utilizaremos uma abordagem matricial. Desse modo, poderemos escrever
 
-$y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + ... + \beta_k x_{ki} + \varepsilon_i, i = 1, ..., 5$.
+$$y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + ... + \beta_k x_{ki} + \varepsilon_i, i = 1, ..., 5$$
 
-como:
+com:
 
-$y1 = \beta_0 + \beta_1 x_{11} + \beta_2 x_{21} + ... + \beta_k x_{k1} + \varepsilon_1$
-$y2 = \beta_0 + \beta_1 x_{12} + \beta_2 x_{22} + ... + \beta_k x_{k2} + \varepsilon_2$
-$y3 = \beta_0 + \beta_1 x_{13} + \beta_2 x_{23} + ... + \beta_k x_{k3} + \varepsilon_3$
-$y4 = \beta_0 + \beta_1 x_{14} + \beta_2 x_{24} + ... + \beta_k x_{k4} + \varepsilon_4$
-$y5 = \beta_0 + \beta_1 x_{15} + \beta_2 x_{25} + ... + \beta_k x_{k5} + \varepsilon_5$
+$$\begin{cases}
+y_1 = \beta_0 + \beta_1 x_{11} + \beta_2 x_{21} + ... + \beta_k x_{k1} + \varepsilon_1\\
+y_2 = \beta_0 + \beta_1 x_{12} + \beta_2 x_{22} + ... + \beta_k x_{k2} + \varepsilon_2\\
+y_3 = \beta_0 + \beta_1 x_{13} + \beta_2 x_{23} + ... + \beta_k x_{k3} + \varepsilon_3\\
+y_4 = \beta_0 + \beta_1 x_{14} + \beta_2 x_{24} + ... + \beta_k x_{k4} + \varepsilon_4\\
+y_5 = \beta_0 + \beta_1 x_{15} + \beta_2 x_{25} + ... + \beta_k x_{k5} + \varepsilon_5
+\end{cases}$$
 
 Assim, alocamos essas equações em dois vetores colunas (5x1), fazendo:
 
@@ -87,108 +89,85 @@ Assim, alocamos essas equações em dois vetores colunas (5x1), fazendo:
 
 n <- length(dados$y)
 
-X <- matrix(c(rep(1,n), x1, x2, x3, x4, x5), ncol = 6, nrow = n, byrow = FALSE)
+X <- matrix(c(rep(1, n), x1, x2, x3, x4, x5), ncol = 6, nrow = n, byrow = FALSE)
 
 Y <- matrix(y, ncol = 1, nrow = n)
 
-k <- ncol(X) -1
+k <- ncol(X) - 1
 
 p <- k + 1
 ```
 
 
-Uma vez definidos tais pontos, podemos iniciar nossa análise descritiva dos dados, fazendo a montagem dos gráficos visando o estudo de como tais variáveis se comportam.
+Uma vez definidos tais pontos, podemos iniciar nossa análise descritiva dos dados, fazendo a montagem dos gráficos para explorar o comportamento das variáveis de nosso dataset.
 
+### Gráficos de barras
 
-*Teste de Correlação de Pearson entre as covariáveis e $y$*
-
-  Na tabela abaixo, podemos observar as correlações de todas as covariáveis entre si e com a variável preditora. Analisando esses resultados, vemos que nenhuma das covariáveis se correlacionam entre si, e apresentam uma correlação muito baixa com a variável preditora - com exceção de x5 (Tamanho) com y.
-
-```{r}
-
-tabela_correlacao <- round(stats::cor(tabela01), 5)
-
-tabela_correlacao
+```{r out.height="70%"}
+dados %>%
+  pivot_longer(cols = everything()) %>%
+  ggplot() +
+  geom_bar(aes(x = as_factor(value)), stat = "count") +
+  facet_wrap(~name, scales = "free_x") +
+  labs(
+    x = "Variáveis",
+    y = "Valores",
+    title = "Gráfico de Barras - Conjunto de Dados"
+  ) +
+  theme_minimal()
 ```
 
-Fazendo uso das correlações, podemos dispor graficamente uma matriz de gráficos para expor as relações entre as variáveis, de modo que teremos histogramas de frequência nas diagonais, gráficos de dispersão no painel triangular inferior e  coeficientes das correlações no superior, de modo que o tamanho dos números é condicionado ao valor da correlação.
+A partir dos gráficos de barras, podemos ver que nossas cinco covariáveis, apesar de serem quantitativas, assumem apenas dois valores. A única variável que assume mais valores do que isso é $y$, que apararenta ter uma distribuição quase uniforme.
 
-```{r}
+Outros gráficos que comparam as relações entre nossas variáveis é o gráfico de coordenadas paralelas e nossa matriz de correlação, ambos também explicitando a falta de correlação entre as covariáveis.
 
-panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
-{
-  usr <- par("usr"); on.exit(par(usr))
-  par(usr = c(0, 1, 0, 1))
-  r <- abs(cor(x, y))
-  txt <- format(c(r, 0.123456789), digits = digits)[1]
-  txt <- paste0(prefix, txt)
-  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
-  text(0.5, 0.5, txt, cex = cex.cor * r)
-}
+### *Correlação de Pearson entre as covariáveis e $y$*
 
-panel.hist <- function(x, ...)
-{
-  usr <- par("usr"); on.exit(par(usr))
-  par(usr = c(usr[1:2], 0, 1.5) )
-  h <- hist(x, plot = FALSE)
-  breaks <- h$breaks; nB <- length(breaks)
-  y <- h$counts; y <- y/max(y)
-  rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
-}
+Fazendo uso das correlações, podemos dispor graficamente uma matriz de gráficos para expor as relações entre as variáveis, de modo que teremos densidades de frequência nas diagonais, gráficos de dispersão no painel triangular inferior e  coeficientes das correlações no superior, de modo que o tamanho dos números é condicionado ao valor da correlação.
 
-
-pairs(dados, diag.panel = panel.hist, upper.panel = panel.cor,
-      lower.panel = panel.smooth)
-
-```
-Outra versão dessa matriz de gráficos pode ser disposta abaixo, atribuindo cor a covariável Tamanho.
 
 ```{r message = F}
-GGally::ggpairs(dados, columns = c(1:4,6), aes(colour = as_factor(Tamanho)))
+ggpairs(dados) + ggtitle("Gráfico de pares - Dados")
 ```
 
-Também podemos observar individualmente os gráficos de dispersão - na versão original e atribuindo cor a covariável Tamanho -, que comprovam e ilustram os resultados da nossa tabela de correlação, onde temos que as variáveis são pouco ou nada correlacionadas.
+No gráfico de pares acima, podemos observar as correlações (ou ausência delas) de todas as covariáveis entre si e com a variável preditora. Analisando esses resultados, vemos que nenhuma das covariáveis se correlacionam entre si. Além disso, a maioria apresenta uma correlação muito baixa com a variável preditora - com exceção de x5 (Tamanho) com y.
 
-```{r}
-dados %>% pivot_longer(!c(Tamanho, y)) %>%
-  ggplot(aes(y = y, color = as_factor(Tamanho))) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x") + labs(x       = "Variáveis",
-         y       = "Valores", 
-         title   = "Gráficos de dispersão - Dados") + 
-    theme_minimal() 
+Essa ausência de correlação pode ser explicada pelo comportamento em "X" da maior parte das covariáveis, que também pode ser notado através do gráfico de coordenadas paralelas:
 
-dados %>% pivot_longer(!y) %>%
-  ggplot(aes(y = y)) + geom_point(aes(x = value)) +
-  facet_wrap(~name, scales = "free_x") + labs(x       = "Variáveis",
-         y       = "Valores", 
-         title   = "Gráficos de dispersão - Dados") + 
-    theme_minimal() 
+
+```{r  out.height="70%"}
+ggparcoord(dados) + labs(
+  x = "Variáveis",
+  y = "Valores",
+  title = "Coordenadas Paralelas - Dados"
+) +
+  theme_minimal()
 ```
 
 
-Do mesmo modo, temos predisposto para visualização uma matriz de nossos histogramas.
+Definindo a covariável Tamanho como mapeamento para cor, podemos dispor outra versão dos gráficos de pares:
 
-```{r}
-dados %>% pivot_longer(cols = everything()) %>%
-  ggplot() + geom_bar(aes(x = as_factor(value)),stat="count") +
-  facet_wrap(~name, scales = "free_x")+ labs(x       = "Variáveis",
-         y       = "Valores", 
-         title   = "Histogramas - Dados") + 
-    theme_minimal() 
-```
-Outros gráficos que comparam as relações entre nossas variáveis é o gráfico de coordenadas paralelas e nossa matriz de correlação, ambos também explicitando a falta de correlação entre as covariáveis.
-```{r}
-GGally::ggparcoord(dados) + labs(x       = "Variáveis",
-         y       = "Valores", 
-         title   = "Coordenadas Paralelas - Dados") + 
-    theme_minimal() 
+```{r  out.height="70%"}
+dados %>%
+  pivot_longer(!c(Tamanho, y)) %>%
+  ggplot(aes(y = y, color = as_factor(Tamanho))) +
+  geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x") +
+  labs(
+    x = "Variáveis",
+    y = "Valores",
+    title = "Gráficos de dispersão - Dados",
+    color = "Tamanho"
+  ) +
+  theme_minimal()
 ```
 
-```{r}
-GGally::ggcorr(dados)
-```
-## 2. ajuste do modelo de Regressão Linear Múltipla
+Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y, enquanto que o mesmo feito não foi alcançado no eixo x. Temos aqui fortes indícios de independência entre as covariáveis, e o melhor modelo talvez não seja o que contenha todas elas, como veremos mais adiante.
 
+
+## 2. Ajuste do modelo de Regressão Linear Múltipla
+
+**FALTA**  Explique se existe diferença entre o EMV e o estimador de mínimos quadrados de beta
 
 Ajustaremos um modelo de regressão utilizando todas as covariáveis presentes em nosso conjunto de dados.
 
@@ -212,29 +191,38 @@ $p=k+1$.
 
 
 ```{r}
-#Definindo os betas do modelo de regressão múltipla
-betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+# Definindo os betas do modelo de regressão múltipla
+betas <- solve(t(X) %*% X) %*% t(X) %*% Y
 betas
+```
 
-#Definindo a matrix C_jj
-C_jj = solve(t(X)%*%X)
 
-#Definindo uma matrix para os betas
+```{r}
+# Definindo a matrix C_jj
+C_jj <- solve(t(X) %*% X)
+C_jj
+```
+
+
+```{r}
+# Definindo uma matrix para os betas
 betas <- matrix(data = betas, nrow = length(betas), ncol = 1, byrow = FALSE)
-rownames(betas) <- c("beta0", "beta1","beta2","beta3","beta4","beta5")
+rownames(betas) <- c("beta0", "beta1", "beta2", "beta3", "beta4", "beta5")
 betas
 
-#Modelo do R
-lm(formula = y ~., data = dados)
+# Modelo do R
+lm(formula = y ~ ., data = dados)
 ```
 
 
 ## 3. Estimação de $\sigma^2$
 
+**FALTA** Descreva e justifique as características deste estimador, é viciado?
+
 $SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$
 
 ```{r}
-SQRes <- (t(Y)%*%Y)-(t(betas)%*%t(X)%*%Y)
+SQRes <- (t(Y) %*% Y) - (t(betas) %*% t(X) %*% Y)
 SQRes
 ```
 Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p}$
@@ -242,8 +230,8 @@ Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p}$
 ```{r}
 p <- ncol(X)
 
-#estimando o sigma^2
-sigma2 <- SQRes/(n-p)
+# estimando o sigma^2
+sigma2 <- SQRes / (n - p)
 sigma2
 ```
 
@@ -255,28 +243,33 @@ Agora que ajustamos um modelo inicial, é necessário que verifiquemos se ele é
 ```{r}
 
 # Obtendo uma estimativa para Y a partir do modelo ajustado
-Y_est <- X%*%betas
+Y_est <- X %*% betas
 
 # Cálculo dos resíduos
 res <- Y - Y_est
 ```
 
 ```{r}
-p <- ggplot(tibble(res), aes(sample = res)) + stat_qq() + stat_qq_line() +
-  labs(x = "Amostra",
-       y = "Quantis Teóricos",
-       title = "Normal Q-Q Plot") +
+p <- ggplot(tibble(res), aes(sample = res)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(
+    x = "Amostra",
+    y = "Quantis Teóricos",
+    title = "Normal Q-Q Plot"
+  ) +
   theme_pubclean()
 
 q <- ggplot(tibble(res), aes(res)) +
-  geom_histogram(aes(y=..density..), binwidth = 4, stat = "bin") +
-  labs(title = "Histograma dos resíduos",
-       y = "Densidade",
-       x = "Valor") +
+  geom_histogram(aes(y = ..density..), binwidth = 4, stat = "bin") +
+  labs(
+    title = "Histograma dos resíduos",
+    y = "Densidade",
+    x = "Valor"
+  ) +
   theme_pubclean()
 
-grid.arrange(p,q, ncol = 2)
-
+grid.arrange(p, q, ncol = 2)
 ```
 
 O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado que os dados têm distribuição normal, enquanto que o histograma dos resíduos nos fornece aproximações a respeito da distribuição de $\xi$.
@@ -284,8 +277,10 @@ O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado qu
 A partir dos gráficos acima, podemos notar que os resíduos não estão muito afastados dos quantis teóricos, embora sua distribuição seja ligeiramente assimétrica, conforme constatado no histograma. Podemos também utilizar o teste de Shapiro-Wilk para verificar a normalidade dos dados.
 
 ```{r}
-pander(shapiro.test(res), style='rmarkdown',
-       caption = "Teste de normalidade Shapiro-Wilk para os resíduos")
+pander(shapiro.test(res),
+  style = "rmarkdown",
+  caption = "Teste de normalidade Shapiro-Wilk para os resíduos"
+)
 ```
 
 
@@ -309,8 +304,8 @@ Table: Tabela ANOVA
 
 
 ```{r}
-# Soma dos quadrados dos residuos  
-(SQRes <- t(Y-Y_est)%*%(Y-Y_est))
+# Soma dos quadrados dos residuos
+(SQRes <- t(Y - Y_est) %*% (Y - Y_est))
 ```
 
 
@@ -319,35 +314,35 @@ $$\beta^T \cdot X^T \cdot Y - \frac1n (u^T \cdot Y)^2$$
 
 ```{r}
 # Soma dos quadrados totais
-u <- c(rep(1,n))
-(SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n)
+u <- c(rep(1, n))
+(SQTotal <- t(Y) %*% Y - ((t(u) %*% Y)^2) / n)
 ```
 
 ```{r}
-#Soma dos quadrados da regressao  
+# Soma dos quadrados da regressao
 (SQReg <- SQTotal - SQRes)
 ```
 
 
 ```{r}
-#Calculando a anova
+# Calculando a anova
 k <- 2 # covariaveis utilizadas
-p <- k+1
+p <- k + 1
 
 
 gl_sqreg <- k
-QMReg <- SQReg/gl_sqreg
+QMReg <- SQReg / gl_sqreg
 
-gl_sqres <- n-p
-QMRes <- SQRes/gl_sqres
+gl_sqres <- n - p
+QMRes <- SQRes / gl_sqres
 
-gl_sqtotal <- n-1
+gl_sqtotal <- n - 1
 ```
 
 
 ```{r}
-#calculando a estatistica F
-(F_0 <- QMReg/QMRes)
+# calculando a estatistica F
+(F_0 <- QMReg / QMRes)
 ```
 
 ```{r}
@@ -368,14 +363,14 @@ Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o a
 
 ```{r}
 alpha <- 0.03
-(RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) )
+(RR <- qf(alpha, df1 = k, df2 = n - k - 1, lower.tail = F))
 ```
 
 Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teorico da distribuicao F com $k$ e $n-p$ graus de liberdade.
 
 ```{r}
 
-if(RR < F_0){
+if (RR < F_0) {
   cat("Rejeita-se H0")
 }
 ```
@@ -384,11 +379,11 @@ Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das vari�
 
 ## 5. $R^2$ e $R^2 ajustado$
 
-Agora que sabemos que nosso modelo de regressão linear múltipla é adequado, estamos interessados em medir quais covariavéis têm maior contribuição em resumir a variabilidade de nossa amostra.
+Agora que sabemos que nosso modelo de regressão linear múltipla é adequado, estamos interessados em medir quais covariáveis têm maior contribuição em explicar a variabilidade de nossa amostra.
 
 Uma das formas de fazer isso, é utilizando o *coeficiente de determinação*, também conhecido como $R^2$, definido como:
 
-$$ R^2 =  \frac{SQ_{Reg}}{SQ_{Total}}$$
+$$R^2 =  \frac{SQ_{Reg}}{SQ_{Total}}$$
 
 $R^2$ é útil para quantificar o percentual da variabilidade dos dados explicado pelo modelo, contudo, como ele tende a aumentar conforme se adicionam mais covariáveis, sendo elas explicativas ou não. Uma forma de contornar esse impasse é através da utilização do $R^2$ ajustado:
 
@@ -397,49 +392,51 @@ $$R^2_{adj} = 1-  \frac{QM_{Res}}{QM_{Total}}$$
 Para evitar duplicar o código utilizado para ajuste dos modelos, criamos uma função com este intuito:
 
 ```{r}
-lm.anova <- function(x,y){
-  x<- as.matrix(x)
-  y<- as.matrix(y)
+lm.anova <- function(x, y) {
+  x <- as.matrix(x)
+  y <- as.matrix(y)
 
   n <- length(y)
   k <- ncol(x) # covariaveis utilizadas
-  p <- k+1
+  p <- k + 1
 
-  X <- matrix(c(rep(1,n), x), ncol = p, nrow = n, byrow = FALSE)
+  X <- matrix(c(rep(1, n), x), ncol = p, nrow = n, byrow = FALSE)
   Y <- matrix(y, ncol = 1, nrow = n)
 
-  betas <- solve(t(X)%*%X)%*%t(X)%*%Y
+  betas <- solve(t(X) %*% X) %*% t(X) %*% Y
 
-  Y_est <- X%*%betas
+  Y_est <- X %*% betas
 
   res <- Y - Y_est
 
-  SQRes <- t(Y-Y_est)%*%(Y-Y_est)
+  SQRes <- t(Y - Y_est) %*% (Y - Y_est)
 
-  u <- c(rep(1,n))
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
+  u <- c(rep(1, n))
+  SQTotal <- t(Y) %*% Y - ((t(u) %*% Y)^2) / n
 
   SQReg <- SQTotal - SQRes
 
   gl_sqreg <- k
-  QMReg <- SQReg/gl_sqreg
-  gl_sqres <- n-p
-  QMRes <- SQRes/gl_sqres
-  SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n
-  gl_sqtotal <- n-1
+  QMReg <- SQReg / gl_sqreg
+  gl_sqres <- n - p
+  QMRes <- SQRes / gl_sqres
+  SQTotal <- t(Y) %*% Y - ((t(u) %*% Y)^2) / n
+  gl_sqtotal <- n - 1
 
-  #calculando a estatistica F
-  F_0 <- QMReg/QMRes
+  # calculando a estatistica F
+  F_0 <- QMReg / QMRes
 
   # calculo de R2
-  R2 <-  SQReg/SQTotal
+  R2 <- SQReg / SQTotal
 
   QMTotal <- QMRes + QMReg
-  #R2 ajustado
-  R2adj <- 1 - QMRes/QMTotal
-  #retorna uma lista com objetos relevantes ao modelo
-  list(R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est,
-       anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg, F_0 = F_0))
+  # R2 ajustado
+  R2adj <- 1 - QMRes / QMTotal
+  # retorna uma lista com objetos relevantes ao modelo
+  list(
+    R2 = R2, R2adj = R2adj, betas = betas, Y_est = Y_est,
+    anov = list(SQreg = SQReg, SQRes = SQRes, QMreg = QMReg, F_0 = F_0)
+  )
 }
 ```
 
@@ -447,13 +444,16 @@ Vamos criar uma lista com os cinco atributos presentes em nosso conjunto de dado
 
 ```{r}
 feat <- c("Tamanho", "Temp", "Pressao", "FluxoCO2", "Umidade")
-stepmodel <- 1:5 %>% map(~head(feat,.x))
+stepmodel <- 1:5 %>% map(~ head(feat, .x))
 ```
 ```{r}
 # Calcula R2 e R2adj para os cinco modelos
-r2 <- stepmodel %>% map_dfr(~lm.anova(x = dados %>%
-                                            select(all_of(.x)),
-                                      y = dados$y)[c("R2adj", "R2")]) %>%
+r2 <- stepmodel %>%
+  map_dfr(~ lm.anova(
+    x = dados %>%
+      select(all_of(.x)),
+    y = dados$y
+  )[c("R2adj", "R2")]) %>%
   cbind(x = 1:5)
 ```
 
@@ -462,16 +462,17 @@ r2 <- stepmodel %>% map_dfr(~lm.anova(x = dados %>%
 # gráfico de R2 e R2adj
 r2 %>%
   pivot_longer(cols = !x) %>%
-  ggplot(aes(x = x, y = value, color = name, label =  round(value, 3))) +
-  geom_line()  +
-  labs(title = "Variabilidade explicada pelos modelos de Regressão Linear Múltipla",
-       x = "Número de covariáveis",
-       y = "",
-       color = "Métrica") +
-  scale_color_brewer(palette = "Dark2",labels = c("R²", "R² ajustado")) +
+  ggplot(aes(x = x, y = value, color = name, label = round(value, 3))) +
+  geom_line() +
+  labs(
+    title = "Variabilidade explicada pelos modelos de Regressão Linear Múltipla",
+    x = "Número de covariáveis",
+    y = "",
+    color = "Métrica"
+  ) +
+  scale_color_brewer(palette = "Dark2", labels = c("R²", "R² ajustado")) +
   geom_label(show.legend = FALSE) +
   theme_pubclean()
-
 ```
 
 
@@ -481,136 +482,131 @@ O modelo que foi capaz de melhor explicar a fonte de variabilidade dos dados de 
 
 ## 6. Testes nos Coeficientes de Regressão Individualmente
 
-Usamos o teste t parcial, para saber se realmente todas as covariáveis são diferentes de zero. O teste, testa esta cada beta, mede a contribuição de uma determinada covariável considerando que outras co-variáveis estão no modelo.E, é definido como:
-$H_0:\beta_j=0$ VS $H_1:\beta_j\neq 0$
-Como consequência, Se $H_0$ for rejeitado, $X_i$ é importante dado que as outras covariáveis estão no modelo também.
+Usamos o teste t-parcial para saber se realmente todas as covariáveis são diferentes de zero. Assim, testamos cada um dos $\beta_i$, medindo a contribuição de uma determinada covariável considerando que outras co-variáveis estão no modelo. Definido o teste como:
 
-Vale lembrar, ainda, que este é um teste marginal ou parcial, pois como dito anteriormente $\hat{\beta}_{i-1}$ depende de todas as outras covariáveis.
+$H_0:\beta_j=0$ versus $H_1:\beta_j\neq 0$
+
+Como consequência, se $H_0$ for rejeitado, $X_i$ é importante dado que as outras covariáveis estão no modelo também.
+
+Vale lembrar, ainda, que esse é um teste marginal ou parcial, pois como dito anteriormente $\hat{\beta}_{i-1}$ depende de todas as outras covariáveis.
 
 ### Sendo:
 ```{r}
 alpha <- 0.03
-beta0_est <- betas[1,1]
-beta1_est <- betas[2,1]
-beta2_est <- betas[3,1]
-beta3_est <- betas[4,1]
-beta4_est <- betas[5,1]
-beta5_est <- betas[6,1]
+beta0_est <- betas[1, 1]
+beta1_est <- betas[2, 1]
+beta2_est <- betas[3, 1]
+beta3_est <- betas[4, 1]
+beta4_est <- betas[5, 1]
+beta5_est <- betas[6, 1]
 ```
 
 ```{r}
-t1 <- qt(alpha/2, n-p)
-t2 <- qt(1-alpha/2, n-p)
-cbind(t1,t2)
+t1 <- qt(alpha / 2, n - p)
+t2 <- qt(1 - alpha / 2, n - p)
+cbind(t1, t2)
 ```
-
-###       t1       t2
-### [1,]  -2.435845 2.435845
 
 Rejeitamos $H_0$ se $t<t_{(\alpha/2;n-p)}$ ou $t>t_{(1-\alpha/2;n-p)}$.
 
-Testando para $\beta1$  
+#### Testando para $\beta_1$  
 
 ```{r}
-t_b1 <- beta1_est / (sqrt( QMRes* solve(t(X)%*%X)[2,2] ) )
+t_b1 <- beta1_est / (sqrt(QMRes * solve(t(X) %*% X)[2, 2]))
 t_b1
 ```
-### [,1]
-### [1,] 2.120505
+
 
 ```{r}
-if(t_b1 < t1 || t_b1>t2){
- cat("Rejeita-se H0")
+if (t_b1 < t1 || t_b1 > t2) {
+  cat("Rejeita-se H0")
 }
 ```
-### Não rejeita-se H0
 
-Testando para $\beta2$
+
+#### Testando para $\beta_2$
+
 ```{r}
-t_b2 <- beta2_est / (sqrt( QMRes* solve(t(X)%*%X)[3,3] ) )
+t_b2 <- beta2_est / (sqrt(QMRes * solve(t(X) %*% X)[3, 3]))
 t_b2
 ```
-### [,1]
-### [1,] 5.583996
+
 
 ```{r}
-if(t_b2 < t1 || t_b2>t2){
- cat("Rejeita-se H0")
+if (t_b2 < t1 || t_b2 > t2) {
+  cat("Rejeita-se H0")
 }
 ```
-### Rejeita-se H0
 
-Testando para $\beta3$
+
+#### Testando para $\beta_3$
+
 ```{r}
-t_b3 <- beta3_est / (sqrt( QMRes* solve(t(X)%*%X)[4,4] ) )
+t_b3 <- beta3_est / (sqrt(QMRes * solve(t(X) %*% X)[4, 4]))
 t_b3
 ```
-### [,1]
-### [1,] 0.3534175
+
 
 ```{r}
-if(t_b3 < t1 || t_b3>t2){
- cat("Rejeita-se H0")
+if (t_b3 < t1 || t_b3 > t2) {
+  cat("Rejeita-se H0")
 }
 ```
-### Não rejeita-se H0
 
-Testando para $\beta4$
+#### Testando para $\beta_4$
+
 ```{r}
-t_b4 <- beta4_est / (sqrt( QMRes* solve(t(X)%*%X)[5,5] ) )
+t_b4 <- beta4_est / (sqrt(QMRes * solve(t(X) %*% X)[5, 5]))
 t_b4
 ```
-### [,1]
-### [1,] 3.766773e-14
+
 
 ```{r}
-if(t_b4 < t1 || t_b4>t2){
- cat("Rejeita-se H0")
+if (t_b4 < t1 || t_b4 > t2) {
+  cat("Rejeita-se H0")
 }
 ```
-### Não rejeita-se H0
 
-Testando para $\beta5$
+
+#### Testando para $\beta_5$
+
 ```{r}
-t_b5 <- beta5_est / (sqrt( QMRes* solve(t(X)%*%X)[6,6] ) )
+t_b5 <- beta5_est / (sqrt(QMRes * solve(t(X) %*% X)[6, 6]))
 t_b5
 ```
-### [,1]
-### [1,] -12.58166
+
+
 ```{r}
-if(t_b5 < t1 || t_b5>t2){
- cat("Rejeita-se H0")
+if (t_b5 < t1 || t_b5 > t2) {
+  cat("Rejeita-se H0")
 }
 ```
-### Rejeita-se H0
 
-Portanto, seguindo a regra apresentada no início da questão, concluímos que $\beta2$ e $\beta5$ rejeitam $H_0$. Logo, Temperatura e  Tamanho são covariáveis significativas para o modelo, dado que já temos pelo menos uma variável significativa no modelo conforme constatado no teste f anteriormente.
+
+Portanto, seguindo a regra de decisão apresentada, concluímos que somente $\beta_2$ e $\beta_5$ rejeitam $H_0$. Logo, Temperatura e Tamanho são covariáveis significativas para o modelo, dado que já temos pelo menos uma variável significativa no modelo conforme constatado no teste *ANOVA* anteriormente.
+
 
 ## 7.  Teste um Subconjunto de Coeficientes
-* Faça análise e Escolha do Melhor Modelo, Qual modelo seu grupo acredita ser o melhor? Apresente omodelo escolhido pelo grupo (Equação do modelo ajustado, com as estimativas dos $\beta$s e $\sigma^2$ e interpretação do modelo). Justifique a escolha das co-variáveis. Faça uso do teste de um subconjuntode coeficientes nesta questão ilustrado na aula 14 e 15.
 
-Equação de melhor modelo: $Y = \beta_2x_2 + \beta_5x_5$
+Utilizando o critério dos testes t-parciais e $R^2_{adj}$ calculados anteriormente, selecionamos o melhor modelo como sendo:
 
-Dando início as interpretações,consideremos um exemplo com $\beta2$. Sabemos, que se todo resto da equação fica constante o $\beta2$ representa o incremento de y dado a variação de uma unidade em $x_1$, com $x_y$ diferente de i mantido com todas as constantes.
+$$Y = \beta_0 +\beta_2x_2 + \beta_5x_5$$
 
 Estimando os Betas para o melhor modelo
+
 ```{r}
-x <- dados%>%select(Temp, Tamanho)
+x <- dados %>% select(Temp, Tamanho)
 y <- dados$y
-modelo <- lm.anova(x,y)
+modelo <- lm.anova(x, y)
 modelo$betas
 ```
-###             [,1]
-### [1,]  80.1346055
-### [2,]   0.2821429
-### [3,] -16.0649819
 
-Estimando $\sigma2$ para o melhor modelo
+Estimando $\sigma^2$ para o melhor modelo
+
 ```{r}
-modelo$anov$SQRes/13
+gl <- n - 3
+modelo$anov$SQRes / gl
 ```
-###          [,1]
-### [1,] 67.82692
 
 Realizando o teste de um subconjunto de coeficientes
 ```{r}
@@ -620,40 +616,47 @@ F_testeparcial <- modelo$anov$F_0
 ```{r}
 alpha <- 0.03
 gl_modredu <- 2
-RR <- qf(alpha, df1 = gl_modredu, df2 = n - gl_modredu -1, lower.tail = F)
+RR <- qf(alpha, df1 = gl_modredu, df2 = n - gl_modredu - 1, lower.tail = F)
 RR
 ```
-### 4.648139
 
 Seguindo a regra, se $F>F_\text{Tabelado}$ rejeitamos $H_0$.
 
 ```{r}
-  if(RR < F_testeparcial){
-    cat("Rejeita-se H0")
- }
-
+if (RR < F_testeparcial) {
+  cat("Rejeita-se H0")
+}
 ```
 
 
-Como foi rejeitada $H_0$ temos que o subconjunto de coeficientes testados (variáveis Temperatura e Tamanho) contribui significativamente para o modelo.Vale ressaltar que este teste é análogo ao teste feito anteriormente usando a estatística t.
+Como foi rejeitada $H_0$ temos que o subconjunto de coeficientes testados (variáveis Temperatura e Tamanho) contribui significativamente para o modelo. Vale ressaltar que este teste é análogo ao teste feito anteriormente usando a estatística t.
 
+Apresentamos agora a equação final do modelo reduzido:
+
+$$Y = 80.134 +0.282 x_2 -16.065x_5$$
+
+### Interpretação dos coeficientes:
+
+ - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ é de 80,134.
+ - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperamos um aumento de 0,282 em $y$, com todo o resto mantido constante.
+ - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, é esperado um descréscimo de 16,065 unidades em $y$, com todo o resto mantido constante.
+ 
 
 ## 8. IC Para Coeficientes de Regressão
 
-Faça o intervalo de confiança para os coeficientes de regressão de seu modelo. Apresente conclusões ou interpretação para cada um deles.
 
 Dado que o melhor modelo que encontramos foi aquele com as variáveis, **Temperatura (Temp)** e **Tamanho**, estimaremos o intervalo de confiança para os coeficientes $\beta_j = \beta_2,\beta_5$ com um coeficiente de confiança de $97\%$
 
 Definimos o Índice de confiança $\gamma = (100 - \alpha)\%$, também chamado de *coeficiente de confiança*
 
 ```{r}
-#Definindo o alpha e o t crítico
+# Definindo o alpha e o t crítico
 alpha <- 0.03
-#para o melhor modelo temos que k =2
+# para o melhor modelo temos que k =2
 k <- 2
 p <- k + 1
-t1 <- qt(alpha/2, n-p)
-t2 <- qt(1-alpha/2, n-p)
+t1 <- qt(alpha / 2, n - p)
+t2 <- qt(1 - alpha / 2, n - p)
 ```
 
 Para $\beta_2$ temos que:
@@ -661,10 +664,10 @@ Para $\beta_2$ temos que:
 $97\%; \hat{\beta}_2=0,2821; QM_{Res}=65,05; (X^T X)_{33}^{-1}=5,1020e^-5; T_{(0,975;22)}=2,4358$
 
 ```{r}
-#Testando para o beta2
+# Testando para o beta2
 dp_b2 <- sqrt(sigma2 * diag(C_jj)[3])
-b2_lim_inf <- betas[3] - t2*dp_b2
-b2_lim_sup <- betas[3] - t1*dp_b2
+b2_lim_inf <- betas[3] - t2 * dp_b2
+b2_lim_sup <- betas[3] - t1 * dp_b2
 IC_b2 <- cbind(b2_lim_inf, b2_lim_sup)
 ```
 
@@ -673,15 +676,15 @@ Para $\beta_5$ temos que:
 $97\%; \hat{\beta}_5=-16,065; QM_{Res}=65,05; (X^T X)_{66}^{-1}=0,0326; T_{(0,975;22)}=2,4358$
 
 ```{r}
-#Testando para beta5
+# Testando para beta5
 dp_b5 <- sqrt(sigma2 * diag(C_jj)[6])
-b5_lim_inf <- betas[6] - t2*dp_b5
-b5_lim_sup <- betas[6] - t1*dp_b5
+b5_lim_inf <- betas[6] - t2 * dp_b5
+b5_lim_sup <- betas[6] - t1 * dp_b5
 IC_b5 <- cbind(b5_lim_inf, b5_lim_sup)
 ```
 
 ```{r}
-#Estruturando em uma tabela
+# Estruturando em uma tabela
 IC_tab <- rbind(IC_b2, IC_b5)
 row.names(IC_tab) <- c("beta2", "beta5")
 colnames(IC_tab) <- c("IC (0.015)", "IC (0.985)")
@@ -711,20 +714,20 @@ $$R^2_{aj} = 1 -\frac{SQ_{Res}/(n-p)}{SQ_{T}/(n-1)}$$
 
 ```{r}
 
-sigma2 <- SQRes/(n-p)
-t3 <- qt(1-alpha/2, n-p)
+sigma2 <- SQRes / (n - p)
+t3 <- qt(1 - alpha / 2, n - p)
 
 
 
 mean_IC <- data.frame(low_b = numeric(0), upper_b = numeric(0))
 y_pred <- data.frame(value = numeric(0))
 
-for (row in 1:nrow(X)){
-  x0 <- X[row,]
-  y0 <- x0%*%betas
-  se <- sqrt(sigma2%*%t(x0)%*%C_jj%*%x0)
-  low_b <- y0 - t3*se
-  upper_b <- y0 + t3*se
+for (row in 1:nrow(X)) {
+  x0 <- X[row, ]
+  y0 <- x0 %*% betas
+  se <- sqrt(sigma2 %*% t(x0) %*% C_jj %*% x0)
+  low_b <- y0 - t3 * se
+  upper_b <- y0 + t3 * se
   tab <- cbind(low_b, upper_b)
   mean_IC <- rbind(mean_IC, tab)
   y_pred <- rbind(y_pred, y0)
@@ -736,12 +739,12 @@ mean_IC <- cbind(mean_IC, len_mean_IC)
 mean_IC <- cbind(mean_IC, y_pred)
 mean_IC <- cbind(mean_IC, dados$y)
 
-colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value")
+colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length", "Predicted Value", "Real Value")
 
 error <- abs(mean_IC$`Predicted Value` - mean_IC$`Real Value`)
 mean_IC <- cbind(mean_IC, error)
 
-colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value", "Absolute Error")
+colnames(mean_IC) <- c("Lower Bound", "Upper Bound", "Interval Length", "Predicted Value", "Real Value", "Absolute Error")
 
 mse <- mean(mean_IC$`Absolute Error`**2)
 
@@ -753,13 +756,13 @@ O resultado da tabela acima nos diz que, dado qualquer observação do nosso con
 Entretanto, sabemos que o melhor modelo encontrado foi aquele com as covariáveis **Pressão, Temperatura** e **Tamanho**. Considerando apenas essas variáveis explicatórias, obteremos os seguintes intervalos de confiança:
 
 ```{r}
-#O melhor modelo teve os valores dos betas modificados
-#Redefinindo a matrix X
-X_2 <- X[,c(1,3,6)]
-#Redefinindo a matrix C_jj
-C_jj2 <- solve(t(X_2)%*%X_2)
+# O melhor modelo teve os valores dos betas modificados
+# Redefinindo a matrix X
+X_2 <- X[, c(1, 3, 6)]
+# Redefinindo a matrix C_jj
+C_jj2 <- solve(t(X_2) %*% X_2)
 
-betas2 <- solve(t(X_2)%*%X_2)%*%t(X_2)%*%Y
+betas2 <- solve(t(X_2) %*% X_2) %*% t(X_2) %*% Y
 betas2
 ```
 
@@ -768,18 +771,18 @@ betas2
 mean_IC2 <- data.frame(low_b = numeric(0), upper_b = numeric(0))
 y_pred2 <- data.frame(value = numeric(0))
 
-#recalculando a estatística teste t
-#agora nosso k =4
-t4 <- qt(1-alpha/2, n-3)
-sigma <- SQRes/(n-3)
+# recalculando a estatística teste t
+# agora nosso k =4
+t4 <- qt(1 - alpha / 2, n - 3)
+sigma <- SQRes / (n - 3)
 
 
-for (row in 1:nrow(X)){
-  x0 <- X[row,c(1,3,6)]
-  y0 <- x0%*%t(t(betas2))
-  se <- sqrt(sigma2%*%t(x0)%*%C_jj2%*%x0)
-  low_b <- y0 - t4*se
-  upper_b <- y0 + t4*se
+for (row in 1:nrow(X)) {
+  x0 <- X[row, c(1, 3, 6)]
+  y0 <- x0 %*% t(t(betas2))
+  se <- sqrt(sigma2 %*% t(x0) %*% C_jj2 %*% x0)
+  low_b <- y0 - t4 * se
+  upper_b <- y0 + t4 * se
   tab <- cbind(low_b, upper_b)
   mean_IC2 <- rbind(mean_IC2, tab)
   y_pred2 <- rbind(y_pred2, y0)
@@ -791,12 +794,12 @@ mean_IC2 <- cbind(mean_IC2, len_mean_IC2)
 mean_IC2 <- cbind(mean_IC2, y_pred2)
 mean_IC2 <- cbind(mean_IC2, dados$y)
 
-colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value")
+colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length", "Predicted Value", "Real Value")
 
 error <- abs(mean_IC2$`Predicted Value` - mean_IC2$`Real Value`)
 mean_IC2 <- cbind(mean_IC2, error)
 
-colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length","Predicted Value", "Real Value", "Absolute Error")
+colnames(mean_IC2) <- c("Lower Bound", "Upper Bound", "Interval Length", "Predicted Value", "Real Value", "Absolute Error")
 
 mse2 <- mean(mean_IC2$`Absolute Error`**2)
 
@@ -818,24 +821,26 @@ Pode-se mostrar que o MSE pode ser decomposto de forma a gerar a seguinte equaç
 $$MSE = Viés^2+Variância+Ruído$$
 
 ```{r, echo=FALSE}
-#Viés do modelo completo
+# Viés do modelo completo
 bias_fullm <- abs(mean(mean_IC$`Predicted Value` - mean_IC$`Real Value`))
 
-#Viés do melhor modelo
+# Viés do melhor modelo
 bias_bestm <- abs(mean(mean_IC2$`Predicted Value` - mean_IC2$`Real Value`))
 
-#Variancia do modelo completo
+# Variancia do modelo completo
 var_fullm <- var(mean_IC$`Predicted Value` - mean_IC$`Real Value`)
 
-#Variancia do melhor modelo
+# Variancia do melhor modelo
 var_bestm <- var(mean_IC2$`Predicted Value` - mean_IC2$`Real Value`)
 
-#criando uma tabela com os valores
-vies <- c(round(bias_bestm,2), round(bias_fullm,2))
-variancia <- c(round(var_bestm,2), round(var_fullm,2))
+# criando uma tabela com os valores
+vies <- c(round(bias_bestm, 2), round(bias_fullm, 2))
+variancia <- c(round(var_bestm, 2), round(var_fullm, 2))
 
-bias_var_m <- data.frame(Viés = vies,
-                         Variância = variancia)
+bias_var_m <- data.frame(
+  Viés = vies,
+  Variância = variancia
+)
 
 row.names(bias_var_m) <- c("Melhor modelo", "Modelo completo")
 bias_var_m %>% kable(caption = "Tabela Viés X Variância")

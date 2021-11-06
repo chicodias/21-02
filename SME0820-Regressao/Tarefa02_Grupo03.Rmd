@@ -231,13 +231,53 @@ Em um modelo linear, se os erros pertencem a uma distribuição normal, os estim
 
 ## 3. Estimação de $\sigma^2$
 
-$SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$
+Temos que:
+$SQ_{res} = \sum_{i=1}^{n}(Y_i - \hat{Y})^2 = (\boldsymbol{y-\hat{y}})^T(\boldsymbol{y-\hat{y}}) = (\boldsymbol{y}-X\hat{\beta})^T(\boldsymbol{y}-X\hat{\beta}) = (\boldsymbol{y}^T-X^T\hat{\beta}^T)(\boldsymbol{y}-X\hat{\beta}) = \boldsymbol{y^Ty - Y^T}X\hat{\beta}-\hat{\beta}^TX^T \boldsymbol{y}+\hat{\beta}^TX^TX\hat{\beta} = \boldsymbol{y^Ty} - 2\hat{\beta}^TX^T\boldsymbol{y} + \hat{\beta}^TX^TX\hat{\beta}$
+
+A partir disso, considerando que:
+
+$\hat{\beta} = (X^TX)^{-1}X^T\boldsymbol{y} $ ;
+$(X^TX)\hat{\beta} = X^TY$ e, portanto,
+
+$SQ_{res} =\boldsymbol{y^Ty} - 2\hat{\beta}^TX^T\boldsymbol{y}+\hat{\beta}^TX^T\boldsymbol{y} $
+
+resultando em:
+
+$SQ_{res}=\boldsymbol{y}^{T}\boldsymbol{y}-\widehat{\boldsymbol{\beta}}^{T}X^{T}\boldsymbol{y}$
+
+Com isso,
 
 ```{r}
 SQRes <- (t(Y) %*% Y) - (t(betas) %*% t(X) %*% Y)
 SQRes
 ```
-Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p}$
+
+Agora, tomando:
+
+$SQ_{res}=\boldsymbol{y}^{T}\boldsymbol{y}-\widehat{\boldsymbol{\beta}}^{T}X^{T}\boldsymbol{y}$
+
+podemos fazer:
+
+$SQ_{res}= \boldsymbol{y}^{T}\boldsymbol{y} - ((X^TX)^{-1}X^T\boldsymbol{y})^TX^T\boldsymbol{y} = \boldsymbol{y}^{T}\boldsymbol{y} - \boldsymbol{y}^TX(X^TX)^{-1}X^T\boldsymbol{y} = \boldsymbol{y}^{T}\boldsymbol{y} - \boldsymbol{y}^{T}H\boldsymbol{y}$
+
+Dessa forma:
+
+$E(SQ_{res}) = E(\boldsymbol{y}^{T}\boldsymbol{y}) - E(\boldsymbol{y}^{T}H\boldsymbol{y})$
+
+- Desenvolvendo $E(\boldsymbol{y}^{T}\boldsymbol{y})$:
+
+  $E(\boldsymbol{y}^{T}\boldsymbol{y}) = E(\boldsymbol{y}^{T}I\boldsymbol{y}) = tr(I\sigma^2I)+ (X\beta)^TIX\beta = \sigma^2tr(I)+\beta^TX^TX\beta = n\sigma^2 + \beta^TX^TX\beta$
+  
+- Desenvolvendo $E(\boldsymbol{y}^{T}H\boldsymbol{y})$:
+  $E(\boldsymbol{y}^{T}H\boldsymbol{y}) = tr(H\sigma^2I) + (X\beta)^TX(X^TX)^{-1}X^TX\beta = \sigma^2tr(H) + \beta^TX^TX(X^TX)^{-1}X^TX\beta = \sigma^2p + \beta^TX^TX\beta$
+  
+Realizando tais substituições, chegamos em:
+
+$E(SQ_{res}) = n\sigma^2 + \beta^TX^TX\beta - (\sigma^2p + \beta^TX^TX\beta) = (n-p)\sigma^2$
+
+Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p} = QM_{res}$ é um estimador não viciado para sigma^2. 
+
+Seu cálculo se dá por:
 
 ```{r}
 p <- ncol(X)
@@ -245,6 +285,7 @@ p <- ncol(X)
 # estimando o sigma^2
 sigma2 <- SQRes / (n - p)
 sigma2
+
 ```
 
 

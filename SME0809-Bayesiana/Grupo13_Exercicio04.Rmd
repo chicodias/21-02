@@ -1,0 +1,85 @@
+---
+title: "SME0809 - Inferência Bayesiana - Gibbs"
+author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
+date: "Outubro 2021"
+output: pdf_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pkg-load, message = FALSE}
+library(tidyverse)
+library(R2OpenBUGS)
+
+set.seed(42)
+```
+
+## Exercício 1
+
+
+Os dados  a seguir mostra a escolaridade (X) e o rendimento (Y) de 5 pessoas ocupadas na agricultura e 5 pessoas ocupadas nos setores "urbanos" (indústria ou serviços). Define-se uma variável binária Z que é igual a zero para pessoas ocupadas na agricultura e é igual a um nos demais casos. Você diria que existe diferença entre o rendimento dos trabalhadores dos diferentes setores? (Faça uma análise bayesiana)
+
+
+```{r}
+z <- c(rep(0,5),rep(1,5))
+
+x <- c(seq(2,10,2),seq(4,12,2))
+
+y <- c(25,29,45,53,73,47,73,87,109,119)
+
+dad <- data.frame(z=z,x=x,y=y)
+
+```
+
+```{r}
+modelo <- function(){
+  # Definindo a distribuição dos dados
+  for(i in 1:N){
+    y[i] ~ dnorm(mu[i],tau)
+    mu[i] <- beta0 + beta1*x[i]
+    
+  }
+  
+  # Modelagem da incerteza a priori
+  # utilizando uma priori vaga
+  beta0 ~ dnorm(0.0,1.0E-6)
+  beta1 ~ dnorm(0.0,1.0E-6)
+  tau ~ dgamma(0.001,0.001)
+  sigma2 <- 1 / tau
+}
+
+# Criando um arquivo .txt ou .bug
+mod <- file.path(tempdir(), "mod.txt")
+# Inserindo o modelo no arquivo
+write.model(modelo,mod)
+#file.show(mod)
+
+x <- df$x
+y <- df$y
+
+N <- length(x)
+data = list('N' = N, 'x'=x, 'y'=y)
+params <- c('beta0', 'beta1', 'tau','sigma2')
+inits <- list(
+  
+  list(beta0 = 1,beta1=0.5, tau=1),
+  list(beta0 = 2,beta1=2, tau=10),
+  list(beta0 =-1,beta1=2, tau=0.5))
+
+
+
+out <- bugs(data, inits, params, mod, codaPkg=TRUE,
+            
+            n.chains = 3,
+            n.iter=14000,n.thin = 1,n.burnin = 4000,debug=F)
+
+out.coda <- read.bugs(out)
+
+
+summary(out.coda)
+
+```
+
+

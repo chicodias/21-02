@@ -1,0 +1,12 @@
+---
+title: "regressao_BUGS"
+author: "Heitor Pinheiro"
+date: "05/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 

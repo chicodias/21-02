@@ -1,6 +1,6 @@
 ---
-title: "agrurban_exregressao"
-author: "Francisco Rosa Dias de Miranda - ,  Heitor Carvalho Pinheiro - 11833351"
+title: "SME0809 - Inferência Bayesiana - Exercício de Regressão Linear"
+author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
 date: "05/11/2021"
 output: pdf_document
 ---
@@ -9,9 +9,10 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(R2OpenBUGS)
+library(knitr)
 ```
 
-## Exercício de Regressão (Agricultura X Urbanismo)
+## Exercício de Regressão (Agricultura X Urbano)
 
 Os dados  a seguir mostram a escolaridade (X) e o rendimento (Y) de 5 pessoas ocupadas na agricultura e 5 pessoas ocupadas nos setores "urbanos" (indústria ou serviços). Define-se uma variável binária Z que é igual a zero para pessoas ocupadas na agricultura e é igual a um nos demais casos. 
 
@@ -51,11 +52,12 @@ dad |>
 ```
 De início, podemos verificar a partir do gráfico que os tralhadores urbanos apresentam um incremento maior no **Rendimento**, dado uma variação unitária na **Escolaridade**.
 
-Podemos calcular os resultados do modelo linear usando **lm**, para a posterior comparação.
+Podemos calcular os resultados do modelo linear usando **summary(lm)**, para a posterior comparação.
 
 ```{r}
 summary(lm(dad_0$y~dad_0$x))
 ```
+
 ```{r}
 summary(lm(dad_1$y~dad_1$x))
 ```
@@ -84,11 +86,11 @@ modelo <- function(){
 }
 ```
 
-Salvando o modelo em arquivo de texto.
+Salvando o modelo em um arquivo de texto.
 ```{r}
-mod0 <- file.path(tempdir(), "mod0.txt")
+mod <- file.path(tempdir(), "mod0.txt")
 
-write.model(modelo0, mod0)
+write.model(modelo, mod)
 ```
 
 Executando o modelo para $z = 0$:
@@ -150,3 +152,26 @@ out.coda <- read.bugs(out)
 Analogamente, o modelo para $z=1$ apresenta o seguinte resumo estatístico:
 
 ![Modelo z = 1](mod1.png)
+
+Comparando a abordagem bayesiana com a tradicional implementada pela função **lm**, concluímos que os coeficientes encontrados são basicamente, idênticos, conforme as tabelas abaixo.
+
+```{r}
+lm_mod0 <- c(9, 6)
+lm_mod1 <- c(15, 9)
+bayes_mod0 <- c(8.817, 6.026)
+bayes_mod1 <- c(14.73, 9.03)
+
+#tabela com os valores dos coeficientes
+df = data.frame(Parameter = c("$\\beta_{0}$", "$\\beta_{1}$"),
+                "z0" = lm_mod0,"z1" = lm_mod1)
+kable(t(df), caption = "Coeficientes Mínimos quadrados para valores de z = 0 e z = 1")
+
+```
+
+```{r}
+df2 = data.frame(Parameter = c("$\\beta_{0}$", "$\\beta_{1}$"),
+                "z0" = bayes_mod0,"z1" = bayes_mod1)
+kable(t(df2), caption = "Coeficientes do modelo Bayesiano para valores de z = 0 e z = 1")
+```
+
+Por fim, podemos concluir que para os trabalhadores do setor Urbano, a variação do **Rendimento (y)** por unidade de variação de **Escolaridade (x)**, é cerca de $1.6\times$ maior que para os trabalhadores do setor Agrícola.

@@ -24,3 +24,34 @@ F_0 = \frac{QM_{reg}}{QM_{res}} = \frac{\frac{SQ_{reg}}{k}}{\frac{SQ_{res}}{n-p}
 
 Portanto, os dois são equivalentes.
 
+#Exercício 5
+
+a) Usando o exercício 4, teste a significância da regressão com $\alpha = 0.05$
+
+Do exercício anterior temos que:
+$$F_0 = \frac{R^2(n-p)}{k (1- R^2)}$$
+
+Para $k = 2$, $n = 25$, $p=k+1$ e $R^2 = 0.90$:
+$$F_0 = \frac{0.9(25-3)}{2 (1- 0.9)} = 99$$
+
+Podemos calcular $F_{(0.95,2,22)}$ com o seguinte comando:
+```{r, echo=TRUE}
+#calculando o valor crítico de F(0.95,2,22)
+qf(0.95,2,22)
+```
+Logo, $F_{(0.95,2,22)} \approx 3.443$.
+
+Como, $F_0 > F_{(0.95,2,22)}$, rejeitamos $H_0$ em favor de $H_1$ e concluímos que o modelo testado é significante para $\alpha = 0.05$. Isto é, ele capta melhor a tendência dos dados se comparado ao modelo restrito, $y = \beta_0 + \epsilon$.
+
+b) Qual o menor valor de $R^2$ para que o modelo seja significativo?
+
+Como no item anterior, vamos considerar um nível de significância $\alpha = 0.05$.
+
+Sabemos que o modelo será significante se, e somente se, $F_0 > F_{(0.95,2,22)}$. Isso implica que:
+$$\frac{R^2(n-p)}{k (1- R^2)} > 3.443$$
+Logo, segue que:
+
+$$\frac{R^2(25-3)}{2 (1- R^2)} > 3.443 \\
+R^2>0.2383$$
+
+Portanto, considerando apenas dois algarismos significativos, podemos considerar que o valor mínimo de $R^2$ para que o modelo possa ser considerado significativo é $R^2 = 0.24$

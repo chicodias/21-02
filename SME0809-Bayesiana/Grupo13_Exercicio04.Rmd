@@ -6,20 +6,24 @@ output: pdf_document
 ---
   
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, dev = "pdf")
 ```
 
 ```{r pkg-load, message = FALSE}
 library(tidyverse)
-library(R2OpenBUGS)
-
+library(coda)
+library(MCMCpack)
+library(ggmcmc)
+library(pander)
+library(ggpubr)
 set.seed(42)
 ```
 
 ## Exercício 1
 
+Os dados a seguir mostram a escolaridade (X) e o rendimento (Y) de 5 pessoas ocupadas na agricultura e 5 pessoas ocupadas nos setores "urbanos" (indústria ou serviços). Define-se uma variável binária Z que é igual a zero para pessoas ocupadas na agricultura e é igual a um nos demais casos. 
 
-Os dados  a seguir mostra a escolaridade (X) e o rendimento (Y) de 5 pessoas ocupadas na agricultura e 5 pessoas ocupadas nos setores "urbanos" (indústria ou serviços). Define-se uma variável binária Z que é igual a zero para pessoas ocupadas na agricultura e é igual a um nos demais casos. Você diria que existe diferença entre o rendimento dos trabalhadores dos diferentes setores? (Faça uma análise bayesiana)
+**Você diria que existe diferença entre o rendimento dos trabalhadores dos diferentes setores? (Faça uma análise bayesiana)**
 
 
 ```{r}
@@ -33,53 +37,147 @@ dad <- data.frame(z=z,x=x,y=y)
 
 ```
 
+A princípio, vamos verificar o gráfico de dispersão, utilizando um `geom_smooth()` para ajustar uma reta de mínimos quadrados.
+
 ```{r}
-modelo <- function(){
-  # Definindo a distribuição dos dados
-  for(i in 1:N){
-    y[i] ~ dnorm(mu[i],tau)
-    mu[i] <- beta0 + beta1*x[i]
-    
-  }
-  
-  # Modelagem da incerteza a priori
-  # utilizando uma priori vaga
-  beta0 ~ dnorm(0.0,1.0E-6)
-  beta1 ~ dnorm(0.0,1.0E-6)
-  tau ~ dgamma(0.001,0.001)
-  sigma2 <- 1 / tau
-}
+dad |> 
+  ggplot(aes(x = x, y = y, color = as.factor(z))) +
+  geom_point() +
+  geom_smooth(formula = y~x, method = 'lm', se = FALSE) +
+  labs( x = "Escolaridade", y = "Rendimento", color = "Ocupação\n") +
+  scale_color_manual(labels = c("Agricultura", "Urbano"),
+                     values = c("green", "red")) +
+  theme_pubclean()
+```
+De início, podemos verificar a partir do gráfico que os tralhadores urbanos apresentam um incremento maior no **Rendimento**, dado uma variação unitária na **Escolaridade**.
 
-# Criando um arquivo .txt ou .bug
-mod <- file.path(tempdir(), "mod.txt")
-# Inserindo o modelo no arquivo
-write.model(modelo,mod)
-#file.show(mod)
+Neste trabalho, optamos por utilizar a função `MCMCregressChange` para simular a densidade a posteriori de um modelo de regressão linear com pontos de mudança.
 
-x <- df$x
-y <- df$y
+O modelo é da forma:
 
-N <- length(x)
-data = list('N' = N, 'x'=x, 'y'=y)
-params <- c('beta0', 'beta1', 'tau','sigma2')
-inits <- list(
-  
-  list(beta0 = 1,beta1=0.5, tau=1),
-  list(beta0 = 2,beta1=2, tau=10),
-  list(beta0 =-1,beta1=2, tau=0.5))
+$$y_t=x_t ' \beta_i + I(s_t=i)\varepsilon_{t},\;\; i=0,1.$$
+Onde $k$ é o número de estados e $I(s_t=i)$ é a função indicadora que se torna 1 quando um estado em $t$ é $i$ e 0 caso contrário.
+
+Assumimos que o erro tem distribuição:
+
+$$I(s_t=i)\varepsilon_{t} \sim \mathcal{N}(0, \sigma^2_i)$$
+Assumimos também prioris semi-conjulgada padrões:
 
 
+$$\beta_i \sim \mathcal{N}(b_0,B_0^{-1}),\;\; i=0,1$$
 
-out <- bugs(data, inits, params, mod, codaPkg=TRUE,
-            
-            n.chains = 3,
-            n.iter=14000,n.thin = 1,n.burnin = 4000,debug=F)
+E também
 
-out.coda <- read.bugs(out)
+$$\sigma^{-2}_i \sim \mathcal{G}amma(c_0/2, d_0/2),\;\; i=0,1.$$
+
+Onde $\beta_i$ e $\sigma^{-2}_i$ são assumidos independentes a priori.
+
+Os valores iniciais para os $\beta_i$ são estimados via máxima verossimilhança. Já os valores iniciais da matriz de transição por padrão são amostrados de uma $Beta(0,9; \ 0,1)$. Para utilizar o critério de Gelman, vamos gerar três cadeias:
 
 
-summary(out.coda)
+```{r}
+# gerando 3 cadeias
+
+fit1 <-  MCMCregressChange(formula = y~x, data = dad,
+                          mcmc = 54000, burnin = 4000,
+                          thin = 5, seed = 1331,
+                          sigma.mu = 1, sigma.var =1,
+                          b0 = 0, B0 = c(1.0E-6, 1.0E-6),
+                          beta.start = c(1, 0),
+                          marginal.likelihood="Chib95")
+fit2 <- MCMCregressChange(formula = y~x, data = dad,
+                          mcmc = 54000, burnin = 4000,
+                          thin = 5, seed = 11223,
+                          sigma.mu = 1, sigma.var =1,
+                          b0 = 0, B0 = c(1.0E-6, 1.0E-6),
+                          beta.start = c(0.5, 2),
+                          marginal.likelihood="Chib95")
+fit3 <- MCMCregressChange(formula = y~ x,data = dad,
+                          mcmc = 54000, burnin = 4000,
+                          thin = 5, seed = 14344,
+                          sigma.mu = 1, sigma.var =1,
+                          b0 = 0, B0 = c(1.0E-6, 1.0E-6),
+                          beta.start = c(-1, 2),
+                          marginal.likelihood="Chib95")
+
+fit <- mcmc.list(fit1, fit2, fit3)
+# Cria um objeto ggmcmc para construirmos os gráficos
+plt <- ggs(fit)
 
 ```
 
+Podemos verificar o ponto de mudança encontrado com auxílio de duas funções do `MCMCpack`. Note que se os rendimentos fossem iguais entre as duas classes, não haveria um ponto de mudança.
 
+
+```{r}
+plotState(fit1)+ theme_pubclean()
+```
+Esse resultado era esperado, pois temos cinco observações de cada grupo em nossa amostra. Assim, o regime 1 é em $z=0$ (agricultura) e o regime 2 em $z=1$ (urbano).
+
+Agora obtivemos amostras da distribuição *a posteriori* de nosso modelo, primeiramente vejamos a trajetória das três cadeias simuladas no gráfico abaixo:
+
+```{r fig.height=10, fig.width=8}
+ggs_traceplot(plt)+ theme_pubclean()
+```
+
+Optamos por utilizar o thin como 5 para extrair uma amostra praticamente indepentente. Precisamos verificar o pressuposto através do gráfico de autocorrelações.
+
+```{r message=FALSE, fig.height=8, fig.width=8}
+ggs_autocorrelation(plt)
+```
+
+O gráfico das Running Means nos mostra a convergência da média de acordo com as respectivas iterações:
+
+```{r  fig.height=5, fig.width=8}
+ggs_running(plt)
+```
+
+Contudo, para não termos dúvidas a respeito da convergência da cadeia é necessário aplicarmos, por exemplo, o critério de Gelman.
+
+O gráfico abaixo exibe o comportamento do fator de redução de escala. É desejável que esses valores fiquem próximos de 1. A tabela abaixo exibe o diagnóstico do `CODA`. O nível de credibilidade é de 95%.
+
+```{r warning=FALSE}
+pander(gelman.diag(fit)$psrf)
+```
+
+As cadeias utilizadas não apresentaram indícios de divergência segundo nosso critério. Vamos agora, estudar as amostras das distribuições *a posteriori* obtidas. 
+
+Abaixo, com auxílio do pacote `ggmcmc`, temos as densidades da distribuição das variáveis de interesse de nosso modelo obtidas através das cadeias simuladas:
+
+
+```{r  fig.height=7, fig.width=8}
+ggs_density(plt)
+```
+
+Iniciamos nossas medidas descritivas com as regiões HPD obtidas com 95% de credibilidade em cada uma das simulações.
+
+```{r warning=FALSE}
+pander(HPDinterval(fit))
+```
+
+Podemos visualizar as informações dessa tabela com auxílio do *caterpillar plot*:
+
+```{r}
+ggs_caterpillar(plt) + theme_pubr()
+```
+
+A distribuição quantílica com a mediana:
+
+```{r}
+pander(summary(fit)$quantiles)
+```
+
+Podemos exibir também os histogramas:
+
+```{r fig.width=10, fig.height=8}
+ggs_histogram(plt) + theme_pubclean()
+```
+Por fim, o resumo descritivo dos resultados obtidos:
+
+```{r}
+pander(summary(fit)$statistics)
+```
+
+Pudemos concluir que para os trabalhadores do setor Urbano, a variação do **Rendimento (y)** por unidade de variação de **Escolaridade (x)**, é cerca de $2\times$ maior do que para os trabalhadores do setor Agrícola.
+
+Além disso, o valor esperado do rendimento de um trabalhador urbano sem escolaridade é cerca de $1,5\times$ maior do que para trabalhadores agrícolas, que ganham em média menos, porém possuem variabilidade de salários bem menor.

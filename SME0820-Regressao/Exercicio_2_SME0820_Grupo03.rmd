@@ -164,8 +164,7 @@ Abaixo, estaremos conferindo com os valores dos betas calculados pelo método lm
 
 ```{r}
 #Modelo do R
-lm(formula = y ~., data = tabela01)
-
+model <- lm(formula = y ~., data = tabela01)
 ```
 Segue abaixo a equação para o modelo determinado:
 
@@ -245,6 +244,10 @@ Tabela *ANOVA*:
 Table: Tabela ANOVA
 
 
+```{r, echo=FALSE}
+an <- anova(model, test = "F")
+pandoc.table(an)
+```
 ```{r}
 # Soma dos quadrados dos residuos  
 (SQRes <- t(Y-Y_est)%*%(Y-Y_est))
@@ -327,10 +330,8 @@ Temos que:
 $$SQ_{reg}(\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta) = \widehat{\beta}^T X^T \boldsymbol{y}$$
 
 ```{r}
-
 SQReg_r <- (t(betas)%*%t(X)%*%Y)
 SQReg_r
-
 ```
 
 e
@@ -368,6 +369,7 @@ podemos realizar:
 SQReg_modredu <- beta_est_modredu*Sxy
 SQReg_modredu # 3 G.L. (3 covariáveis no subconjunto)
 ```
+
 ```{r}
 gl_modredu <- 3
 ```

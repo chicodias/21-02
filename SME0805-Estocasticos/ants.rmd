@@ -49,15 +49,12 @@ include_graphics("https://pics.me.me/live-breakyourownnews-com-breaking-news-one
 ```
 
 
-
-## O modelo
-
 ---
 .left-column[
 
-Introdução
+**Introdução**
 
-**O modelo**
+Modelo de dispersão
 
 Exemplo
 
@@ -75,15 +72,28 @@ Algumas populações de espécies, como formigas, vivem em colônias que
 crescem durante algum tempo e depois colapsam. Após o colapso poucos indivíduos
 sobrevivem. Esses indivíduos se dispersam tentando fazer novas colônias que podem ou não se estabelecer dependendo do ambiente que encontram. 
 
-Este estudo usou cadeias de nascimento e morte em ambientes aleatórios para modelar tais populações, e buscou compreender se a dispersão aleatória é uma boa estratégia para a sobrevivência da população. 
+O artigo apresentado utilizou cadeias de nascimento e morte em ambientes aleatórios para modelar tais populações, e buscou compreender se a dispersão aleatória é uma boa estratégia para a sobrevivência da população. 
 
 ]
 
 ---
-class: inverse center middle
+.left-column[
 
-## O Modelo de dispersão
----
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+
 ## Modelo de dispersão
 
    - Indivíduos iniciam uma colônia, 
@@ -96,7 +106,26 @@ class: inverse center middle
    
 O objetivo do artigo é modelar esse processo e compará-lo a outras estratégias de sobrevivência.
 
+]
+
 ---
+
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
 
 ## Modelo de dispersão
 
@@ -107,8 +136,25 @@ O objetivo do artigo é modelar esse processo e compará-lo a outras estratégia
  - Cada colônia é associada a um tempo aleatório $T$ amostrado de uma distribuição $\nu$ fixa.
  
  - Em um tempo $T$ cada indivíduo da colônia inicia sua própria colônia independente.
+]
 
 ---
+
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
 
 ## Modelo de dispersão
 
@@ -117,8 +163,26 @@ O objetivo do artigo é modelar esse processo e compará-lo a outras estratégia
  - $(\lambda, T)$ é independente de todo o resto, mas $\lambda$ e $T$ não precisam ser.
  
  - O interesse é nas distribuições de $\mu$ em que $\mu([0,1])$ é perto de 1. Isso é, a maior parte dos $\lambda$'s amostrados é abaixo de 1, e a nova colônia colapsa muito rapidamente.
+]
 
 ---
+
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
 
 ## Modelo de dispersão
 
@@ -129,8 +193,24 @@ $$E[\exp{((\Lambda-1)\tau)}] > 1$$
 onde $\Lambda$ tem distribuição $\mu$ e $\tau$ distribuição $\nu$.
 
 **Demonstração:** Schinazi(2015).
-
+]
 ---
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
 
 ## Modelo de dispersão
 
@@ -139,10 +219,32 @@ Uma consequência direta do Teorema 1 é o enunciado abaixo:
 **Corolário 1:** Assuma que $\Lambda$ e $\tau$ são independentes. Se $E(\Lambda) > 1$ então a população sobrevive. Ainda mais, se  $E(\Lambda) = 1$ e $\Lambda$ não for constante então a população também sobrevive.
 
 **Demonstração:** Schinazi(2015).
-
+]
 ---
+.left-column[
+
+Introdução
+
+Modelo de dispersão
+
+**Exemplo**
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
 
 ## Exemplo
+
+Em seu artigo, o autor apresenta um exemplo com $E(\Lambda)$ arbitrariamente perto de 0 em que ainda assim o processo sobrevive.
+
+Ao invés de apresentar o exemplo do autor, trouxe uma implementação em R de processos de nascimento e morte clássicos perto do nível crítico $\lambda = 1$.
+]
+---
 
 ```{r message=FALSE}
 library(DOBAD)
@@ -156,7 +258,9 @@ dat <- birth.death.simulant(t=Tempo,
                             mu= 1, nu = 0,
                             X0=initstate)
 
-tibble(y = getStates(dat), x = getTimes(dat), lambda=Lambda, x0 = initstate)
+tibble(
+  y = getStates(dat), x = getTimes(dat),
+  lambda=Lambda, x0 = initstate)
 }
 
 lambdas <- c(0.9,1.0,1.1)
@@ -206,6 +310,23 @@ df %>% ggplot() + geom_line(aes(x = x, y = y, color = as_factor(lambda))) +
 
 ---
 
+.left-column[
+
+Introdução
+
+Modelo de dispersão
+
+Exemplo
+
+**Modelo Nulo**
+
+Conclusão
+
+]
+
+.right-column[
+
+
 ## Modelo nulo
 
 - É introduzido um modelo em que não há dispersão, ou seja, o ambiente muda globalmente para toda a população.
@@ -215,26 +336,42 @@ df %>% ggplot() + geom_line(aes(x = x, y = y, color = as_factor(lambda))) +
 $$E(\Lambda) > 1.$$
 
 **Demonstração:** Schinazi(2015).
+]
 
 ---
+.left-column[
+
+Introdução
+
+Modelo de dispersão
+
+Exemplo
+
+Modelo Nulo
+
+**Conclusão**
+
+]
+
+.right-column[
+
 
 ## Conclusão
 
-  - O **Teorema 2** mostra que sem a dispersão o ambiente aleatório não auxilia na sobrevivência.
-  
-- Se olharmos para uma cadeia de nascimento e morte com taxa de nascimento $E(\Lambda)$ e taxa de morte 1 o processo sobrevive, assim como no modelo de dispersão.
+  - O **Teorema 2** mostra que sem a dispersão o ambiente aleatório não auxilia na sobrevivência. Se olharmos para uma cadeia de nascimento e morte com taxa de nascimento $E(\Lambda)$ e taxa de morte 1 o processo sobrevive, assim como no modelo de dispersão.
 
 - É conhecido que taxas críticas de nascimentos e mortes geralmente levam a extinção do processo. Contudo, o processo do modelo de dispersão sobreviveu, pois as taxas de nascimento continuaram a ser amostradas de uma distribuição não degenerada.
 
 - O autor também apresenta um exemplo em que $E(\Lambda)$ é arbitrariamente próximo de 0 e o modelo ainda assim sobrevive.
 
 - Assim, a dispersão aleatória parece ajudar na sobrevivência. Contudo, não é claro quando o fator ambiental influencia na taxa de sobrevivência.
+]
 
 ---
 
 class: center middle
 ```{r echo=FALSE, out.width="50%"}
-include_graphics("https://img.ifunny.co/images/712184874f6fb502580016f8a845d95caf17aa42a625049360b7f1ee7e35b6a0_1.jpg", )
+include_graphics("https://img.ifunny.co/images/712184874f6fb502580016f8a845d95caf17aa42a625049360b7f1ee7e35b6a0_1.jpg" )
 ```
 ---
 

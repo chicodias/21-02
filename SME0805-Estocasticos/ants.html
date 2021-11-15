@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Does random dispersion help survival?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Francisco Miranda" />
+    <script src="ants_files/xaringanExtra-webcam/webcam.js"></script>
+    <script id="xaringanExtra-webcam-options" type="application/json">{"width":"200","height":"200","margin":"1em"}</script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Does random dispersion help survival?
+## Baseado no artigo de Rinaldo B. Schinazi
+### Francisco Miranda
+### Novembro 2021
+
+---
+
+
+
+
+
+
+
+&lt;style type="text/css"&gt;
+.remark-slide-content {
+    font-size: 24px;
+    padding: 1em 4em 1em 4em;
+}
+&lt;/style&gt;
+
+
+&lt;img src="https://pics.me.me/live-breakyourownnews-com-breaking-news-one-million-ants-found-dead-18-08-33109787.png" width="100%" /&gt;
+
+
+---
+.left-column[
+
+**Introdução**
+
+Modelo de dispersão
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+## Introdução
+
+Algumas populações de espécies, como formigas, vivem em colônias que
+crescem durante algum tempo e depois colapsam. Após o colapso poucos indivíduos
+sobrevivem. Esses indivíduos se dispersam tentando fazer novas colônias que podem ou não se estabelecer dependendo do ambiente que encontram. 
+
+O artigo apresentado utilizou cadeias de nascimento e morte em ambientes aleatórios para modelar tais populações, e buscou compreender se a dispersão aleatória é uma boa estratégia para a sobrevivência da população. 
+
+]
+
+---
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+
+## Modelo de dispersão
+
+   - Indivíduos iniciam uma colônia, 
+   
+   - A colônia prospera até colapsar devido a exaustão de recursos ou algum fator externo,
+   
+   - Alguns indivíduos sobrevivem ao colapso, dispersam-se e encontram novas colônias,
+   
+   - O padrão recomeça.
+   
+O objetivo do artigo é modelar esse processo e compará-lo a outras estratégias de sobrevivência.
+
+]
+
+---
+
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+
+## Modelo de dispersão
+
+ - Os indivíduos são divididos em colônias independentes,
+ 
+ - Cada colônia é uma cadeia de *nascimento e morte* com taxa `\(\lambda\)`, amostrado de uma distribuição `\(\mu\)` fixa com taxa de morte 1.
+ 
+ - Cada colônia é associada a um tempo aleatório `\(T\)` amostrado de uma distribuição `\(\nu\)` fixa.
+ 
+ - Em um tempo `\(T\)` cada indivíduo da colônia inicia sua própria colônia independente.
+]
+
+---
+
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+## Modelo de dispersão
+
+ - Cada nova colônia tem novos `\(\lambda\)` e `\(T\)` amostrados de `\(\mu\)` e `\(\nu\)`, respectivamente.
+ 
+ - `\((\lambda, T)\)` é independente de todo o resto, mas `\(\lambda\)` e `\(T\)` não precisam ser.
+ 
+ - O interesse é nas distribuições de `\(\mu\)` em que `\(\mu([0,1])\)` é perto de 1. Isso é, a maior parte dos `\(\lambda\)`'s amostrados é abaixo de 1, e a nova colônia colapsa muito rapidamente.
+]
+
+---
+
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+
+## Modelo de dispersão
+
+
+**Teorema 1.** Considere um processo no qual os indivíduos são divididos em um número aleatório de colônias independentes. Cada colônia é uma cadeia de nascimento-morte em que *nascimento e morte* com taxa `\(\lambda\)`, amostrado de uma distribuição `\(\mu\)` fixa com taxa de morte 1. Cada colônia é associada a um tempo aleatório `\(T\)` amostrado de uma distribuição `\(\nu\)` fixa. Em um tempo `\(T\)` cada indivíduo da colônia inicia sua própria colônia independente com um novos `\(\lambda\)` e `\(T\)`. Essa população sobrevive se e somente se
+
+`$$E[\exp{((\Lambda-1)\tau)}] &gt; 1$$`
+onde `\(\Lambda\)` tem distribuição `\(\mu\)` e `\(\tau\)` distribuição `\(\nu\)`.
+
+**Demonstração:** Schinazi(2015).
+]
+---
+.left-column[
+
+Introdução
+
+**Modelo de dispersão**
+
+Exemplo
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+
+## Modelo de dispersão
+
+Uma consequência direta do Teorema 1 é o enunciado abaixo:
+
+**Corolário 1:** Assuma que `\(\Lambda\)` e `\(\tau\)` são independentes. Se `\(E(\Lambda) &gt; 1\)` então a população sobrevive. Ainda mais, se  `\(E(\Lambda) = 1\)` e `\(\Lambda\)` não for constante então a população também sobrevive.
+
+**Demonstração:** Schinazi(2015).
+]
+---
+.left-column[
+
+Introdução
+
+Modelo de dispersão
+
+**Exemplo**
+
+Modelo Nulo
+
+Conclusão
+
+]
+
+.right-column[
+
+
+## Exemplo
+
+Em seu artigo, o autor apresenta um exemplo com `\(E(\Lambda)\)` arbitrariamente perto de 0 em que ainda assim o processo sobrevive.
+
+Ao invés de apresentar o exemplo do autor, trouxe uma implementação em R de processos de nascimento e morte clássicos perto do nível crítico `\(\lambda = 1\)`.
+]
+---
+
+
+```r
+library(DOBAD)
+library(tidyverse)
+set.seed(42)
+
+nasc.mc &lt;- function(Tempo = 25, Lambda = 1, initstate = 34){
+#generate process
+dat &lt;- birth.death.simulant(t=Tempo,
+                            lambda=Lambda,
+                            mu= 1, nu = 0,
+                            X0=initstate)
+
+tibble(
+  y = getStates(dat), x = getTimes(dat),
+  lambda=Lambda, x0 = initstate)
+}
+
+lambdas &lt;- c(0.9,1.0,1.1)
+
+df &lt;- map_dfr(lambdas, ~nasc.mc(Tempo = 30, Lambda = .x, initstate = 3))
+```
+
+---
+class: center middle
+
+&lt;img src="ants_files/figure-html/unnamed-chunk-4-1.png" width="100%" /&gt;
+
+---
+
+class: center middle
+
+
+
+
+&lt;img src="ants_files/figure-html/unnamed-chunk-6-1.png" width="100%" /&gt;
+
+---
+
+class: center middle
+
+
+&lt;img src="ants_files/figure-html/unnamed-chunk-8-1.png" width="100%" /&gt;
+
+---
+
+.left-column[
+
+Introdução
+
+Modelo de dispersão
+
+Exemplo
+
+**Modelo Nulo**
+
+Conclusão
+
+]
+
+.right-column[
+
+
+## Modelo nulo
+
+- É introduzido um modelo em que não há dispersão, ou seja, o ambiente muda globalmente para toda a população.
+
+**Teorema 2.** Considere uma cadeia de nascimento-morte num ambiente aleatório no qual a taxa de morte é 1 e a taxa de nascimentos muda nos tempos `\(T_k = \tau_1 + \tau_2 + ... + \tau_k\)`, onde `\(\tau_1, \tau_2...\)` são i.i.d. As taxas de nascimento são amostradas de uma distribuição `\(\mu\)` fixada. Assuma que `\(E(\tau_1) &lt; +\infty\)` e `\(E(\Lambda) &lt; +\infty\)`, onde `\(\Lambda\)` tem distribuição `\(\mu\)`. Assuma que as taxas de nascimento e os tempos `\(\tau_i\)` são independentes. Então, o processo sobrevive se e somente se
+
+`$$E(\Lambda) &gt; 1.$$`
+
+**Demonstração:** Schinazi(2015).
+]
+
+---
+.left-column[
+
+Introdução
+
+Modelo de dispersão
+
+Exemplo
+
+Modelo Nulo
+
+**Conclusão**
+
+]
+
+.right-column[
+
+
+## Conclusão
+
+  - O **Teorema 2** mostra que sem a dispersão o ambiente aleatório não auxilia na sobrevivência. Se olharmos para uma cadeia de nascimento e morte com taxa de nascimento `\(E(\Lambda)\)` e taxa de morte 1 o processo sobrevive, assim como no modelo de dispersão.
+
+- É conhecido que taxas críticas de nascimentos e mortes geralmente levam a extinção do processo. Contudo, o processo do modelo de dispersão sobreviveu, pois as taxas de nascimento continuaram a ser amostradas de uma distribuição não degenerada.
+
+- O autor também apresenta um exemplo em que `\(E(\Lambda)\)` é arbitrariamente próximo de 0 e o modelo ainda assim sobrevive.
+
+- Assim, a dispersão aleatória parece ajudar na sobrevivência. Contudo, não é claro quando o fator ambiental influencia na taxa de sobrevivência.
+]
+
+---
+
+class: center middle
+&lt;img src="https://img.ifunny.co/images/712184874f6fb502580016f8a845d95caf17aa42a625049360b7f1ee7e35b6a0_1.jpg" width="50%" /&gt;
+---
+
+
+# Referências:
+
+- "Does random dispersion help survival?" -  Rinaldo B. Schinazi &lt;https://arxiv.org/pdf/1410.6384.pdf&gt;
+
+- "DOBAD Package: Gibbs Sampling MCMC of Linear Birth-Death Chain with Partial Data" - Charles Doss &lt;https://rdrr.io/cran/DOBAD/f/inst/doc/BD_MCMC.pdf&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"ratio": "16:9",
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

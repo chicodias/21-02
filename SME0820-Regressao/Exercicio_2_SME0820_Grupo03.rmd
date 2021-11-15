@@ -24,7 +24,7 @@ F_0 = \frac{QM_{reg}}{QM_{res}} = \frac{\frac{SQ_{reg}}{k}}{\frac{SQ_{res}}{n-p}
 
 Portanto, os dois são equivalentes.
 
-#Exercício 5
+# Exercício 5
 
 a) Usando o exercício 4, teste a significância da regressão com $\alpha = 0.05$
 
@@ -56,6 +56,7 @@ R^2>0.2383$$
 
 Portanto, considerando apenas dois algarismos significativos, podemos considerar que o valor mínimo de $R^2$ para que o modelo possa ser considerado significativo é $R^2 = 0.24$
 
+
 # Exercício 11
 
 ## Conjunto de dados
@@ -80,7 +81,7 @@ library(pander)
 
 Leitura do pacote de dados:
 
-```{r}
+```{r message = FALSE}
 library(readr)
 dados <- read_csv("data-table-B5.csv")
 ```
@@ -114,7 +115,6 @@ x5 <- dados$Carvão_Total
 y <- dados$y
 
 tabela01 <- data.frame(cbind(x1, x2, x3, x4, x5, y))
-tabela01
 ```
 
 Devido à complexidade das fórmulas envolvidas para realizarmos uma regressão linear múltima, utilizaremos uma abordagem matricial. Desse modo, poderemos escrever
@@ -207,7 +207,7 @@ res <- Y - Y_est
 
 ```
 
-```{r}
+```{r echo = FALSE}
 p <- ggplot(tibble(res), aes(sample = res)) + stat_qq() + stat_qq_line() +
   labs(x = "Amostra",
        y = "Quantis Teóricos",
@@ -246,8 +246,9 @@ Table: Tabela ANOVA
 
 ```{r, echo=FALSE}
 an <- anova(model, test = "F")
-pandoc.table(an)
+pander(an)
 ```
+
 ```{r}
 # Soma dos quadrados dos residuos  
 (SQRes <- t(Y-Y_est)%*%(Y-Y_est))

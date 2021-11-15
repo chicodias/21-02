@@ -330,21 +330,40 @@ Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das vari�
 
 # Verificando a importancia de x3, x4 e x5
 
+## Sob $H_0 : β_2 = 0$ VS sob $H_1 : β_2 \neq 0:$
+
 Soma de quadrados extra devido a $x_3$,$x_4$ e $x_5$:
 
 $SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_0,\beta_1,\beta_2,\beta_3,\beta_4,\beta_5) - SQ_{reg}(\beta_0,\beta_1,\beta_2)$ (Não corrigida)
 
+$SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) - SQ_{reg}(\beta_1|\beta_0)$ ??? (Corrigida)
 
-$SQ_{reg}(\beta_0,\beta_1,\beta_2,\beta_3,\beta_4,\beta_5) = SQ_{reg}(\beta) = \widehat{\beta}^T X^T \boldsymbol{y}$
+Temos que:
+
+$SQ_{reg}(\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta) = \widehat{\beta}^T X^T \boldsymbol{y}$
 
 ```{r}
-SQReg # já verificado na ANOVA
+
+SQReg2 <- (t(betas)%*%t(X)%*%Y)
+SQReg2
+
 ```
+
+e
+
+$SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) = \widehat{\beta}^T X^T \boldsymbol{Y} - \frac{(I_n^T\boldsymbol{Y})^2}{n} $
+
+coincide com o valor obtido na tabela ANOVA, sendo este:
+
+```{r}
+SQReg # SQreg encontrado na tabela ANOVA
+```
+
 Considerando o modelo reduzido: 
 
 $Y= \beta_0 + \beta_1X_1 + \beta_2X_2 + \xi$
 
-Sob $H_0 : β_2 = 0$ o modelo fica:
+Sob $H_0 : β_2 = 0$:
 
 $Y= \beta_1X_1 + \xi$
 
@@ -354,9 +373,35 @@ Sxy <- sum(x1*y) - n*(mean(x1)*mean(y))
 beta_est_modredu <- Sxy/Sxx
 beta_est_modredu
 ```
+```{r}
+SQReg_modredu <- beta_est_modredu*Sxy
+SQReg_modredu # 3 G.L.
+```
+```{r}
+gl_modredu <- 3
+```
 
+e, portanto, 
 
+```{r}
+SQReg_teste <- SQReg-SQReg_modredu
+SQReg_teste
+```
 
+```{r}
+QMReg_modredus <- (SQReg_teste/gl_modredu)
+F_testeparcial <- (QMReg_modredus/QMRes)
+F_testeparcial
+```
 
+```{r}
+alpha <- 0.05
+RR <- qf(alpha, df1 = gl_modredu, df2 = n - gl_modredu -1, lower.tail = F)
+RR
+```
 
-
+```{r}
+if(RR < F_testeparcial){
+ cat("Rejeita-se H0")
+}
+```

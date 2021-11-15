@@ -83,7 +83,6 @@ Leitura do pacote de dados:
 ```{r}
 library(readr)
 dados <- read_csv("data-table-B5.csv")
-View(dados)
 ```
 
 ```{r}
@@ -94,7 +93,7 @@ head(dados)
 
 Para facilitar nosso trabalho em termos computacionais, estaremos nomeando nossas variáveis e criando um data frame com as mesmas; sendo:
 
-- $Y:$ Rendimento total de azeite por lote de amendoim*
+- $Y:$ Rendimento total
 
 - $X_1:$ Tempo
 
@@ -120,17 +119,20 @@ tabela01
 
 Devido à complexidade das fórmulas envolvidas para realizarmos uma regressão linear múltima, utilizaremos uma abordagem matricial. Desse modo, poderemos escrever
 
-$y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + ... + \beta_k x_{ki} + \varepsilon_i, i = 1, ..., 5. $
+$$y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + ... + \beta_k x_{ki} + \varepsilon_i,\ \ i = 1, ..., 5.$$
 
 como:
 
-$y_1 = \beta_0 + \beta_1 x_{11} + \beta_2 x_{21} + ... + \beta_k x_{k1} + \varepsilon_1$
-$y_2 = \beta_0 + \beta_1 x_{12} + \beta_2 x_{22} + ... + \beta_k x_{k2} + \varepsilon_2$
-$y_3 = \beta_0 + \beta_1 x_{13} + \beta_2 x_{23} + ... + \beta_k x_{k3} + \varepsilon_3$
-$y_4 = \beta_0 + \beta_1 x_{14} + \beta_2 x_{24} + ... + \beta_k x_{k4} + \varepsilon_4$
-$y_5 = \beta_0 + \beta_1 x_{15} + \beta_2 x_{25} + ... + \beta_k x_{k5} + \varepsilon_5$
+$$\begin{cases}
+y_1 = \beta_0 + \beta_1 x_{11} + \beta_2 x_{21} + ... + \beta_k x_{k1} + \varepsilon_1 \\
+y_2 = \beta_0 + \beta_1 x_{12} + \beta_2 x_{22} + ... + \beta_k x_{k2} + \varepsilon_2\\
+y_3 = \beta_0 + \beta_1 x_{13} + \beta_2 x_{23} + ... + \beta_k x_{k3} + \varepsilon_3\\
+y_4 = \beta_0 + \beta_1 x_{14} + \beta_2 x_{24} + ... + \beta_k x_{k4} + \varepsilon_4\\
+y_5 = \beta_0 + \beta_1 x_{15} + \beta_2 x_{25} + ... + \beta_k x_{k5} + \varepsilon_5
+\end{cases}$$
 
-Assim, alocamos essas equações em dois vetores colunas (5x1), fazendo:
+Assim, alocamos essas equações em dois vetores coluna (5x1), fazendo:
+
 ```{r}
 n <- length(dados$y)
 X <- matrix(c(rep(1,n), x1, x2, x3, x4, x5), ncol = 6, nrow = n, byrow = FALSE)
@@ -167,13 +169,13 @@ lm(formula = y ~., data = tabela01)
 ```
 Segue abaixo a equação para o modelo determinado:
 
-$y= 30.59320 - 0.38612x1 - 0.04556x2 + 0.31074x3 - 0.37168x4 + 0.01410x5$
+$$y= 30.59320 - 0.38612 x_1 - 0.04556 x_2 + 0.31074 x_3 - 0.37168 x_4 + 0.01410 x_5$$
 
-## Teste de significancia da Regressão
+### Teste de significancia da Regressão
 
 A estimação de $\sigma^2$ é necessária para o seguimento do teste. Sendo assim, fazemos:
 
-$SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$
+$$SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$$
 
 ```{r}
 SQRes <- (t(Y)%*%Y)-(t(betas)%*%t(X)%*%Y)
@@ -192,7 +194,7 @@ sigma2
 
 ```
 
-## ANOVA
+### ANOVA
 
 Agora que ajustamos um modelo inicial, é necessário que verifiquemos se ele é adequado em explicar a variabilidade de nossa amostra. Vamos assumir que $\xi\sim N_n(0,\sigma^2I)$. Precisamos agora verificar nossa suposição graficamente:
 
@@ -224,13 +226,7 @@ grid.arrange(p,q, ncol = 2)
 
 ```
 
-Interpretando os gráficos acima, podemos observar no histograma que a distribuição - embora majoritariamente centralizada - ocorre de forma irregular. No gráfico de dispersão podemos constatar certa normalidade dos valores, que possuem uma aproximação evidente dos quantis teóricos. Como estamos fazendo suposições a partir de uma análise interpretativa, podemos utilizar do teste de Shapiro-Wilk para verificá-las, como segue abaixo:
-
-```{r}
-pander(shapiro.test(res), style='rmarkdown',
-       caption = "Teste de normalidade Shapiro-Wilk para os resíduos")
-```
-Se considerarmos a significância como sendo 97% - como referenciado em materiais anteriores -, teremos que nosso modelo segue a distribuição normal, visto que obtivemos um resultado de 0.2733 no teste de Shapiro-Wilk. Ou seja, não é um valor alto suficiente para rejeitar a hipótese nula de normalidade dos dados. 
+Interpretando os gráficos acima, podemos observar no histograma que a distribuição - embora majoritariamente centralizada - ocorre de forma irregular. No gráfico de dispersão podemos constatar certa normalidade dos valores, que possuem uma aproximação evidente dos quantis teóricos.
 
 Além disso, para determinar matematicamente se existe uma relação linear entre a variável resposta $\boldsymbol{Y}$ e qualquer as outras covariáveis $\boldsymbol{X}_1,\ldots,\boldsymbol{X}_k$, é possível utilizar o teste **ANOVA**. Nele, queremos testar:
 
@@ -312,20 +308,23 @@ if(RR < F_0){
 
 Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das variáveis contribui significativamente ao modelo.
 
-# Verificando a importancia do subconjunto com x3, x4 e x5.
+### Verificando a importancia do subconjunto com x3, x4 e x5.
 
-## Sob $H_0 : β_2 = 0$ VS sob $H_1 : β_2 \neq 0:$
+Sob $H_0 : \beta_2 = 0$ VS $H_1 : \beta_2 \neq 0:$
 
 Soma de quadrados extra devido a $x_3$,$x_4$ e $x_5$:
 
-$SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_0,\beta_1,\beta_2,\beta_3,\beta_4,\beta_5) - SQ_{reg}(\beta_0,\beta_1,\beta_2)$ (Não corrigida)
+$$SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_0,\beta_1,\beta_2,\beta_3,\beta_4,\beta_5) - SQ_{reg}(\beta_0,\beta_1,\beta_2)$$ (Não corrigida)
 
-$SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) - SQ_{reg}(\beta_1|\beta_0) - SQ_{reg}(\beta_2|\beta_1, \beta_0) - SQ_{reg}(\beta_3|\beta_2,\beta_1,\beta_0)- SQ_{reg}(\beta_4|\beta_3,\beta_2,\beta_1,\beta_0) - SQ_{reg}(\beta_5|\beta_4,\beta_3,\beta_2,\beta_1,\beta_0)$ (Corrigida)
+$$\begin{gathered}
+SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = \\ SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) - SQ_{reg}(\beta_1|\beta_0)- 
+SQ_{reg}(\beta_2|\beta_1, \beta_0) -\\ SQ_{reg}(\beta_3|\beta_2,\beta_1,\beta_0)- SQ_{reg}(\beta_4|\beta_3,\beta_2,\beta_1,\beta_0) -  SQ_{reg}(\beta_5|\beta_4,\beta_3,\beta_2,\beta_1,\beta_0)
+\end{gathered}$$ (Corrigida)
 
 
 Temos que:
 
-$SQ_{reg}(\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta) = \widehat{\beta}^T X^T \boldsymbol{y}$
+$$SQ_{reg}(\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta) = \widehat{\beta}^T X^T \boldsymbol{y}$$
 
 ```{r}
 
@@ -336,7 +335,7 @@ SQReg_r
 
 e
 
-$SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) = \widehat{\beta}^T X^T \boldsymbol{Y} - \frac{(I_n^T\boldsymbol{Y})^2}{n} $
+$$SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) = \widehat{\beta}^T X^T \boldsymbol{Y} - \frac{(I_n^T\boldsymbol{Y})^2}{n}$$
 
 coincide com o valor obtido na tabela ANOVA, sendo este:
 
@@ -345,13 +344,13 @@ SQReg # SQreg encontrado na tabela ANOVA
 ```
 **
 
-$Y= \beta_0 + \beta_1X_1 + \beta_2X_2 + \xi$
+$$Y= \beta_0 + \beta_1X_1 + \beta_2X_2 + \xi$$
 
-Sob $H_0 : β_2 = 0$:
+Sob $H_0 : \beta_2 = 0$:
 
 Considerando o modelo reduzido:
 
-$Y= \beta_1X_1 + \xi$
+$$Y= \beta_1X_1 + x_i$$
 
 ```{r}
 Sxx <- sum(x1^2) - n*(mean(x1))^2
@@ -361,7 +360,7 @@ beta_est_modredu
 ```
 Agora, tendo o modelo reduzido como sendo:
 
-$SQ_{reg} = \beta_1Sxy$
+$$SQ_{reg} = \beta_1S_{XY}$$
 
 podemos realizar:
 
@@ -373,7 +372,7 @@ SQReg_modredu # 3 G.L. (3 covariáveis no subconjunto)
 gl_modredu <- 3
 ```
 
-e, portanto, 
+e portanto, 
 
 ```{r}
 SQReg_teste <- SQReg-SQReg_modredu

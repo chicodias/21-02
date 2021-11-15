@@ -56,7 +56,7 @@ R^2>0.2383$$
 
 Portanto, considerando apenas dois algarismos significativos, podemos considerar que o valor mínimo de $R^2$ para que o modelo possa ser considerado significativo é $R^2 = 0.24$
 
-#Exercício 11
+# Exercício 11
 
 ## Conjunto de dados
 
@@ -64,7 +64,10 @@ O dataset contém dados de um experimento para determinar **tempo**, **temperatu
 
 Significância: 97%
 
+Leitura dos pacotes utilizados:
+
 ```{r setup, include=FALSE, warning=FALSE}
+
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(knitr)
@@ -74,6 +77,8 @@ library(GGally)
 library(pander)
 
 ```
+
+Leitura do pacote de dados:
 
 ```{r}
 library(readr)
@@ -119,11 +124,11 @@ $y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + ... + \beta_k x_{ki} + \varep
 
 como:
 
-$y1 = \beta_0 + \beta_1 x_{11} + \beta_2 x_{21} + ... + \beta_k x_{k1} + \varepsilon_1$
-$y2 = \beta_0 + \beta_1 x_{12} + \beta_2 x_{22} + ... + \beta_k x_{k2} + \varepsilon_2$
-$y3 = \beta_0 + \beta_1 x_{13} + \beta_2 x_{23} + ... + \beta_k x_{k3} + \varepsilon_3$
-$y4 = \beta_0 + \beta_1 x_{14} + \beta_2 x_{24} + ... + \beta_k x_{k4} + \varepsilon_4$
-$y5 = \beta_0 + \beta_1 x_{15} + \beta_2 x_{25} + ... + \beta_k x_{k5} + \varepsilon_5$
+$y_1 = \beta_0 + \beta_1 x_{11} + \beta_2 x_{21} + ... + \beta_k x_{k1} + \varepsilon_1$
+$y_2 = \beta_0 + \beta_1 x_{12} + \beta_2 x_{22} + ... + \beta_k x_{k2} + \varepsilon_2$
+$y_3 = \beta_0 + \beta_1 x_{13} + \beta_2 x_{23} + ... + \beta_k x_{k3} + \varepsilon_3$
+$y_4 = \beta_0 + \beta_1 x_{14} + \beta_2 x_{24} + ... + \beta_k x_{k4} + \varepsilon_4$
+$y_5 = \beta_0 + \beta_1 x_{15} + \beta_2 x_{25} + ... + \beta_k x_{k5} + \varepsilon_5$
 
 Assim, alocamos essas equações em dois vetores colunas (5x1), fazendo:
 ```{r}
@@ -134,33 +139,39 @@ k <- ncol(X) -1
 p <- k + 1
 ```
 
-#Análise descritiva
+**
 
 ```{r}
 #Definindo os betas do modelo de regressão múltipla
+
 betas <- solve(t(X)%*%X)%*%t(X)%*%Y
 
 #Definindo a matrix C_jj
+
 C_jj = solve(t(X)%*%X)
 
 #Definindo uma matrix para os betas
+
 betas <- matrix(data = betas, nrow = length(betas), ncol = 1, byrow = FALSE)
 rownames(betas) <- c("beta0", "beta1","beta2","beta3","beta4","beta5")
 betas
+
 ```
 
-#conferir se é assim msm ou com todos os dados pois o resultado da diferente data = dados
+Abaixo, estaremos conferindo com os valores dos betas calculados pelo método lm. É importante ressaltar que não chamaremos o data frame do conjunto de dados completo - visto que esse conta com as variáveis $x_6$ e $x_7$ que não serão consideradas nessa análise de regressão -, e sim a tabela com as variáveis de $x_1$ até $x_5$. 
+
 ```{r}
 #Modelo do R
 lm(formula = y ~., data = tabela01)
+
 ```
 Segue abaixo a equação para o modelo determinado:
 
 $y= 30.59320 - 0.38612x1 - 0.04556x2 + 0.31074x3 - 0.37168x4 + 0.01410x5$
 
-#Teste de significancia da Regressão
+## Teste de significancia da Regressão
 
-### 3. Estimação de $\sigma^2$
+A estimação de $\sigma^2$ é necessária para o seguimento do teste. Sendo assim, fazemos:
 
 $SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\boldsymbol{X}^{T}\boldsymbol{Y}$
 
@@ -168,23 +179,20 @@ $SQ_{res}=\boldsymbol{Y}^{T}\boldsymbol{Y}-\widehat{\boldsymbol{\beta}}^{T}\bold
 SQRes <- (t(Y)%*%Y)-(t(betas)%*%t(X)%*%Y)
 SQRes
 ```
-#[,1]
-#[1,] 3222.907
 
-Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p}$
+Logo, $\widehat{\sigma}^2=\dfrac{SQres}{n-p}$.
 
 ```{r}
 p <- ncol(X)
 
 #estimando o sigma^2
+
 sigma2 <- SQRes/(n-p)
 sigma2
+
 ```
-#[,1]
-#[1,] 153.4718
 
-
-## 4. ANOVA
+## ANOVA
 
 Agora que ajustamos um modelo inicial, é necessário que verifiquemos se ele é adequado em explicar a variabilidade de nossa amostra. Vamos assumir que $\xi\sim N_n(0,\sigma^2I)$. Precisamos agora verificar nossa suposição graficamente:
 
@@ -195,6 +203,7 @@ Y_est <- X%*%betas
 
 # Cálculo dos resíduos
 res <- Y - Y_est
+
 ```
 
 ```{r}
@@ -215,19 +224,13 @@ grid.arrange(p,q, ncol = 2)
 
 ```
 
-Interpretação: 
+Interpretando os gráficos acima, podemos observar no histograma que a distribuição - embora majoritariamente centralizada - ocorre de forma irregular. No gráfico de dispersão podemos constatar certa normalidade dos valores, que possuem uma aproximação evidente dos quantis teóricos. Como estamos fazendo suposições a partir de uma análise interpretativa, podemos utilizar do teste de Shapiro-Wilk para verificá-las, como segue abaixo:
 
 ```{r}
 pander(shapiro.test(res), style='rmarkdown',
        caption = "Teste de normalidade Shapiro-Wilk para os resíduos")
 ```
-#| Test statistic | P value |
-#|:--------------:|:-------:|
-#|     0.9544     | 0.2733  |
-
-#Table: Teste de normalidade Shapiro-Wilk para os resíduos
-
-O teste acima confirma nossa suposição de que os resíduos têm distribuição Normal, pois, para um nível de significância de 97%, o valor-p obtido, 0,2733, não rejeita a hipótese nula, de normalidade dos dados.
+Se considerarmos a significância como sendo 97% - como referenciado em materiais anteriores -, teremos que nosso modelo segue a distribuição normal, visto que obtivemos um resultado de 0.2733 no teste de Shapiro-Wilk. Ou seja, não é um valor alto suficiente para rejeitar a hipótese nula de normalidade dos dados. 
 
 Além disso, para determinar matematicamente se existe uma relação linear entre a variável resposta $\boldsymbol{Y}$ e qualquer as outras covariáveis $\boldsymbol{X}_1,\ldots,\boldsymbol{X}_k$, é possível utilizar o teste **ANOVA**. Nele, queremos testar:
 
@@ -250,8 +253,6 @@ Table: Tabela ANOVA
 # Soma dos quadrados dos residuos  
 (SQRes <- t(Y-Y_est)%*%(Y-Y_est))
 ```
-# [,1]
-# [1,] 3222.907
 
 $$SQ_{Reg} = SQ_{Total} - SQ_{Res} = \frac 1n \sum_{i=1}^n y_i^2 - (Y-\hat{Y})^T\cdot(Y-\hat{Y}) =$$
 $$\beta^T \cdot X^T \cdot Y - \frac1n (u^T \cdot Y)^2$$
@@ -261,18 +262,16 @@ $$\beta^T \cdot X^T \cdot Y - \frac1n (u^T \cdot Y)^2$$
 u <- c(rep(1,n))
 (SQTotal <- t(Y)%*%Y - ((t(u)%*%Y)^2)/n)
 ```
-#[,1]
-#[1,] 7870.112
+
 ```{r}
 #Soma dos quadrados da regressao  
 (SQReg <- SQTotal - SQRes)
 ```
-#[,1]
-#[1,] 4647.205
 
 ```{r}
-#Calculando a anova
-k <- 2 # covariaveis utilizadas
+# Calculando a anova
+
+k <- 5 
 p <- k+1
 
 
@@ -290,33 +289,19 @@ gl_sqtotal <- n-1
 #calculando a estatistica F
 (F_0 <- QMReg/QMRes)
 ```
-#[,1]
-#[1,] 17.30315
+
 ```{r}
 (QMTotal <- QMRes + QMReg)
 ```
-#[,1]
-#[1,] 2457.89
-Apresentamos os resultados obtidos na forma de tabela.
 
-#achei o formato legal, copiei a tabela do código da tarefa 2, mudar valores
-| **F.V.** | **G.L** | **S.Q.** | **Q.M.** | **F** |
-|:---:|:---:|:---:|:---:|:---:|
-| **Regressão** | $2$ | $9712.5$ | $4856.25$ | $97.05035$ |     
-| **Resíduo** | $13$ | $650.5$ | $50.03846$ |  |
-| **Total** | $15$ | $10363$ |  $4906.288$  |  |
-Table: Tabela ANOVA para o modelo ajustado.
-
-
-Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o auxílio do R:
+Como nosso estimador $F \sim F(k,\ n - k - 1)$, podemos obter os quantis com o auxílio do R, assumindo $\alpha = 0.03$ - a partir de instruções fornecidas em trabalhos anteriores:
 
 ```{r}
 alpha <- 0.03
 (RR <- qf(alpha, df1 = k, df2 = n - k -1, lower.tail = F) )
 ```
-#[1] 4.072662
 
-Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teorico da distribuicao F com $k$ e $n-p$ graus de liberdade.
+Rejeitamos $H_0$ se $F_0 > F_{crit}$, sendo $F_{crit}$ o quantil teórico da distribuição F com $k$ e $n-p$ graus de liberdade.
 
 ```{r}
 
@@ -324,11 +309,10 @@ if(RR < F_0){
   cat("Rejeita-se H0")
 }
 ```
-#Rejeita-se H0
 
 Dessa forma, podemos concluir com 97% de confiança que pelo menos uma das variáveis contribui significativamente ao modelo.
 
-# Verificando a importancia de x3, x4 e x5
+# Verificando a importancia do subconjunto com x3, x4 e x5.
 
 ## Sob $H_0 : β_2 = 0$ VS sob $H_1 : β_2 \neq 0:$
 
@@ -336,7 +320,8 @@ Soma de quadrados extra devido a $x_3$,$x_4$ e $x_5$:
 
 $SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_0,\beta_1,\beta_2,\beta_3,\beta_4,\beta_5) - SQ_{reg}(\beta_0,\beta_1,\beta_2)$ (Não corrigida)
 
-$SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) - SQ_{reg}(\beta_1|\beta_0)$ ??? (Corrigida)
+$SQ_{reg}(\beta_3,\beta_4,\beta_5|\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta_1,\beta_2,\beta_3,\beta_4,\beta_5|\beta_0) - SQ_{reg}(\beta_1|\beta_0) - SQ_{reg}(\beta_2|\beta_1, \beta_0) - SQ_{reg}(\beta_3|\beta_2,\beta_1,\beta_0)- SQ_{reg}(\beta_4|\beta_3,\beta_2,\beta_1,\beta_0) - SQ_{reg}(\beta_5|\beta_4,\beta_3,\beta_2,\beta_1,\beta_0)$ (Corrigida)
+
 
 Temos que:
 
@@ -344,8 +329,8 @@ $SQ_{reg}(\beta_0,\beta_1,\beta_2) = SQ_{reg}(\beta) = \widehat{\beta}^T X^T \bo
 
 ```{r}
 
-SQReg2 <- (t(betas)%*%t(X)%*%Y)
-SQReg2
+SQReg_r <- (t(betas)%*%t(X)%*%Y)
+SQReg_r
 
 ```
 
@@ -358,12 +343,13 @@ coincide com o valor obtido na tabela ANOVA, sendo este:
 ```{r}
 SQReg # SQreg encontrado na tabela ANOVA
 ```
-
-Considerando o modelo reduzido: 
+**
 
 $Y= \beta_0 + \beta_1X_1 + \beta_2X_2 + \xi$
 
 Sob $H_0 : β_2 = 0$:
+
+Considerando o modelo reduzido:
 
 $Y= \beta_1X_1 + \xi$
 
@@ -373,9 +359,15 @@ Sxy <- sum(x1*y) - n*(mean(x1)*mean(y))
 beta_est_modredu <- Sxy/Sxx
 beta_est_modredu
 ```
+Agora, tendo o modelo reduzido como sendo:
+
+$SQ_{reg} = \beta_1Sxy$
+
+podemos realizar:
+
 ```{r}
 SQReg_modredu <- beta_est_modredu*Sxy
-SQReg_modredu # 3 G.L.
+SQReg_modredu # 3 G.L. (3 covariáveis no subconjunto)
 ```
 ```{r}
 gl_modredu <- 3
@@ -387,6 +379,7 @@ e, portanto,
 SQReg_teste <- SQReg-SQReg_modredu
 SQReg_teste
 ```
+Este valor representa o aumento na $SQ_{reg}$ com o acréscimo do subconjunto no modelo que já possui $X_1$
 
 ```{r}
 QMReg_modredus <- (SQReg_teste/gl_modredu)
@@ -395,7 +388,7 @@ F_testeparcial
 ```
 
 ```{r}
-alpha <- 0.05
+alpha <- 0.03
 RR <- qf(alpha, df1 = gl_modredu, df2 = n - gl_modredu -1, lower.tail = F)
 RR
 ```

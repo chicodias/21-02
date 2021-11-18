@@ -1,0 +1,67 @@
+---
+title: "SME0805 - Processos Estocásticos - Teste 7"
+author: "Francisco Rosa Dias de Miranda - 4402962"
+date: "outubro 2021"
+output: pdf_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercício 1 
+```{r echo=FALSE, message=FALSE}
+library(tidyverse)
+library(matrixcalc)
+library(knitr)
+set.seed(42)
+P <- t(matrix(c(
+                          0.4, 0.5,  0.1,
+                          0.05, 0.7, 0.25,
+                          0.05, 0.5, 0.45
+                           ), 3, 3))
+```
+
+Seja uma cadeia de Markov com estados $\{0, 1, 2\}$ definida pela seguinte matriz de transição:
+
+```{r echo=FALSE}
+row.names(P) <- c(1, 2, 3)
+colnames(P) <- c(1, 2, 3)
+write_matex2 <- function(x) {
+  begin <- "\\begin{bmatrix}"
+  end <- "\\end{bmatrix}"
+  X <-
+    apply(x, 1, function(x) {
+      paste(
+        paste( round(x, 4), collapse = "&"),
+        "\\\\"
+      )
+    })
+  paste(c(begin, X, end), collapse = "")
+}
+```
+
+$$\mathbb{P} =  `r write_matex2(P)`$$
+Seu estado inicial é $\{\lambda_0 = 3, \lambda_1 = 6, \lambda_2 = 5 \}$
+
+Vamos calcular as transições para os próximos passos:
+
+$$\mathbb{P}^2 =  `r write_matex2(matrix.power(P,2))`\ \ \ 
+\mathbb{P}^4 =  `r write_matex2(matrix.power(P,3))`$$
+
+$$\mathbb{P}^8 =  `r write_matex2(matrix.power(P,8))` \ \ \ 
+\mathbb{P}^{10} =  `r write_matex2(matrix.power(P,10))`$$
+A distribuição do número de equipamentos no estado $j$ em $t = 10$
+
+$$\sum_{i=0}^2 N_j(i) \sim \text{Poiss}\left(\sum_{i=0}^2 \lambda_iP^{10}_{ij}\right), \ j = 0,1,2.$$
+
+Assim, o número esperado de cada equipamento no estado de equilíbrio é dado por: 
+
+$$E(N_0) = \lambda_0 P^{10}_{00} + \lambda_1P^{10}_{10} + \lambda_2P^{10}_{20} = 
+ (3+ 6 + 5)*0.0769 =  1.07$$
+
+$$E(N_1) = \lambda_0 P^{10}_{01} + \lambda_1P^{10}_{11} + \lambda_2P^{10}_{21} =
+(3 + 6 + 5) * 0.625 = 8.75$$
+
+$$E(N_2) = \lambda_0 P^{10}_{02} + \lambda_1P^{10}_{12} + \lambda_2P^{10}_{22} = (3 + 6 + 5) * 0.2981 = 4.17$$
+  

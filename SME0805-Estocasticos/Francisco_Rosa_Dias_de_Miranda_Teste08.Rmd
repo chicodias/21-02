@@ -1,0 +1,35 @@
+---
+title: "SME0805 - Processos Estocásticos - Teste 8"
+author: "Francisco Rosa Dias de Miranda - 4402962"
+date: "novembro 2021"
+output: pdf_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+devtools::install_github("chicodias/thepackage")
+```
+
+
+## Exercício 1 
+
+Uma fila M/M/1 com $\lambda = 3, \mu = 1/4$
+
+ - a) número médio de caminhões no sistema
+ 
+$$L_Q = \frac{\lambda^2}{\mu(\mu - \lambda)}$$
+ 
+ - b) tempo médio de espera
+ 
+$$W = \frac1{\mu-\lambda}$$
+
+
+ - c) a probabilidade de 6 caminhões estarem no sistema
+ 
+ $$P_n = \left( \frac{\lambda}{\mu}\right)^n  \left(1 -  \frac{\lambda}{\mu}\right)$$
+ 
+  - d) 
+ 

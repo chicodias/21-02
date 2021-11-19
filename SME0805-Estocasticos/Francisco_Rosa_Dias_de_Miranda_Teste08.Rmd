@@ -9,27 +9,34 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-devtools::install_github("chicodias/thepackage")
-```
-
 
 ## Exercício 1 
 
-Uma fila M/M/1 com $\lambda = 3, \mu = 1/4$
+Seja o sistema de chegada de caminhões descrito por uma fila M/M/1 com $\lambda = 3$ chegadas e $\mu = 4$ serviços por hora. Pede-se:
 
- - a) número médio de caminhões no sistema
+ - a) Número médio de caminhões no sistema
  
-$$L_Q = \frac{\lambda^2}{\mu(\mu - \lambda)}$$
+$$L = \frac{\lambda}{\mu - \lambda} = 
+  \frac{3}{4-3} = 3$$
+  
+O número médio de caminhões no sistema é 3.
  
- - b) tempo médio de espera
+ - b) Tempo médio de espera
  
-$$W = \frac1{\mu-\lambda}$$
+$$W = \frac1{\mu-\lambda} = \frac{1}{4-3} = 1$$
+
+O tempo médio de espera é de 1 hora.
 
 
- - c) a probabilidade de 6 caminhões estarem no sistema
+ - c) Probabilidade de 6 caminhões estarem no sistema
  
  $$P_n = \left( \frac{\lambda}{\mu}\right)^n  \left(1 -  \frac{\lambda}{\mu}\right)$$
+ Assim,
  
-  - d) 
+ $$P_6 = \left( \frac{3}{4}\right)^6  \left(1 -  \frac{3}{4}\right) = 0.1779785 * 0.25 = 0.0445$$
  
+A probabilidade de haverem 6 caminhões no sistema é de 4,45%.
+ 
+  - d) Custo médio gasto no sistema
+ 
+ Em média, temos $L=3$ caminhões, parados em média por $W = 1$ hora no sistema. Como a hora de um caminhão parado custa em média R\$ 100,00, temos que o custo médio do sistema é de $LW$ vezes o custo, totalizando R\$ 300,00 por hora.

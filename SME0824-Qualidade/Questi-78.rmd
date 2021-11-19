@@ -1,0 +1,67 @@
+---
+title: "SME0820 - Gestão da Qualidade - Questionário 7 e 8"
+author:
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351
+date: "novembro 2021"
+output: pdf_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse, quietly = TRUE)
+library(knitr)
+library(qcc)
+set.seed(42)
+```
+
+## Geração dos dados
+
+Suponha que o comprimento de mancais tem distribuição Normal
+
+```{r message=FALSE}
+
+mu1 <- 10
+sigma1 <- 4
+
+mu2 <- 14
+sigma2 <- 7
+
+dados <- rbind(1:5 %>%  map_dfc(~rnorm(30, mu1, sigma1)),
+               1:5 %>%  map_dfc(~rnorm(10, mu2, sigma2)))
+
+kable(head(dados))
+```
+## graficos de controle
+
+
+```{r}
+qcc(dados, type="xbar")
+```
+
+### Grafico de controle Xbarra R
+
+
+```{r}
+qcc(dados, type="R")
+```
+
+
+### Grafico de controle Xbarra S
+
+
+```{r}
+qcc(dados, type="S")
+```
+
+
+## deteccao de anomalias
+
+### grafico de CUSUM
+
+### cusum tabular
+
+### mascara V

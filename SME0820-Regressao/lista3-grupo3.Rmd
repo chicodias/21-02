@@ -1,0 +1,109 @@
+---
+title: "Lista3 - Grupo3_mv"
+author: 
+  - Brenda da Silva Muniz 11811603
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351
+  - Mônica Amaral Novelli 11810453
+date: "23/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(ggpubr)
+library(FSA)
+```
+
+6) Considere o teste da falta de ajuste para o modelo de regressão linear simples. Obtenha
+E(QMres). Desenvolva passo a passo colocando todos os detalhes.
+
+7) Uma empresa fabricante de garrafas de vidro registrou dados sobre a quantidade média de
+defeitos por 10 000 garrafas, devido a pedras (pequenas pedras embutidas na parede da garrafa)
+e a quantidade de semanas a partir da última reparação geral feita no forno.
+
+```{r dados07}
+defeitos <- c(13.00, 16.10, 14.50, 17.80, 22.00, 27.40, 16.80, 34.20, 65.60, 49.20, 66.20,81.20,87.40, 114.50)
+
+semanas <- c(seq(4,17))
+
+df <- data.frame(defeitos, semanas)
+
+View(df)
+```
+
+Ajustando um modelo de regressão linear MMQ
+
+```{r}
+fit1 <- lm(defeitos ~ semanas, data = df)
+summary(fit1)
+```
+##Plotting the fitted model
+
+```{r}
+ggplot(df, aes(x=semanas, y=defeitos)) +
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") +
+  theme_pubclean()
+  
+```
+Percebemos que os atributos *semanas* e *defeitos* apresentam certa lienaridade, porém, existem pontos que localizam-se fora do intervalo de confiança 95%, estabelecido por padrão no R.
+
+### Gráfico de Resíduos
+
+```{r}
+FSA::residPlot(fit1)
+```
+O gráfico de reíduos acima nos indica que os resíduos não ão lineares, apesar da distribuição deles parecem ser Normal, de acordo com o histograma ao lado.
+
+```{r}
+ggplot(df, aes(x = fit1$fitted.values, y = fit1$residuals)) +
+  geom_point() + 
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth()
+```
+O gráfico de resíduos acima indica que há uma relação não-linear nos resíduos.
+
+Isso significa que ainda existe alguma relação entre as variáveis que o modelo regressão linear simples não é capaz de detectar.
+
+Devido a isso, precisamos realizar algumas transformações no nosso modelo. Uma vez que os resíduos apresentam um comportamento semelhante a uma função quadrática, ajustaremos uma regressão polinomial de grau 2.
+
+## Ajustando um modelo de regressão polinomial
+
+```{r}
+fit2 <- lm(defeitos ~ poly(semanas,2), data = df)
+summary(fit2)
+```
+Percebemos que o modelo polinomial é muito melhor para explicar a variabilidade nos dados, alcançando um $R^2_{aj} = 0.94$.
+
+```{r}
+#usando o ggplot
+ggplot(df, aes(x=semanas, y=defeitos)) +
+  geom_point() +
+  stat_smooth(method = "lm", formula = y ~ poly(x,2), col = "red") +
+  theme_pubclean()
+```
+## Gráfico dos resíduos para o modelo polinomial
+
+```{r}
+ggplot(df, aes(x = fit2$fitted.values, y = fit2$residuals)) +
+  geom_point() + 
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth()
+```
+##### Testando um polinomio de grau 3
+
+```{r}
+fit3 <- lm(defeitos ~ poly(semanas,3), data = df)
+summary(fit3)
+```
+O modelo polinomial de grau 3 não apresentou quase nenhuma melhora em relação ao de grau 2
+```{r}
+ggplot(df, aes(x = fit3$fitted.values, y = fit3$residuals)) +
+  geom_point() + 
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth()
+```
+E, do mesmo modo que o modelo polnomial de grau 2, os primeiros resíduos parecem estar "amontoados".

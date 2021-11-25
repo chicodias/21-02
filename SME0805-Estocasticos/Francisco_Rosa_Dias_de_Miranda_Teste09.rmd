@@ -1,0 +1,23 @@
+---
+title: "SME0805 - Processos Estocásticos - Teste 9"
+author: "Francisco Rosa Dias de Miranda - 4402962"
+date: "novembro 2021"
+output: pdf_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercício 1 
+
+  - Temos que o tempo de atendimento $T \sim \text{Exp}(\alpha)$
+  - Dado $T = t \Rightarrow (N(t)\ |\ T=t) \sim \text{Poiss}(\lambda t)$
+  - O número de clientes num determinado tempo $t$, $N(t
+  
+  Como $f_T(t) = \alpha e^{-\alpha t}$ então
+  
+$$\begin{gathered}
+f_T(t \ | \ N(t) = n) = \frac{P(N(t) = n\ |\ T=t) f_T(t)}{P(N(t) =n)} = 
+\frac{\frac{\alpha \lambda^n}{n!} \int_0^{\infty}  t^n  e^{-(\lambda + \alpha)t} dt \ \alpha e^{-\alpha t}}{ \frac{\alpha \lambda^n}{(\lambda + \alpha)^{n+1}}  }
+\end{gathered}$$

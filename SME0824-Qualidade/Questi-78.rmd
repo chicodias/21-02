@@ -35,7 +35,9 @@ dados <- rbind(1:5 %>%  map_dfc(~rnorm(30, mu1, sigma1)),
 
 kable(head(dados))
 ```
-## graficos de controle
+## 1.)Característica da qualidade
+
+## 2.) Graficos de controle
 
 
 ```{r}
@@ -57,11 +59,14 @@ qcc(dados, type="R")
 qcc(dados, type="S")
 ```
 
+## 3.) Grafico da soma cumulativa
 
-## deteccao de anomalias
+## 4.) CUMSUM tabular
 
-### grafico de CUSUM
+## 5.) Mascara V
 
-### cusum tabular
+## 6.) Verificar a diferença na detecção de anomalias para as técnicas acima
 
-### mascara V
+## 7.) Estabelecer os Limites de Especificação
+
+## 8.) Avaliar a capacidade do processo

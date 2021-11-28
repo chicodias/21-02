@@ -53,6 +53,17 @@ e, a Soma de quadrado devido a falta de ajuste, por:
 
 $SS_{FA} = \sum_{i=1}^{m} n_i (\overline{Y_i} - \hat{Y_i})^2 $
 
+Interpretação: Se os valores ajustados de $\hat{Y}_i$ forem próximos às respostas médias correspondentes a $\overline{Y_i}$, então há uma forte indicação de que a função de regressão é linear. Seguindo o mesmo raciocínio, temos, que se $\hat{Y}_i$ desviar muito de $\overline{Y_i}$, então é provável que a função de regressão não seja linear.
+
+Seguindo, a estatística de teste devido a falta ajuste pode ser ajustada, por:
+
+$F_0 = \frac{SS_{FA}/(m-2)}{SS_{EP}/(n-m)} = \frac{MS_{FA}}{MS_{EP}}$
+
+Logo, temos que o valor esperado de $MS_{EP}$ é $\sigma^2$, e o valor esperado de $MS_{FA}$ é:
+
+$E(MS_{FA}) = \sigma^2 + \frac{\sum_{i=1}^{m} n_i[E(Y_i)-\beta_0-\beta_1x_i]^2} {m-2} $
+
+Em suma, concluí-se então, que se a verdadeira função de regressão for linear, então $E(Y_i) = \beta_0 + \beta_1x_i$, e o segundo termo de $E(MS_{FA})$ é zero, restando $E(MS_ {FA}) = \sigma^ 2$. Entretanto, se a função de regressão não for linear, então $E(Y_i)= \beta_0 + \beta_1x_1$ e $E(MS_ {FA}) > \sigma ^ 2$. Além disso, se a função de regressão for linear, a estatística $F_0$ segue a distribuição $F_{m-2, n-m}$. Portanto, para testar a falta de ajuste, calcularíamos a estatística de teste $F_0$ e concluiríamos que a função de regressão não é linear se $F_0 >F_{\alpha, m-2, n-m}$.
 
 
 

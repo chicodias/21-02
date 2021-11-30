@@ -11,38 +11,60 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-library(tidyverse, quietly = TRUE)
+```{r message = FALSE}
+library(tidyverse)
 library(knitr)
 library(qcc)
-set.seed(42)
+library(vMask)
+set.seed(1238)
 ```
 
 ## Geração dos dados
 
-Suponha que o comprimento de mancais tem distribuição Normal
+Foram gerados um total de 40 observações, provenientes de distribuições Normais independentes, de mesma média e variância amostrada de uma distribuição $\chi^2_{(\nu)}$. As 30 primeiras observações têm média $\mu = 110$ e $\nu = 1$. Já as 10 últimas, $\mu_2 = 112$ e $\nu = 2$, respectivamente.
+
+```{r}
+gera_dados <- function(mu, n, m, nu){
+  map2_dfc(1:m, rchisq(m, nu), ~rnorm(n, mu, .y))
+}
+```
+
 
 ```{r message=FALSE}
 
-mu1 <- 10
-sigma1 <- 4
+mu1 <- 110
+mu2 <- 112
 
-mu2 <- 14
-sigma2 <- 7
+nu1 <- 1
+nu2 <- 2
 
-dados <- rbind(1:5 %>%  map_dfc(~rnorm(30, mu1, sigma1)),
-               1:5 %>%  map_dfc(~rnorm(10, mu2, sigma2)))
-
-kable(head(dados))
+dados <- rbind(gera_dados(mu1, 30, 5, nu1 ),
+               gera_dados(mu2, 10, 5, nu2))
+  
+kable(head(dados), format = "markdown")
 ```
-## 1.)Característica da qualidade
 
-## 2.) Graficos de controle
+## Característica da qualidade
 
+Foram coletadas medições em milímetros do comprimento de mancais com flange de 2 parafusos, realizadas por cinco funcionários de forma independente. Nos primeiros 30 produtos, é assumido que o processo estava sob controle.
 
+Em seguida, houve um problema na forma de injeção. A gerência foi notificada e o processo foi interrompido para reparos na máquina.
+
+## Graficos de controle
+
+### Gráfico de controle X-barra para a amostra toda
 ```{r}
 qcc(dados, type="xbar")
 ```
+
+### Gráfico de controle X-barra para as primeiras observações
+
+```{r}
+qcc(dados[1:30,], type="xbar")
+```
+
+
+
 
 ### Grafico de controle Xbarra R
 
@@ -60,6 +82,23 @@ qcc(dados, type="S")
 ```
 
 ## 3.) Grafico da soma cumulativa
+```{r}
+cusum(dados[1:32,])
+```
+
+
+```{r}
+dm <- as.matrix(dados)
+```
+
+
+```{r eval = F}
+mask <- vMask.method4(data = dm, mu0 = mu1, sleep = "PressEnter")
+```
+![](maskV.png)
+
+
+
 
 ## 4.) CUMSUM tabular
 

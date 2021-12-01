@@ -1,0 +1,258 @@
+---
+title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Trabalho 3 - Grupo 3"
+author:
+  - Brenda da Silva Muniz 11811603
+  - Francisco Rosa Dias de Miranda 4402962
+  - Heitor Carvalho Pinheiro 11833351
+  - Mônica Amaral Novelli 11810453
+date: "Dezembro 2021"
+output: pdf_document
+---
+
+
+Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
+
+## Conjunto de dados
+
+O dataset contém dados de um experimento para determinar **pressão**, **temperatura**, **fluxo de CO2**, **umidade** e **tamanho da partícula de amendoim** sob o **rendimento total de aceite por lote de amendoim**. [rendimento (y)].
+
+Significância: 97%
+
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(ggpubr)
+library(gridExtra)
+library(GGally)
+library(pander)
+```
+
+```{r, echo=TRUE, warning=FALSE}
+dados <- read_csv("dados/data-table-B7.csv", locale = locale(decimal_mark = ","))
+
+# Renomeando as colunas
+names(dados) <- c("Pressao", "Temp", "FluxoCO2", "Umidade", "Tamanho", "y")
+
+head(dados)
+```
+Temos cinco covariáveis quantitativas e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de azeite por lote de amendoim**
+
+
+## 1. Análise Descritiva dos dados
+
+
+- $Y:$ Rendimento total de azeite por lote de amendoim*.
+
+- $X_1:$ Pressão
+
+- $X_2:$ Temperatura
+
+- $X_3:$ Fluxo de CO2
+
+- $X_4:$ Umidade
+
+- $X_5:$ Tamanho
+
+### Gráficos de barras
+
+```{r out.height="70%"}
+dados %>%
+  pivot_longer(cols = everything()) %>%
+  ggplot() +
+  geom_bar(aes(x = as_factor(value)), stat = "count") +
+  facet_wrap(~name, scales = "free_x") +
+  labs(
+    x = "Variáveis",
+    y = "Valores",
+    title = "Gráfico de Barras - Conjunto de Dados"
+  ) +
+  theme_minimal()
+```
+
+A partir dos gráficos de barras, podemos ver que nossas cinco covariáveis, apesar de serem quantitativas, assumem apenas dois valores, com a mesma proporção. A única variável que assume mais valores do que isso é $y$, que apararenta ter uma distribuição quase uniforme.
+
+Outros gráficos que comparam as relações entre nossas variáveis é o gráfico de coordenadas paralelas e nossa matriz de correlação, ambos também explicitando a falta de correlação entre as covariáveis.
+
+### *Correlação de Pearson entre as covariáveis e $y$*
+
+Fazendo uso das correlações, podemos dispor graficamente uma matriz de gráficos para expor as relações entre as variáveis, de modo que teremos densidades de frequência nas diagonais, gráficos de dispersão no painel triangular inferior e  coeficientes das correlações no superior, de modo que o tamanho dos números é condicionado ao valor da correlação.
+
+
+```{r message = F}
+ggpairs(dados) + ggtitle("Gráfico de pares - Dados")
+```
+
+No gráfico de pares acima, podemos observar as correlações (ou ausência delas) de todas as covariáveis entre si e com a variável preditora. Analisando esses resultados, vemos que nenhuma das covariáveis se correlacionam entre si. Além disso, a maioria apresenta uma correlação muito baixa com a variável preditora - com exceção de x5 (Tamanho) com y.
+
+Essa ausência de correlação pode ser explicada pelo comportamento em "X" da maior parte das covariáveis, que também pode ser notado através do gráfico de coordenadas paralelas:
+
+
+```{r  out.height="70%"}
+ggparcoord(dados) + labs(
+  x = "Variáveis",
+  y = "Valores",
+  title = "Coordenadas Paralelas - Dados"
+) +
+  theme_minimal()
+```
+
+
+Definindo a covariável Tamanho como mapeamento para cor, podemos dispor outra versão dos gráficos de pares:
+
+```{r  out.height="70%"}
+dados %>%
+  pivot_longer(!c(Tamanho, y)) %>%
+  ggplot(aes(y = y, color = as_factor(Tamanho))) +
+  geom_point(aes(x = value)) +
+  facet_wrap(~name, scales = "free_x") +
+  labs(
+    x = "Variáveis",
+    y = "Valores",
+    title = "Gráficos de dispersão - Dados",
+    color = "Tamanho"
+  ) +
+  theme_minimal()
+```
+
+Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y, enquanto que o mesmo feito não foi alcançado no eixo x. Temos aqui fortes indícios de independência entre as covariáveis, e o melhor modelo talvez não seja o que contenha todas elas, como veremos mais adiante.
+
+## 2. Matriz Hat
+
+ - valores da matriz hat
+ - apresentar os valores e analisar
+ - determinar possiveis outliers e pontos de alavanca
+
+## 3. Análise de resíduos
+
+  - ajuste do modelo
+  - resumo do modelo
+  - resíduos vs valores ajustados
+  - qqplot
+  - raiz de resituos estandartizados versus valores ajustados
+  - distancia de cook (residuos estandartizados vs pontos de alavanca)
+  
+  
+
+```{r}
+
+# Modelo  reduzido do Ex 2
+
+fit <- lm(y ~ Temp + Tamanho, data = dados)
+summary(fit)
+```
+
+
+$$Y = 80.134 +0.282 x_2 -16.065x_5$$
+
+### Interpretação dos coeficientes:
+
+ - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ é de 80,134.
+ - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperamos um aumento de 0,282 em $y$, com todo o resto mantido constante.
+ - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, é esperado um descréscimo de 16,065 unidades em $y$, com todo o resto mantido constante.
+ 
+ 
+
+```{r}
+res <- fit$residuals
+
+p <- ggplot(tibble(res), aes(sample = res)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(
+    x = "Amostra",
+    y = "Quantis Teóricos",
+    title = "Normal Q-Q Plot"
+  ) +
+  theme_pubclean()
+
+q <- ggplot(tibble(res), aes(res)) +
+  geom_histogram(aes(y = ..density..), binwidth = 4, stat = "bin") +
+  labs(
+    title = "Histograma dos resíduos",
+    y = "Densidade",
+    x = "Valor"
+  ) +
+  theme_pubclean()
+
+grid.arrange(p, q, ncol = 2)
+```
+
+O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado que os dados têm distribuição normal, enquanto que o histograma dos resíduos nos fornece aproximações a respeito da distribuição de $\xi$.
+
+A partir dos gráficos acima, podemos notar que os resíduos não estão muito afastados dos quantis teóricos, embora sua distribuição seja ligeiramente assimétrica, conforme constatado no histograma. Podemos também utilizar o teste de Shapiro-Wilk para verificar a normalidade dos dados.
+
+
+
+## 4. Testes nos resíduos
+
+  - resumo dos residuos
+  - análise dos testes de normalidade
+  - teste de homocedasticidade
+  - teste de multicolinearidade
+
+```{r}
+summary(res)
+```
+
+
+```{r}
+pander(shapiro.test(res),
+  style = "rmarkdown",
+  caption = "Teste de normalidade Shapiro-Wilk para os resíduos"
+)
+```
+
+
+O teste acima confirma nossa suposição de que os resíduos têm distribuição Normal, pois, para um nível de significância de 97%, o valor-p obtido, 0,7669, não rejeita a hipótese nula, de normalidade dos dados.
+
+Além disso, para determinar matematicamente se existe uma relação linear entre a variável resposta $\boldsymbol{Y}$ e qualquer as outras covariáveis $\boldsymbol{X}_1,\ldots,\boldsymbol{X}_k$, é possível utilizar o teste **ANOVA**. Nele, queremos testar:
+
+**$H_0$**: Nenhuma das variáveis contribui significativamente ao modelo, versus:
+
+**$H_a$**: Pelo menos uma das covariáveis contribui significativamente ao modelo.
+
+
+
+## 5. Resíduos Escalonados
+
+  - estimativas do modelo (betas)
+  - residuos e QMres
+  - residuos padronizados
+  - residuos studentizados internamente
+  - residuos studentizados externamente
+  - observações que possam ser remotas no espaço
+  - histograma delas e analisar
+
+## 6. Comparações resíduos escalonados
+
+  - quadro comparativo com os resultados obtidos no item anterior
+  - análise de cada um dos resíduos calculados (aula 17)
+  
+  
+## 7. Gráfico de Resíduos versus ajuste
+
+  - análise do gráfico para cada um dos residuos calculados no item 5 vs valores ajustados
+  
+## 8. Transformações
+
+  - proponha uma transformação para seu modelo que corrija possíveis problemas e compare
+  - refazer os itens de 1 a 7 com o novo modelo
+
+## 9. Teste de Falta de ajuste
+
+  - proponha um caso ou exemplo onde seja necessario a aplicação do teste da falta de ajuste
+  - residuos vs valores ajustados
+  - mostre a falta de ajuste dos dados
+  - ajuste o modelo
+  - ANOVA
+  - SQEP
+  - SQFA
+  - análise do teste F_0
+  
+  
+## 10. Mínimos Quadrados Ponderados
+
+  - proponha um caso ou exemplo onde seja necessário a aplicação da técnica dos mínimos quadrados e faça a respectiva análise
+  

@@ -52,39 +52,47 @@ Em seguida, houve um problema na forma de injeção. A gerência foi notificada 
 
 ## Graficos de controle
 
-### Gráfico de controle X-barra para a amostra toda
-```{r}
-qcc(dados, type="xbar")
-```
-
-### Gráfico de controle X-barra para as primeiras observações
+### Gráfico de controle X-barra
 
 ```{r}
-qcc(dados[1:30,], type="xbar")
+q1 <- qcc(dados[1:30,], type="xbar", newdata= dados[31:40,])
 ```
-
-
-
 
 ### Grafico de controle Xbarra R
 
 
 ```{r}
-qcc(dados, type="R")
+q2 <- qcc(dados[1:30,], type="R", newdata= dados[31:40,])
 ```
-
 
 ### Grafico de controle Xbarra S
 
 
 ```{r}
-qcc(dados, type="S")
+q3 <- qcc(dados[1:30,], type="S", newdata= dados[31:40,])
 ```
 
-## 3.) Grafico da soma cumulativa
+Curiosamente, há 3 pontos violando as regras dentro dos dados sob controle, e nenhum ponto acima do 30 infringe as diretivas, como seria o esperado.
+
+## Grafico da soma cumulativa
 ```{r}
-cusum(dados[1:32,])
+q4 <- cusum(dados[1:30,], newdata= dados[31:40,])
 ```
+
+Este gráfico permitiu a rápida detecção de problemas, a partir do ponto 31.
+
+## CUMSUM tabular
+
+
+```{r cusum tabular}
+q5 <- cusum(dados[1:30,],newdata = dados[31:40,], decision.interval = 4, se.shift = 1, chart.all=FALSE)
+```
+No gráico da soma cumulativa, usamos um intervalo de decisão $H = 4$, indicando que o processo emitirá um sinal de que está fora de controle caso o número de desvios-padrão entre a linha central e os limites de controle seja igual a 4.
+Também usamos um $shift = 1$ indicando que toleramos um erro padrão de 1 em relação à média.
+
+Em comparação ao gráfico de $X-R$, o gráfico da **soma cumulativa**, detectou que o processo está fora de controle a partir da observação 31 e se mantém assim até a observação 40, como esperado. Já no gráfico de $X-R$, o processo é considerado fora de controle a partir da amostra 32, e as amostras 34, 35 e 36 que estão fora de controle foram consideradas dentro dos limites de especificação.
+
+## Mascara V
 
 
 ```{r}
@@ -98,32 +106,14 @@ mask <- vMask.method4(data = dm, mu0 = mu1, sleep = "PressEnter")
 ![](maskV.png)
 
 
+A máscará V foi capaz de detectar inconformidade dos dados a partir da observação 32.
 
 
-## 4.) CUMSUM tabular
-
-```{r}
-qcc(dados[1:40,], type="xbar")
-```
-
-
-```{r cusum tabular}
-cusum(dados[1:30,],newdata = dados[31:40,], decision.interval = 4, se.shift = 1)
-```
-No gráico da soma cumulativa, usamos um intervalo de decisão $H = 4$, indicando que o processo emitirá um sinal de que está fora de controle caso o número de desvios-padrão entre a linha central e os limites de controle seja igual a 4.
-Também usamos um $shift = 1$ indicando que toleramos um erro padrão de 1 em relação à média.
-
-Em comparação ao gráfico de $X-R$, o gráfico da **soma cumulativa**, detectou que o processo está fora de controle a partir da observação 31 e se mantém assim até a observação 40, como esperado. Já no gráfico de $X-R$, o processo é considerado fora de controle a partir da amostra 32, e as amostras 34, 35 e 36 que estão fora de controle foram consideradas dentro dos limites de especificação.
-
-## 5.) Mascara V
-
-## 6.) Verificar a diferença na detecção de anomalias para as técnicas acima
-
-## 7.) Estabelecer os Limites de Especificação
+## Limites de Especificação
 
 Para este exemplo vamos definir os limites de especificação,**Limite Inferior de Especificação (LSL)** e **Limite Superior de Especificação (USL)** de modo que $LSL = 12$ e $USL = 111$, medidos em mm. 
 
-## 8.) Avaliar a capacidade do processo
+## Capacidade do processo
 
 ### Definindo a variância da amostra
 
@@ -136,7 +126,6 @@ sigma <- mean(var(dados[1:30,]))
 cp <- (usl - lsl)/6*sigma
 cp
 ```
-
 
 Da tabela do Montgomery temos que $d_2 = 2.326$.
 

@@ -31,6 +31,7 @@ library(pander)
 
 ```{r, echo=TRUE, warning=FALSE}
 dados <- read_csv("dados/data-table-B7.csv", locale = locale(decimal_mark = ","))
+n <- length(dados$y)
 
 # Renomeando as colunas
 names(dados) <- c("Pressao", "Temp", "FluxoCO2", "Umidade", "Tamanho", "y")
@@ -124,6 +125,25 @@ Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y
  - apresentar os valores e analisar
  - determinar possiveis outliers e pontos de alavanca
 
+```{r}
+X <- matrix(c(rep(1,n), dados$Temp, dados$Tamanho), ncol = 3, nrow = n, byrow = FALSE)
+#X
+```
+
+```{r}
+Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
+#Y
+```
+# Matriz Hat
+```{r}
+H <- X %*% solve(t(X) %*% X) %*% t(X)
+h <- diag(H)
+summary(h)
+```
+
+
+
+
 ## 3. Análise de resíduos
 
   - ajuste do modelo
@@ -142,17 +162,6 @@ Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y
 fit <- lm(y ~ Temp + Tamanho, data = dados)
 summary(fit)
 ```
-
-
-$$Y = 80.134 +0.282 x_2 -16.065x_5$$
-
-### Interpretação dos coeficientes:
-
- - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ é de 80,134.
- - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperamos um aumento de 0,282 em $y$, com todo o resto mantido constante.
- - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, é esperado um descréscimo de 16,065 unidades em $y$, com todo o resto mantido constante.
- 
- 
 
 ```{r}
 res <- fit$residuals
@@ -217,6 +226,25 @@ Além disso, para determinar matematicamente se existe uma relação linear entr
 
 ## 5. Resíduos Escalonados
 
+
+
+```{r}
+(betas <- as.vector(fit$coefficients))
+```
+
+
+$$Y = 80.134 +0.282 x_2 -16.065x_5$$
+
+### Interpretação dos coeficientes:
+
+ - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ é de 80,134.
+ - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperamos um aumento de 0,282 em $y$, com todo o resto mantido constante.
+ - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, é esperado um descréscimo de 16,065 unidades em $y$, com todo o resto mantido constante.
+ 
+ 
+
+
+
   - estimativas do modelo (betas)
   - residuos e QMres
   - residuos padronizados
@@ -225,7 +253,91 @@ Além disso, para determinar matematicamente se existe uma relação linear entr
   - observações que possam ser remotas no espaço
   - histograma delas e analisar
 
+
+
+Os resíduos escalonados são úteis para encontrarmos outliers ou valores extremos. 
+
+```{r}
+# Resíduos 
+
+y_est <- as.vector(fit$fitted.values)
+res <- fit$residuals
+
+p <- 3 # número de parâmetros estimados
+
+QMRes <- sum(res^2) / (n-p)
+QMRes
+
+```
+
+
+**Resíduo Padronizado**
+
+O Resíduo padronizado ajuda na detecção de uma observação ser potencial outlier.
+
+```{r}
+res.padr <- res / sqrt( QMRes)
+res.padr
+```
+
+Aqui é preciso ter cuidado pois podemos superestimar a variância do resíduo.
+
+**Resíduo Studentizado Internamente**
+
+"Refinamento" do resíduo padronizado onde escalamos o resíduo pelo desvio-padrão 'exato' do i-ésimo resíduo e levamos em consideração onde o ponto da variável está no espaço.
+
+```{r}
+#  +++ pto => +hii => 1-hii -- => +++ res.int.st  
+res.int.st <- res / sqrt( QMRes * (1 - h))
+res.int.st
+
+```
+
+
+```{r}
+# CURIOSIDADE
+#obs
+p/n
+```
+
+**Resíduo Studentizado Externamente**
+
+Primeiro calculamos o **QMRes** do resíduo sem a $i$-ésima observação, com $i = 1,\ldots, n$ (cálculo das $n$ variâncias sem a $i$-ésima observação, com $i = 1,\ldots, n$).
+
+```{r}
+S_i <- ( (n - p) * QMRes - res^2 / (1 - h)  ) / (n - p - 1)
+S_i
+```
+
+Se não tivermos nem uma observação influente, esperamos que res.int.st esteja próximo de res.ext.st. Se tivermos a $i$-ésima observação influente então esperamos que o i-ésimo res.ext.st seja maior em comparação com o $i$-ésimo res.int.st.
+
+
+```{r}
+res.ext.st <- res / sqrt( S_i * (1 - h))
+res.ext.st
+```
+
+Vamos observar se há observações que podem ser remotas no espaço,
+
+```{r}
+sort(S_i)
+hist(S_i) 
+```
+
+
+
+
+
+
 ## 6. Comparações resíduos escalonados
+
+
+```{r}
+nome_colunas <- c("i", "e_i", "d_i", "r_i", "h_ij", "t_i")
+tab <- tibble(i= 1:16,res, res.ext.st, res.int.st,h,res.padr)
+kable(tab, col.names = nome_colunas, format = "markdown")
+```
+
 
   - quadro comparativo com os resultados obtidos no item anterior
   - análise de cada um dos resíduos calculados (aula 17)
@@ -234,6 +346,19 @@ Além disso, para determinar matematicamente se existe uma relação linear entr
 ## 7. Gráfico de Resíduos versus ajuste
 
   - análise do gráfico para cada um dos residuos calculados no item 5 vs valores ajustados
+  
+```{r}
+  tab %>% select(!c(i,h)) %>%
+  mutate(y = dados$y) %>% 
+  pivot_longer(!y) %>% 
+  ggplot() +
+  geom_point(aes(x = y, y = value)) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~name)
+```
+  
+  
+  
   
 ## 8. Transformações
 

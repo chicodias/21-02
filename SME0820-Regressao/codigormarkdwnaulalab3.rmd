@@ -1,0 +1,798 @@
+---
+title: "Aula de laboratório 3: Estudo da Adequabilidade do Modelo"
+author: "Daniel Camilo Fuentes Guzman"
+date: "12/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+#Primeiramente vamos verificar e carregar os pacotes que serão utilizados no estudo.
+
+if(!require(pacman)) install.packages("pacman")
+library(pacman)
+
+pacman::p_load(dplyr, car, rstatix, lmtest, ggpubr,
+               QuantPsyc, psych, scatterplot3d)
+
+```
+
+**Aula 16**
+
+Para o Modelo de regressão Linear $Y=\beta_0+\beta_1X_1+\ldots+\beta_kX_k+\xi$ (modelo de regressão linear múltipla com $k$ covariáveis) as seguintes suposições foram assumidas:
+
+- A relação entre variável resposta e as covariáveis es linear.
+
+- $E(\xi)=0$.
+
+- $V(\xi)=\sigma^2$.
+
+- $\xi_i^{\prime s}$ tem distribuição normal.
+
+**I)** Essas suposições são válidas? Como sabemos se o modelo está bem ajustado? Se o ajuste estiver dando errado, o que pode ser?.
+
+*Análise de resíduo é útil para verificar estas suposições. Os resíduos são uma medida de variabilidade de $y$ que o modelo não conseguiu explicar*.
+
+Se o modelo ajustado estiver correto, o resíduo deve mostrar tendências que confirmem estas suposições ou ao menos não deve exibir tendências que negam as suposições. 
+
+Outra coisa pode ser a necessidade de se fazer uma transformação nos dados ou na variável resposta.
+
+**II)** Existem outliers e/ou pontos influentes?
+
+Pode acontecer no nosso ajuste termos observações influentes e/ou pontos de alavanca.
+ 
+Ponto de alavanca não é necessariamente ponto influente.
+
+O ponto de alavanca pode até mudar a reta ajustada porém sem ele nos dados a reta do modelo não teria tanta diferença.
+
+O ponto influente puxa a reta do modelo ajustado e sem esse ponto a reta ajustada do modelo muda.
+
+*Para os pontos de alavanca e influentes podemos ter uma ideia deles pelos valores de hii observando a matriz hat.*
+
+**Leitura dos dados** 
+
+```{r}
+rm(list=ls(all=TRUE))
+```
+
+```{r}
+# Importante: selecionar o diretório de trabalho (working directory)
+# Isso pode ser feito manualmente: Session > Set Working Directory > Choose Directory
+setwd("C:/Users/camig/OneDrive/Documentos/R/Aulas lab PAE Regressão/Aula lab 3")
+```
+
+
+conjunto de dados:
+
+- $Y:$ Tempo de entrega,
+
+- $X_1:$ Número de itens,
+
+- $X_2:$ Distância.
+
+```{r}
+data <- read.table("dadosexemplotempodeentrega.csv", header = TRUE, sep = ";", dec = ",") # Carregamento do arquivo csv
+head(data)
+#View(data)                                 # Visualização dos dados em janela separada
+glimpse(data)                              # Visualização de um resumo dos dados
+```
+
+```{r}
+summary(data) #Resumo dos dados
+```
+
+
+```{r}
+attach(data)
+y <- tempodeentrega
+x1 <- numerodeitens
+x2 <- distancia
+dados <- data.frame(cbind(x1, x2, y))
+dados
+```
+```{r}
+glimpse(dados)                              # Visualização de um resumo dos dados
+```
+
+
+```{r}
+n <- length(dados$y)
+n
+```
+
+```{r}
+X <- matrix(c(rep(1,n), dados$x1, dados$x2), ncol = 3, nrow = n, byrow = FALSE)
+#X
+```
+
+```{r}
+Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
+#Y
+```
+# Matriz Hat
+```{r}
+H <- X %*% solve(t(X) %*% X) %*% t(X)
+h <- diag(H)
+summary(h)
+```
+
+
+```{r}
+sum(h)
+```
+Valores de $h_{ii}$ para os dados de tempo de entrega:
+```{r}
+dadoshii <- data.frame(cbind(x1, x2, h))
+dadoshii
+```
+
+# Análise de Resíduo
+
+Temos que: $e_i=Y_i - \widehat{Y}_i, \quad i=1,\ldots,n$. E portanto é o desvio padrão entre as observações e os valores ajustados, desta forma é também uma medida de variabilidade na variável resposta que não foi explicada pelo modelo de regressão. Assim, qualquer desvio em relação a suposição dos erros deveria aparecer nos resíduos. Desta forma, analisar os resíduos é uma maneira de descobrir vários tipos de não adequabilidade do modelo. 
+
+
+A seguir vamos fazer a análise dos resíduos por meio das funções prontas do R, vamos construir o modelo a partir das nossas variáveis Y, X1 e X2.
+
+```{r}
+## Construção do modelo:
+mod <- lm(y ~ x1 + x2, dados) #linear model
+```
+
+
+```{r}
+summary(mod)
+```
+
+```{r}
+## Análise gráfica:
+par(mfrow=c(2,2)) #Dois argumentos 2 linhas e 2 colunas
+```
+
+
+```{r}
+plot(mod) # Este comando vai me mostrar os gráficos seguintes correspondentes ao modelo proposto: 
+# 1) Gráfico resíduos vs valores ajustados onde conseguimos avaliar o pressuposto de linearidade, note que a linha vermelha tem que estar aproximadamente horizontal. 
+# 2) No segundo gráfico temos um QQ plot para verificar se os resíduos apresentaram distribuição normal, aqui note que se os resíduos apresentaram distribuição normal os pontos deveriam cair sobre a linha pontilhada. 
+# 3) No terceiro gráfico temos os resíduos estandardizados vs valores ajustados que serve para verificar homocedasticidade, aqui note que se os dados estiverem dispersos num padrão aproximadamente retangular a gente diz que existe homocedasticidade, não posso observar padrões triangulares. 
+# 4) No último gráfico podemos verificar a existência de outliers e possíveis pontos influentes, caso existam vai aparecer uma linha pontilhada vermelha e aqueles pontos vão aparecer para fora da linha. 
+```
+
+```{r}
+par(mfrow=c(1,1)) # Esta linha permite que a saída de cada gráfico fique sozinha.
+```
+
+**Teste de Normalidade**
+
+Note que aqui avaliamos uma $H_0: \text{ distribuição dos dados = Normal se } p>0,05$ e $H_1: \text{ distribuição dos dados } \neq \text{ Normal se } p \leq 0,05$ aqui podemos reforçar o observado no gráfico qq-plot.
+
+```{r}
+## Normalidade dos resíduos:
+shapiro.test(mod$residuals)
+```
+
+Note que nosso $P$ valor obtido indica que podemos considerar que os resíduos possuem distribuição aproximadamente normal. 
+
+**Resumo dos Resíduos**
+
+Podemos analisar os valores mais baixos e altos dos resíduos padronizados por meio da função summary.
+
+```{r}
+
+## Outliers nos resíduos:
+summary(rstandard(mod))
+```
+ 
+Veja os valores extremos versus a mediana indicando a possível existência de outliers.
+
+
+
+
+```{r}
+#Teste de Independência
+
+#Se os dados forem coletados no tempo, ou em ordem podemos usar o teste de Durbin-watson. Usado geralmente para dados longitudinais ou de medidas repetidas e no suposto dos residuos possuir distribuição normal. Este teste gera um valor que é cosiderado que não ha autocorrelação nos residuos quando dito valor é perto de 2 em geral é sugerido de 1.5 até 2.5 ou as vezes 1 até 3.
+
+## Independência dos resíduos (Durbin-Watson):
+#durbinWatsonTest(mod)
+
+#Note que nesse caso temos um valor de $1.1695$ indicando que possivelmente temos resíduos dependentes ou autocorrelacionados. 
+
+#O valor $p$ reforça essa estatística D-W pois esse valor vem de um teste que tem como hipótese nula que não há autocorrelação e hipótese alternativa que há autocorrelação. 
+#Como $P\text{-valor}=0.04<0.05$ rejeita-se a hipótese nula indicando que há evidência de autocorrelação.
+```
+
+
+
+**Teste para Homocedasticidade**
+
+Este é um outro teste que só funciona quando a distribuição é normal. Ele brinda um P-valor de um teste que tem como hipótese nula $H_0$ que há homocedasticidade e hipótese alternativa $H_1$ que não há homocedasticidade. Portanto, 
+$H_0: \text{ Há homocedasticidade } \rightarrow p>0.05$ e $H_1: \text{ Não há homocedasticidade } \rightarrow p\leq 0.05$ 
+
+```{r}
+
+## Homocedasticidade (Breusch-Pagan):
+bptest(mod)
+```
+
+Note que nosso p valor é $0.0024< 0.05$ indicando que há evidência estatística para afirmar que não há homocedasticidade, fato que pode ser comprovado no terceiro gráfico  apresentado anteriormente onde temos os resíduos estandardizados vs valores ajustados, aqui note que os dados estão dispersos num padrão aproximadamente triangular indicando a não existência de homocedasticidade.
+
+**Teste de Multicolinearidade**
+
+Um suposto que surge na regressão linear múltipla é que não deve existir multicolinearidade ou correlação muito alta entre as variáveis independentes(variáveis explicativas ou covariáveis). Conseguimos avaliar isso olhando o coeficiente de correlação de pearson $r$ e em geral é sugerido e considerado que há multicolinearidade quando $r>0.9\quad (\text{ ou } 0.8)$.
+
+```{r}
+## Ausência de Multicolinearidade
+
+pairs.panels(dados)
+
+### Multicolinearidade: r > 0.9 (ou 0.8)
+```
+
+Note que usando a função *pairs.panels* são cruzadas todas as variáveis duas a duas mostrando o coeficientes de correlação, gráficos de dispersão e os respectivos histogramas de cada variável.
+
+**VIF**
+
+Existe uma outra medida para avaliar a existência de multicolinearidade denotada $VIF$ onde o indicativo de existência de multicolinearidade é um valor acima de 10 $(VIF > 10)$.
+
+```{r}
+vif(mod)
+### Multicolinearidade: VIF > 10
+```
+
+Avaliar a multicolinearidade é fundamental dado que na existência dela vamos ter um impacto no ajuste do modelo obtendo resultados estranhos ou anormales. 
+
+## Resíduos Escalonados
+
+Os resíduos escalonados são úteis para encontrarmos outliers ou valores extremos. 
+
+```{r}
+# Resíduos 
+n <- length(y)
+betas <- as.vector(mod$coefficients)
+b0_est <- betas[1]
+b1_est <- betas[2]
+b2_est <- betas[3]
+
+y_est <- as.vector(mod$fitted.values)
+res <- y - y_est
+
+p <- 3 # número de parâmetros estimados
+
+QMRes <- sum(res^2) / (n-p)
+QMRes
+
+```
+
+
+**Resíduo Padronizado**
+
+O Resíduo padronizado ajuda na detecção de uma observação ser potencial outlier.
+
+```{r}
+res.padr <- res / sqrt( QMRes)
+res.padr
+```
+
+Aqui é preciso ter cuidado pois podemos superestimar a variância do resíduo.
+
+**Resíduo Studentizado Internamente**
+
+"Refinamento" do resíduo padronizado onde escalamos o resíduo pelo desvio-padrão 'exato' do i-ésimo resíduo e levamos em consideração onde o ponto da variável está no espaço.
+
+```{r}
+#  +++ pto => +hii => 1-hii -- => +++ res.int.st  
+res.int.st <- res / sqrt( QMRes * (1 - h))
+res.int.st
+
+```
+
+
+```{r}
+# CURIOSIDADE
+#obs
+p/n
+```
+
+**Resíduo Studentizado Externamente**
+
+Primeiro calculamos o **QMRes** do resíduo sem a $i$-ésima observação, com $i = 1,\ldots, n$ (cálculo das $n$ variâncias sem a $i$-ésima observação, com $i = 1,\ldots, n$).
+
+```{r}
+S_i <- ( (n - p) * QMRes - res^2 / (1 - h)  ) / (n - p - 1)
+S_i
+```
+
+Se não tivermos nem uma observação influente, esperamos que res.int.st esteja próximo de res.ext.st. Se tivermos a $i$-ésima observação influente então esperamos que o i-ésimo res.ext.st seja maior em comparação com o $i$-ésimo res.int.st.
+
+
+```{r}
+res.ext.st <- res / sqrt( S_i * (1 - h))
+res.ext.st
+```
+
+Vamos observar se há observações que podem ser remotas no espaço,
+
+```{r}
+sort(S_i)
+hist(S_i) 
+```
+
+**Aula 17**
+
+**Comparando os Valores dos Resíduos**
+
+```{r}
+cbind(res.padr, res.padr - res.int.st, res.int.st, h, c(rep(2*p/n)),res.int.st - res.ext.st, res.ext.st)
+```
+
+
+# Gráficos de Resíduos
+
+Os gráficos são uma forma simples e eficaz de verificar a adequabilidade dos supostos do modelo. 
+
+**Gráfico Resíduos Pelos Valores Ajustados**
+
+```{r}
+par(mfrow = c(2, 2))
+plot(res ~ y_est, ylab = "Residuos", xlab = "Valores ajustados", main = "Residuos")
+
+plot(res.padr ~ y_est, ylab = "Residuos padronizados", xlab = "Valores ajustados", main = "Padronizados", ylim = c(-3,3))
+abline(h=c(-2,2), lty = 3, col='red')
+
+plot(res.int.st ~ y_est, ylab = "Residuos internamente studentizados", xlab = "Valores ajustados", main = "Internamente studentizados")
+abline(h=c(-2,2), lty = 3, col='red')
+
+plot(res.ext.st ~ y_est, ylab = "Residuos externamente studentizados", xlab = "Valores ajustados", main = "Externamente studentizados")
+abline(h=c(-2,2), lty = 3, col='red')
+```
+
+
+# Gráfico dos Resíduos Pela Covariável
+
+```{r}
+par(mfrow = c(1, 1))
+plot(res ~ x1, ylab = "Residuos", xlab = "covariavel x1", main = "Residuos")
+```
+
+```{r}
+par(mfrow = c(1, 1))
+plot(res ~ x2, ylab = "Residuos", xlab = "covariavel x2", main = "Residuos")
+```
+
+Note que é necessário ajustarmos os resíduos do modelo antes de analisarmos a falta de ajuste.
+
+
+**Aula 19**
+
+
+**Fazendo uma Transformação Polinomial**
+
+
+```{r}
+mod2 <- lm(y ~ x1+x2 + I(scale(x1)^2)+I(scale(x2)^2) , data = dados)
+summary(mod2)
+shapiro.test(mod2$residuals) # testando normalidade dos resíduos
+```
+
+
+**CURIOSIDADE**
+
+```{r}
+library(nortest)
+lillie.test(mod2$residuals)
+```
+
+
+
+```{r}
+qqnorm(mod2$residuals)
+qqline(mod2$residuals, col = "red")
+```
+
+
+**Utilizando os Pacotes do R**
+
+**Resíduo Padronizado**
+
+```{r}
+pmod2 <- 5 # número de parâmetros estimados
+y_estmod2 <- as.vector(mod2$fitted.values)
+resmod2 <- y - y_estmod2
+
+QMResmod2 <- sum((mod2$residuals)^2)/(n-(pmod2))
+res.padr_mod2 <- resmod2 / sqrt( QMResmod2)
+
+```
+
+
+**Resíduo Internamente Studentizado**
+
+```{r}
+res.int.st_mod2<-rstandard(mod2) 
+```
+
+
+**Resíduo Externamente Studentizado**
+
+```{r}
+res.ext.st_mod2 <- rstudent(mod2) 
+```
+
+
+**Gráfico Resíduos Pelos Valores Ajustados**
+
+```{r}
+par(mfrow = c(2, 2))
+y_estmod2 <- mod2$fitted.values
+res_mod2 <- mod2$residuals
+
+plot(res_mod2 ~ y_estmod2, ylab = "Residuos", xlab = "Valores ajustados", main = "Residuos")
+
+plot(res.padr_mod2 ~ y_estmod2, ylab = "Residuos padronizados", xlab = "Valores ajustados", main = "Padronizados")
+abline(h=c(-2,2), col='red', lty=3)
+
+plot(res.int.st_mod2 ~ y_estmod2, ylab = "Residuos internamente studentizados", xlab = "Valores ajustados", main = "Internamente studentizados")
+
+plot(res.ext.st_mod2 ~ y_estmod2, ylab = "Residuos externamente studentizados", xlab = "Valores ajustados", main = "Externamente studentizados")
+```
+
+
+```{r}
+cbind(res.padr_mod2, res.padr_mod2 - res.int.st_mod2, res.int.st_mod2, h, c(rep(2*(pmod2)/n)),res.int.st_mod2 - res.ext.st_mod2, res.ext.st_mod2)
+which(res.padr_mod2>2)
+```
+
+
+Necessário ajustarmos os resíduos do modelo antes de analisarmos a falta de ajuste
+
+
+# Fazendo outra transformação, agora na variável resposta
+
+
+```{r}
+mod_logy <- lm(log(y) ~ x1+x2  , data = dados)
+summary(mod_logy)
+```
+
+
+**Significância da Regressão**
+
+```{r}
+anova(mod_logy)
+```
+
+**Interpretação**
+
+**Analisando os Resíduos**
+
+```{r}
+n <- length(dados$y)
+Xmod_logy <- NULL
+Xmod_logy <- matrix(c(rep(1,n),dados$x1,dados$x2), nrow=n, ncol=3 )
+Hmod_logy <- Xmod_logy %*% solve(t(Xmod_logy) %*% Xmod_logy) %*% t(Xmod_logy)
+hmod_logy <- diag(Hmod_logy)
+summary(hmod_logy)
+```
+
+
+**Curiosidade**
+
+```{r}
+sum(hmod_logy)
+```
+
+**Resíduos**
+
+```{r}
+n <- length(y)
+betasmod_logy <- as.vector(mod_logy$coefficients)
+b0_estmod_logy <- betasmod_logy[1]
+b1_estmod_logy <- betasmod_logy[2]
+b2_estmod_logy <- betasmod_logy[3]
+y_estmod_logy <- as.vector(mod_logy$fitted.values)
+resmod_logy <- log(y) - y_estmod_logy
+```
+
+
+```{r}
+p <- 3 # Número de Parâmetros Estimados
+
+SQResmod_logy <- sum((resmod_logy)^2)
+QMResmod_logy <- SQResmod_logy / (n-p)
+```
+
+```{r}
+shapiro.test(mod_logy$residuals) 
+par(mfrow = c(1, 1))
+qqnorm(mod_logy$residuals)
+qqline(mod_logy$residuals, col= 'red')
+```
+
+
+**Resíduos Escalonados**
+
+```{r}
+res_mod_logy <- mod_logy$residuals
+```
+
+
+
+
+**Resíduo Padronizado**
+
+```{r}
+res.padr_mod_logy <- resmod_logy / sqrt( QMResmod_logy)
+```
+
+
+**Resíduo Internamente Studentizado**
+
+```{r}
+res.int.st_mod_logy<-rstandard(mod_logy) 
+res.int.st_mod_logy2 <- res_mod_logy / sqrt( QMResmod_logy * (1 - h))
+res.int.st_mod_logy - res.int.st_mod_logy2
+```
+
+
+**Resíduo Externamente Studentizado**
+```{r}
+res.ext.st_mod_logy <- rstudent(mod_logy) 
+S_imod_logy <- ( (n - p) * QMResmod_logy - res_mod_logy^2 / (1 - h)  ) / (n - p - 1)
+
+res.ext.st_mod_logy2 <- res_mod_logy / sqrt( S_imod_logy * (1 - h))
+res.ext.st_mod_logy - res.ext.st_mod_logy2
+```
+
+
+
+**Gráfico Resíduos pelos Valores Ajustados**
+
+```{r}
+par(mfrow = c(2, 2))
+y_estmod_logy <- mod_logy$fitted.values
+
+plot(res_mod_logy ~ y_estmod_logy, ylab = "Residuos", xlab = "Valores ajustados", main = "Residuos")
+
+plot(res.padr_mod_logy ~ y_estmod_logy, ylab = "Residuos padronizados", xlab = "Valores ajustados", main = "Padronizados", ylim = c(-3, 3))
+abline(h = c(-2, 2), col = 'red', lty = 3)
+which(res.padr_mod_logy > 2)
+#which(res.padr_4 < 2 & res.padr_4 > 1.95)
+
+plot(res.int.st_mod_logy ~ y_estmod_logy, ylab = "Residuos internamente studentizados", xlab = "Valores ajustados", main = "Internamente studentizados")
+
+plot(res.ext.st_mod_logy ~ y_estmod_logy, ylab = "Residuos externamente studentizados", xlab = "Valores ajustados", main = "Externamente studentizados")
+```
+
+
+**Vamos observar se há observações que podem ser remotas no espaço**
+
+```{r}
+sort(S_imod_logy)
+hist(S_imod_logy)
+```
+
+  
+**Comparando os Valores dos Resíduos**
+
+```{r}
+cbind(res.padr_mod_logy, res.padr_mod_logy - res.int.st_mod_logy, res.int.st_mod_logy, hmod_logy, c(rep(2*p/n)), res.int.st_mod_logy - res.ext.st_mod_logy, 
+      res.ext.st_mod_logy)
+```
+
+
+Observem que nenhuma das observações está próxima de 2 nos resíduos padronizados. Quando observamos os valores de h, os resíduos estudentizados internamente e os resíduos estudentizados externamente vemos que o valor do resíduo de cada observação não muda muito, dessa forma esses valores não apresentam problema para o ajuste.
+
+```{r}
+par(mfrow=c(1,1))
+plot(res_mod_logy~x1+x2)
+```
+
+
+**Agora podemos analisar a falta de ajuste**
+
+**Aula 18**
+
+## Falta de Ajuste
+
+Este procedimento consiste em dividir a soma dos quadrados do resíduo em duas partes:
+
+_ *Soma de quadrados devido ao erro puro* e,
+
+_ *Soma de quadrados devido a falta de ajuste*
+
+É necessário ter réplicas, e as suposições em relação à normalidade, independência e variância constante são válidas. A única questão seria a adequabilidade do modelo linear aos dados. 
+
+**Analisando a falta de Ajuste**
+
+Só é possível analisar a falta de ajuste do modelo se houver réplicas, caso contrário o quadrado médio do erro puro da $0$ e $n-m = 0$ o que não permite o cálculo do teste.
+
+
+A Continuação será apresentado um exemplo de falta de ajuste tomado do livro guia da aula "Introdução à análise de regressão linear de Douglas Montgomery" edição 3. Os dados são os seguintes: 
+
+```{r}
+x<-c(1.0,1.0,2.0,3.3,3.3,4.0,4.0,4.0,4.7,5.0,5.6,5.6,5.6,6.0,6.0,6.5,6.9)
+y<-c(10.84,9.30,16.35,22.88,24.35,24.56,25.86,29.16,24.59,22.25,25.90,27.20,25.61,25.45,26.56,21.03,21.46)
+
+dados <- data.frame(cbind(x, y))
+View(dados)
+```
+
+Note que que estes dados indicam falta de ajuste a um modelo linear, 
+
+```{r}
+pairs.panels(dados)
+```
+
+
+Ajustando o modelo linear podemos verificar nossas suposições, 
+```{r}
+ajuste<-lm(y~x,data = dados)
+plot(ajuste)
+```
+Resumo do ajuste linear, 
+```{r}
+summary(ajuste)
+```
+Note que os coeficientes (Betas) estimados seriam:
+```{r}
+b0_est=ajuste$coefficients[1]
+b1_est=ajuste$coefficients[2]
+cbind(b0_est,b1_est)
+```
+
+```{r}
+# Gráfico da reta ajustada aos dados
+plot(x,y,
+     main = expression(paste("Reta ajustada com ", 
+                             hat(beta)[0],"=13.21388", 
+                             " e ", hat(beta)[1],"=2.130389")),
+     xlab = "x", ylab = "y")
+curve(b0_est + b1_est*x, add = T, col = 'red')
+
+```
+
+Anova do ajuste,
+```{r}
+anova(ajuste)
+```
+
+Vamos a iniciar definindo o vetor ajustado, número de parâmetros estimados, resíduos, soma do quadrado dos resíduos e dimensão da variável resposta,
+
+```{r}
+y_est <- ajuste$fitted.values
+res <- y - y_est
+n <- length(y)
+p <- 2 # numero de parametros estimados
+SQRes <- sum(res^2)
+```
+
+
+```{r}
+# Pacote para detectar linhas da matriz que sejam iguais.
+library(mgcv)
+xaux <- uniquecombs(x)
+#xaux
+```
+
+```{r}
+# Mostra quais linhas da matriz são iguais.
+ind <- attr(xaux,"index") 
+ind
+```
+
+**Soma dos quadrados do erro puro SQEP**
+
+```{r}
+SQEP <- 0
+```
+
+**Soma dos quadrados da falta de ajuste SQFA**
+
+```{r}
+SQFA <- 0
+```
+
+**linhas que são diferentes da matriz**
+
+```{r}
+m <- max(ind)
+for(i in 1:m ){
+  j <- ind == i
+  SQEP <- SQEP + sum( (y[j] - mean( y[j] ) )^2 )
+  SQFA <- SQFA + sum( (y_est[j] - mean( y[j] ))^2 )
+}
+```
+
+
+Lembre que a **SQRes** tem $(n - p)$ g.l.
+
+**SQE** tem $(n - m)$ g.l.
+
+```{r}
+SQEP 
+```
+
+**SQFA** tem $(n - p) - (n - m) = m - p$, g.l.
+
+```{r}
+SQFA
+```
+
+ 
+
+
+```{r}
+(SQEP + SQFA) - SQRes 
+SQEP + SQFA
+QMEP <- SQEP / (n - m)
+QMFA <- SQFA / (m - p)
+F0 <- QMFA / QMEP
+```
+
+
+
+**Hipótese**
+
+$H_0: E[Y] = \beta_0 + \beta_1.X$ vs $H_1: E[Y] \neq \beta_0 + \beta_1.X$
+
+```{r}
+alfa <- 0.05
+F_teo <- qf(alfa, df1 = m - p, df2 = n - m, lower.tail = F)
+
+F0 > F_teo
+```
+```{r}
+cbind(F0,F_teo)
+```
+
+
+
+Se $F_0 > F\text{_teo}$ rejeitamos $H_0$. Como $F1 > F0$ ao nível de $5\%$ de significância, temos evidências de que há falta de ajuste no modelo linear de regressão. 
+
+$p$-Valor
+
+```{r}
+pf(F0, df1 = m - p, df2 = n - m, lower.tail = F)
+```
+
+
+**CURIOSIDADE**
+
+Para olharmos a significância do modelo teríamos que fazer
+
+```{r}
+Sxy <- Sxy <- sum(x*y) - n*(mean(x)*mean(y))
+SQreg <- b1_est*Sxy
+QMReg <- SQreg
+F_0 <- QMReg/QMRes
+k <- 1
+alpha <- 0.05
+RR <- qf(alpha, df1 = k, df2 = n - p, lower.tail = F)
+
+anova(ajuste)
+
+```
+
+```{r}
+cbind(F_0,RR,F_0>RR)
+```
+
+Rejeitamos, $H_0: b_1=0$. Concluindo-se que pelo menos uma das cováriaveis contribui significativamente ao modelo. 
+
+
+
+
+**Aula 20**
+
+## Mínimos Quadrados Ponderados
+
+
+
+
+
+

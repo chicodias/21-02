@@ -36,6 +36,11 @@ library(ggpubr)
 library(gridExtra)
 library(GGally)
 library(pander)
+library(car)
+library(rstatix)
+library(lmtest)
+library(QuantPsyc)
+library(psych)
 ```
 
 ```{r, echo=TRUE, warning=FALSE}
@@ -395,7 +400,7 @@ kable(tab, col.names = nome_colunas, format = "markdown")
   - análise do gráfico para cada um dos residuos calculados no item 5 vs valores ajustados
   
 ```{r}
-  tab %>% select(!c(i,h)) %>%
+  tab %>% dplyr::select(!c(i,h)) %>%
   mutate(y = dados$y) %>% 
   pivot_longer(!y) %>% 
   ggplot() +

@@ -204,7 +204,18 @@ A partir dos gráficos acima, podemos notar que os resíduos não estão muito a
 ```{r}
 summary(res)
 ```
+```{r}
+#Análise gráfica
+## Análise gráfica:
+par(mfrow=c(2,2))
 
+plot(fit)
+```
+
+
+O resumo dos resíduos nos indica que provavelmente devem existir outliers, como o valor $12.625$, que se afasta muito da mediana e do 3º quantil.
+
+Vale notar que o gráfico dos resíduos studentizados x valores ajustados indiac que não há homocesdaticidade nos dados, uma vez que a linha vermelha apresenta um padrão retangular. Iremos confirmar essa hipótese com o teste de Breusch Pagan em breve.
 
 ```{r}
 pander(shapiro.test(res),
@@ -216,11 +227,37 @@ pander(shapiro.test(res),
 
 O teste acima confirma nossa suposição de que os resíduos têm distribuição Normal, pois, para um nível de significância de 97%, o valor-p obtido, 0,7669, não rejeita a hipótese nula, de normalidade dos dados.
 
+**Teste de Homoscedasticidade**
+
+```{r}
+#Teste de homoscedasticidade
+bptest(fit)
+```
+
+Dado que o p-valor para o teste de Breusch-Pagan é menor que 0.03, pode-se concluir que há heterocedasticidade nos dados, portanto rejeitamos a hipótese nula, $H_0$.
+
+**Teste de Multicolinearidade**
+
+Já verificamos anteriormente através dos gráficos de dispersão que não existe colinearidade entre a maioria das variáveis independentes. Podemos formalizar este resultado através da medida $VIF$
+
+```{r}
+## Ausência de Multicolinearidade
+
+vif(fit)
+```
+Considerando o nosso modelo reduzido, uma vez quE $VIF = 1$ para as duas covariáveis, podemos concluir que não existe correlação alguma entre elas.
+
+**ANOVA Teste**
+
 Além disso, para determinar matematicamente se existe uma relação linear entre a variável resposta $\boldsymbol{Y}$ e qualquer as outras covariáveis $\boldsymbol{X}_1,\ldots,\boldsymbol{X}_k$, é possível utilizar o teste **ANOVA**. Nele, queremos testar:
 
 **$H_0$**: Nenhuma das variáveis contribui significativamente ao modelo, versus:
 
 **$H_a$**: Pelo menos uma das covariáveis contribui significativamente ao modelo.
+
+```{r}
+anova(fit)
+```
 
 
 
@@ -376,6 +413,22 @@ kable(tab, col.names = nome_colunas, format = "markdown")
   - SQFA
   - análise do teste F_0
   
+**Criação de dataset artificial**
+
+Resolvemos utilizar um dataset que contém dados do comprimento da mandíbula de veados com relação à idade do animal.
+
+```{r}
+dados2 <- read_table("jaws.txt")
+#Ajustando um modelo linear
+fit2 <- lm(dados2$bone ~ dados2$age, data = dados2)
+summary(fit2)
+```
+
+
+**Gráfico dos resíduos vs Valores Ajustados**
+
+
+
   
 ## 10. Mínimos Quadrados Ponderados
 

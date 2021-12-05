@@ -448,4 +448,90 @@ summary(fit2)
 ## 10. Mínimos Quadrados Ponderados
 
   - proponha um caso ou exemplo onde seja necessário a aplicação da técnica dos mínimos quadrados e faça a respectiva análise
-  
+
+A Continuação será apresentado um exemplo simulado de falta de ajuste.
+
+Exemplo: Um pesquisador no setor de vendas queria estudar a associação entre o faturamento mensal médio de vendas de lanches (Y) e a despesa por mês com divulção(X). Os dados referentes a 30 lanchonetes encontram-se abaixo:
+
+```{r}
+x<-c(2,2,2,4,4.0,4,8,8,8,8,8,8,11,11,11,11,11,14,14,14,14,14,14,16,16,16,18,18,18,18)
+y<-c(89,73,72,80,112,99,79,114,116,92,131,149,109,157,103,147,82,113,149,121,99,103,110,170,189,122,203,115,217,204)
+gasto_venda= data.frame(cbind(x,y))
+```
+
+Note que que estes dados indicam falta de ajuste a um modelo linear
+
+```{r}
+pairs.panels(gasto_venda)
+```
+
+Portanto, devemos realizar o ajuste do modelo utilizando o Método de Mínimos Quadrados Ponderados. Para isso deve-se observar as estimativas do Erro Puro para cada nível de X, ou seja, os valores de Var(Y | X). Observe a função abaixo:
+
+```{r}
+ tapply(gasto_venda[,2],as.factor(gasto_venda[,1]),var)
+```
+```{r}
+gasto <-c(2,4,8,11,14,16,18)
+v<-c(91.0000,  259.0000,  645.1000,  987.8000,  323.3667, 1192.3333, 2202.9167)
+plot (gasto,v,xlab="Gasto",ylab="Variância (Venda|Gasto)" )
+```
+
+Observa-se que Var(Venda | Gasto) é proporcional ao Gasto. Sendo assim, o peso $W_i$ deve ser
+inversamente proporcional ao $X_i$.
+
+```{r}
+wi <- c(1/2 ,1/4 ,1/8 ,1/11 ,1/14 ,1/16 ,1/18)
+valores_peso= data.frame(cbind(gasto,wi))
+valores_peso %>% 
+  knitr::kable()
+```
+
+Abaixo encontra-se nosso comando R para o ajuste do modelo via Método de Mínimos Quadrados Ponderados e a respectiva saída do software com os coeficientes ajustados.
+
+### Cálculo do ajuste_ponderado 
+
+```{r}
+ajuste_ponderado=lm(formula = y ~ x, weights = 1/x)
+summary(ajuste_ponderado)
+```
+
+### Cálculo da Anova
+
+```{r}
+anova(ajuste_ponderado)
+```
+
+### Gráficos para Análise dos Resíduos
+
+```{r}
+plot(x,ajuste_ponderado$residuals,
+     main = expression(paste("Resíduos vs Gasto")),
+     xlab="Valores Ajustados Ponderados",ylab="Resíduos")
+```
+
+```{r}
+plot(ajuste_ponderado$fitted.values,ajuste_ponderado$residuals,
+     main = expression(paste(" Resíduos vs Valores ajustados")),
+     xlab="Valores Ajustados Ponderados",ylab="Resíduos")
+```
+
+As Figuras acima evidenciam que o problema da heterocedasticidade dos erros foi solucionado, pois nos dois
+gráficos os resíduos ponderados estão dispostos homogeneamente em torno de zero.
+
+Note também, que os coeficientes (Betas) estimados seriam:
+
+```{r}
+b0_est=ajuste_ponderado$coefficients[1]
+b1_est=ajuste_ponderado$coefficients[2]
+cbind(b0_est,b1_est)
+```
+
+### Gráfico da reta ajustada aos dados
+```{r}
+plot(x,y,
+ main = expression(paste("Reta ajustada com ",
+ hat(beta)[0],"=70.03587",
+ " e ", hat(beta)[1],"=4.978227")),
+ xlab = "x", ylab = "y")
+curve(b0_est + b1_est*x, add = T, col = 'red')
+```  

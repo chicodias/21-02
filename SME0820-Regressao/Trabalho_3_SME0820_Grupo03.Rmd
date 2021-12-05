@@ -1,5 +1,6 @@
 ---
-title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I - Trabalho 3 - Grupo 3"
+title: "SME0820 - Modelos de Regressão e Aprendizado Supervisionado I"
+subtitle: "Trabalho 3 - Grupo 3"
 author:
   - Brenda da Silva Muniz 11811603
   - Francisco Rosa Dias de Miranda 4402962
@@ -9,6 +10,14 @@ date: "Dezembro 2021"
 output: pdf_document
 ---
 
+
+\centering
+\raggedright
+\newpage
+\tableofcontents
+\newpage
+
+## Objetivo
 
 Este trabalho tem como objetivo ajustar um modelo de regressão linear múltipla a um conjunto de dados.
 
@@ -134,7 +143,8 @@ X <- matrix(c(rep(1,n), dados$Temp, dados$Tamanho), ncol = 3, nrow = n, byrow = 
 Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
 #Y
 ```
-# Matriz Hat
+
+
 ```{r}
 H <- X %*% solve(t(X) %*% X) %*% t(X)
 h <- diag(H)

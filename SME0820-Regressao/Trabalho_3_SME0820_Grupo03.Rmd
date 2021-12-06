@@ -122,9 +122,9 @@ A partir dos gráficos de barras, podemos ver que nossas cinco covariáveis, ape
 
 Outros gráficos que comparam as relações entre nossas variáveis é o gráfico de coordenadas paralelas e nossa matriz de correlação, ambos também explicitando a falta de correlação entre as covariáveis.
 
-### *Correlação de Pearson entre as covariáveis e $y$*
+### Correlações
 
-Visualizando a correlação entre as variáveis por meio de uma tabela:
+Visualizando a correlação de Pearson entre as covariáveis e $y$*  por meio de uma tabela:
 
 ```{r}
 C_tabela <- cor(data)
@@ -319,11 +319,11 @@ anova(fit)
 ## 5. Resíduos Escalonados
 
 
+Iniciamos essa sessão apresentando os coeficientes ajustados de nosso modelo.
 
 ```{r}
 (betas <- as.vector(fit$coefficients))
 ```
-
 
 $$Y = 80.134 +0.282 x_2 -16.065x_5$$
 
@@ -333,6 +333,18 @@ $$Y = 80.134 +0.282 x_2 -16.065x_5$$
  - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperamos um aumento de 0,282 em $y$, com todo o resto mantido constante.
  - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, é esperado um descréscimo de 16,065 unidades em $y$, com todo o resto mantido constante.
  
+ 
+
+É útil trabalharmos com o escalonamento dos resíduos para encontrarmos **outliers**, observações que estejam de alguma maneira separadas do resto dos dados.
+
+### Quadrado Médio dos Resíduos
+
+```{r}
+p <- 3 # número de parâmetros estimados
+
+QMRes <- sum(res^2) / (n-p)
+cat("QMres: ", QMRes)
+```
  
 
 
@@ -346,45 +358,38 @@ $$Y = 80.134 +0.282 x_2 -16.065x_5$$
   - histograma delas e analisar
 
 
+### Resíduo Padronizado
 
-Os resíduos escalonados são úteis para encontrarmos outliers ou valores extremos. 
+Sendo a variância média dos resíduos estimada por $QM_{res}$, para torna-lá unitária basta fazermos:
 
-```{r}
-# Resíduos 
+$$d_i = \frac{e_i}{\sqrt{QM_{res}}},\ \  i = 1, ..., n.$$
 
-y_est <- as.vector(fit$fitted.values)
-res <- fit$residuals
-
-p <- 3 # número de parâmetros estimados
-
-QMRes <- sum(res^2) / (n-p)
-QMRes
-
-```
-
-
-**Resíduo Padronizado**
-
-O Resíduo padronizado ajuda na detecção de uma observação ser potencial outlier.
+Consequentemente, valores grandes (como, digamos, $d_i > 3$) potencialmente indica um **outlier**.
 
 ```{r}
 res.padr <- res / sqrt( QMRes)
 res.padr
 ```
 
-Aqui é preciso ter cuidado pois podemos superestimar a variância do resíduo.
+Note que $QM_{res}$ é apenas uma aproximação para a variância do i-ésimo resíduo, o que pode ocasionar em distorções em sua estimação.
 
-**Resíduo Studentizado Internamente**
+### Resíduo Studentizado Internamente
 
-"Refinamento" do resíduo padronizado onde escalamos o resíduo pelo desvio-padrão 'exato' do i-ésimo resíduo e levamos em consideração onde o ponto da variável está no espaço.
+Podemos refinar o método anterior escalonando o resíduo pelo desvio-padrão 'exato' do i-ésimo resíduo e levando em consideração onde o ponto da variável está no espaço.
+
+Utilizando a matriz hat, podemos estimar a variância do i-ésimo resíduo como sendo:
+
+$$Var(e_i) = \sigma^2(1-h_{ii})$$
+
+Onde $h_{ii}$ é o i-ésimo elemento da diagonal da matriz Hat. Ainda mais, como essa é uma medida de **locação** do i-ésimo ponto com respeito a $x$, a variância de $e_i$ depende de onde o ponto $x_i$ está.
 
 ```{r}
 #  +++ pto => +hii => 1-hii -- => +++ res.int.st  
 res.int.st <- res / sqrt( QMRes * (1 - h))
 res.int.st
-
 ```
 
+Não se observou nenhum outlier segundo o critério discutido acima.
 
 ```{r}
 # CURIOSIDADE
@@ -392,7 +397,7 @@ res.int.st
 p/n
 ```
 
-**Resíduo Studentizado Externamente**
+### Resíduo Studentizado Externamente
 
 Primeiro calculamos o **QMRes** do resíduo sem a $i$-ésima observação, com $i = 1,\ldots, n$ (cálculo das $n$ variâncias sem a $i$-ésima observação, com $i = 1,\ldots, n$).
 
@@ -448,8 +453,8 @@ kable(tab, col.names = nome_colunas, format = "markdown")
   geom_hline(yintercept = 0) +
   facet_wrap(~name)
 ```
-  
-  
+
+Não foi observado nenhum padrão nos plots residuais, o que nos fornece indícios gráficos da aleatoriedade dos resíduos.
   
   
 ## 8. Transformações
@@ -473,9 +478,9 @@ kable(tab, col.names = nome_colunas, format = "markdown")
 Resolvemos utilizar um dataset que contém dados do comprimento da mandíbula de veados com relação à idade do animal.
 
 ```{r}
-dados2 <- read_table("jaws.txt")
+dados2 <- read_delim("jaws.txt", "\t")
 #Ajustando um modelo linear
-fit2 <- lm(dados2$bone ~ dados2$age, data = dados2)
+fit2 <- lm(bone ~ age, data = dados2)
 summary(fit2)
 ```
 

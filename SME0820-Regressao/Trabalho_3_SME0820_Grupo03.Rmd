@@ -175,20 +175,26 @@ Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y
 
 ## 2. Matriz Hat
 
- - valores da matriz hat
- - apresentar os valores e analisar
- - determinar possiveis outliers e pontos de alavanca
+Criando e visualizando a nossa matriz X, em que a primeira coluna corresponde a uma repetição de números 1, a segunda na covariável x1 e, a terceira, x2:
 
 ```{r}
-X <- matrix(c(rep(1,n), dados$Temp, dados$Tamanho), ncol = 3, nrow = n, byrow = FALSE)
-#X
+X <- matrix(c(rep(1,n), x1, x2), ncol = 3, nrow = n, byrow = FALSE)
+
+X
 ```
+Definindo e visualizando nossa matriz Y, que contém apenas uma coluna e é a da variável preditora y - o vetor resposta:
 
 ```{r}
 Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
-#Y
+
+Y
 ```
 
+A partir disso, podemos construir nossa matriz HAT, em que:
+
+$Hat: H = X(X^TX)^{−1}X^T$, onde
+$h_{ii}$: i-esimo elemento da diagonal de H;
+$h_{ij}$: elemento ij da matriz H.
 
 ```{r}
 H <- X %*% solve(t(X) %*% X) %*% t(X)
@@ -196,8 +202,33 @@ h <- diag(H)
 summary(h)
 ```
 
+```{r}
+dadoshii <- data.frame(cbind(x1, x2, h))
 
+View(dadoshii)
 
+```
+
+Temos que:
+
+$h_{ii} = \frac{1}{n} +\frac{(X_i − \overline{X})^2}{S_{XX}}$
+
+Levando isso em consideração, $h_{ii}$ deve atingir seu menor valor no ponto $\overline{X}$, se igualando a $\frac{1}{n}$. 
+Temos então que $h_{ii}$ é uma medida de alavanca, que nos informa o quão distante do centro a observação está. Ou seja, quanto mais a observação se distancia de $\overline{X}$, mais $h_{ii}$ cresce. Com isso, é possível determinarmos possível outliers - uma vez que, se $h_{ii}$ for relativamente maior do que os das demais observações, temos que ele provavelmente será um ponto influente e distante dos demais (e da média).
+
+Analisando os resultados obtidos na tabela acima, e aplicando esses pontos, podemos observar que todos nossos pontos possuem a mesma influência, uma vez que $h_{ii}$ se mantém constante para todas as observações. Logo, provavelmente também não contamos com outliers dentre as nossas observações.
+
+Calculando $\frac{1}{n}$ e o comparando com nosso $h_{ii}$:
+
+```{r}
+
+frac_n = 1/n
+
+frac_n
+
+```
+
+Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamente uniforme dentre eles da média. 
 
 ## 3. Análise de resíduos
 

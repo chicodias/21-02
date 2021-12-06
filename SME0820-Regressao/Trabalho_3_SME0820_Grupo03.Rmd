@@ -232,51 +232,33 @@ Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que 
 
 ## 3. Análise de resíduos
 
-  - ajuste do modelo
-  - resumo do modelo
-  - resíduos vs valores ajustados
-  - qqplot
-  - raiz de resituos estandartizados versus valores ajustados
-  - distancia de cook (residuos estandartizados vs pontos de alavanca)
-  
-  
+Primeiramente, vamos construir nosso modelo e utilizar a função _summary_ para observarmos as principais medidas descritivas do mesmo, sendo:
 
 ```{r}
-
-# Modelo  reduzido do Ex 2
-
-fit <- lm(y ~ Temp + Tamanho, data = dados)
-summary(fit)
+mod <- lm(y ~ x1 + x2, dados) 
 ```
 
 ```{r}
-res <- fit$residuals
-
-p <- ggplot(tibble(res), aes(sample = res)) +
-  stat_qq() +
-  stat_qq_line() +
-  labs(
-    x = "Amostra",
-    y = "Quantis Teóricos",
-    title = "Normal Q-Q Plot"
-  ) +
-  theme_pubclean()
-
-q <- ggplot(tibble(res), aes(res)) +
-  geom_histogram(aes(y = ..density..), binwidth = 4, stat = "bin") +
-  labs(
-    title = "Histograma dos resíduos",
-    y = "Densidade",
-    x = "Valor"
-  ) +
-  theme_pubclean()
-
-grid.arrange(p, q, ncol = 2)
+summary(mod)
 ```
 
-O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado que os dados têm distribuição normal, enquanto que o histograma dos resíduos nos fornece aproximações a respeito da distribuição de $\xi$.
+```{r}
+par(mfrow=c(2,2)) 
+```
 
-A partir dos gráficos acima, podemos notar que os resíduos não estão muito afastados dos quantis teóricos, embora sua distribuição seja ligeiramente assimétrica, conforme constatado no histograma. Podemos também utilizar o teste de Shapiro-Wilk para verificar a normalidade dos dados.
+```{r}
+plot(mod) 
+```
+
+1) Para a primeira plotagem, obtemos o gráfico dos resíduos comparados com os valores ajustados, onde é possível avaliar o pressuposto de linearidade. 
+Nesse gráfico, podemos notar que a linha vermelha está muito próxima de estar completamente no eixo horizontal, uma vez que o balanceamento de valores é muito equilibrado. Ou seja, não temos nenhuma observação que influencia nosso ajuste muito fortemente - seja positivamente ou negativamente.
+
+2) Já no segundo gráfico temos um QQ plot. Nele, podemos verificar se os resíduos apresentaram distribuição normal.  
+Podemos ver que, existe sim uma tendência à esta distribuição - principalmente nos pontos  mais centrais; entretanto, há um leve afastamento nas extremidades, e um falta de preenchimento de espaço no centro do gráfico, o que pode nos indicar que essa tendência não é tão forte.
+
+3) No terceira gráfico era esperado termos os resíduos estandardizados vs valores ajustados, que serviria para verificar a  homocedasticidade. Entretanto, por conta dos valores da nossa matriz HAT serem uniformes, não é possível realizar tal plotagem. 
+
+4) Na última plotagem, podemos verificar caso existam dutliers e possíveis pontos influentes, reiterando o pressuposto no item 2 do trabalho. Como podemos ver, há uma influência alternada entre positiva e negativa, porém em aproximadamente mesmos graus de intensidade e distanciamento. Também podemos verificar a ausência de outliers, uma vez que, se houvesse, deveria haver uma linha pontilhada vermelha com pontos para fora desta. 
 
 
 

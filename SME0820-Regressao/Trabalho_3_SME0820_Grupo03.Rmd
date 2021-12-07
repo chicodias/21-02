@@ -43,22 +43,21 @@ library(lmtest)
 library(QuantPsyc)
 library(psych)
 library(corrplot)
+library(EnvStats)
 ```
 
-```{r, echo=TRUE, warning=FALSE}
+```{r, echo=TRUE, warning=FALSE, message = F}
 dados <- read_csv("dados/data-table-B7.csv", locale = locale(decimal_mark = ","))
 n <- length(dados$y)
 
 # Renomeando as colunas
 names(dados) <- c("Pressao", "Temp", "FluxoCO2", "Umidade", "Tamanho", "y")
-
-head(dados)
 ```
 
 
 ## 1. Análise Descritiva dos dados
 
-Temos cinco covariáveis quantitativas e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de aceite por lote de amendoim**. Renomeando nossas covariáveis para facilitar a manipulação destas, temos:
+Temos cinco covariáveis quantitativas em nosso dataset:
 
 - $Y:$ Rendimento total de aceite por lote de amendoim*.
 
@@ -72,34 +71,16 @@ Temos cinco covariáveis quantitativas e a coluna $y$ corresponde a nossa variá
 
 - $X_5:$ Tamanho
 
-Realizando a concatenação das mesmas em um data frame:
-
-```{r}
-x1 <- dados$Pressao
-x2 <- dados$Temp
-x3 <- dados$FluxoCO2
-x4 <- dados$Umidade
-x5 <- dados$Tamanho
-y <- dados$y
-
-data <- data.frame(cbind(x1, x2, x3, x4, x5, y))
-```
+e a coluna $y$ corresponde a nossa variável preditora que determina **o rendimento total de aceite por lote de amendoim**.
 
 Para obsermos um resumo dos dados, podemos utilizar as funções _glimpse_ e _summary_, que nos retornarão, respectivamente, os tipos de variáveis e o máximo de observações possíveis no espaço proposto na horizontal; e, medidas descritivas das nossas variáveis, sendo estas os valores mínimo e máximo das observações, o primeiro quantil, a mediana, a média e o terceiro quantil.
 
 ```{r}
-glimpse(data) 
+glimpse(dados)
 ```
 
 ```{r}
-summary(data) 
-```
-
-Salvando o número total de observações em uma variável:
-
-```{r}
-n <- length(dados$y)
-n
+pander(summary(data), "Sumário do conjunto de dados")
 ```
 
 ### Gráficos de barras
@@ -124,25 +105,15 @@ Outros gráficos que comparam as relações entre nossas variáveis é o gráfic
 
 ### Correlações
 
-Visualizando a correlação de Pearson entre as covariáveis e $y$*  por meio de uma tabela:
-
-```{r}
-C_tabela <- cor(data)
-C_tabela
-```
-
-Fazendo uso destas correlações dispostas, podemos construir uma matriz de gráficos para expor as relações entre as variáveis. Com isso, poderemos visualizar as densidades de frequência na diagonal desta matriz, gráficos de dispersão no painel triangular inferior e  coeficientes das correlações no superior. Também faremos outro tipo de gráfico de correlação para auxiliar esse processo: um mapa de calor com visualização gráfica por meio de círculos.
+Podemos visualizando a correlação de Pearson entre as covariáveis e $y$* por meio de um gráfico de pares: fazendo uso destas correlações dispostas, podemos construir uma matriz de gráficos para expor as relações entre as variáveis. Com isso, podemos visualizar as densidades de frequência na diagonal, gráficos de dispersão no painel triangular inferior e  coeficientes das correlações no superior.
 
 ```{r message = F}
-ggpairs(data, lower = list(continuous = "smooth")) + ggtitle("Gráfico de pares - Dados")
+ggpairs(dados) + ggtitle("Gráfico de pares - Dados")
 ```
-```{r}
-corrplot(C_tabela, method = "circle")
-```
+
 Observando o comportamento da correlação das nossas variávies e analisando os resultados dispostos, vemos que nenhuma das covariáveis se correlacionam entre si. Além disso, a maioria apresenta uma correlação muito baixa com a variável preditora - com exceção de x5 (Tamanho) - que apresenta uma correlação alta -, e x2 - que, apesar de apresentar uma correlação relativamente baixa, se torna significante devido ao cenário obtido.
 
-Essa ausência de correlação pode ser explicada pelo comportamento em "X" da maior parte das covariáveis, que também pode ser notado através do gráfico de coordenadas paralelas:
-
+Essa ausência de correlação pode ser explicada pelo comportamento cruzado da maior parte das covariáveis, que também pode ser notado através do gráfico de coordenadas paralelas, repare o padrão em "X":
 
 ```{r  out.height="70%"}
 ggparcoord(dados) + labs(
@@ -153,8 +124,7 @@ ggparcoord(dados) + labs(
   theme_minimal()
 ```
 
-
-Definindo a covariável Tamanho como mapeamento para cor, podemos dispor outra versão dos gráficos de pares:
+Definindo a covariável Tamanho como mapeamento para cor, podemos dispor outra versão dos gráficos de pontos vistos acima:
 
 ```{r  out.height="70%"}
 dados %>%
@@ -199,11 +169,15 @@ $h_{ij}$: elemento ij da matriz H.
 ```{r}
 H <- X %*% solve(t(X) %*% X) %*% t(X)
 h <- diag(H)
-summary(h)
+pander(summary(h), "Sumário da diagonal da matriz hat obtida")
 ```
+
+
+Devido ao comportamento singular de nosso conjunto de dados observado anteriormente na análise exploratória, todos os valores da diagonal da matriz hat são iguais, o que torna o exemplo muito interessante do ponto de vista do aprendizado.
 
 ```{r}
 dadoshii <- data.frame(cbind(x1, x2, h))
+
 
 View(dadoshii)
 
@@ -226,7 +200,9 @@ frac_n = 1/n
 
 frac_n
 
-```
+fit <- lm(y ~ Temp + Tamanho, data = dados)
+pander(fit, "Ajuste do modelo linear reduzido")
+
 
 Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamente uniforme dentre eles da média. 
 
@@ -270,7 +246,7 @@ Podemos ver que, existe sim uma tendência à esta distribuição - principalmen
   - teste de multicolinearidade
 
 ```{r}
-summary(res)
+pander(summary(res), "Sumário dos resíduos")
 ```
 ```{r}
 #Análise gráfica
@@ -299,7 +275,7 @@ O teste acima confirma nossa suposição de que os resíduos têm distribuição
 
 ```{r}
 #Teste de homoscedasticidade
-bptest(fit)
+pander(bptest(fit), "Teste de Breush-Pagan para o modelo ajustado")
 ```
 
 Dado que o p-valor para o teste de Breusch-Pagan é menor que 0.03, pode-se concluir que há heterocedasticidade nos dados, portanto rejeitamos a hipótese nula, $H_0$.
@@ -324,7 +300,7 @@ Além disso, para determinar matematicamente se existe uma relação linear entr
 **$H_a$**: Pelo menos uma das covariáveis contribui significativamente ao modelo.
 
 ```{r}
-anova(fit)
+pander(anova(fit), "Tabela ANOVA do modelo ajustado")
 ```
 
 
@@ -434,7 +410,7 @@ sort(S_i)
 hist(S_i) 
 ```
 
-
+$\hat{y_i}$
 
 
 
@@ -443,9 +419,9 @@ hist(S_i)
 
 
 ```{r}
-nome_colunas <- c("i", "e_i", "d_i", "r_i", "h_ij", "t_i")
+nome_colunas <- c('Observação $i$', '$e_i = y_i - \\hat{y_i}$', "d_i", "r_i", "h_ij", "t_i")
 tab <- tibble(i= 1:16,res, res.ext.st, res.int.st,h,res.padr)
-kable(tab, col.names = nome_colunas, format = "markdown")
+pander(tab, col.names = nome_colunas, format = "markdown")
 ```
 
 
@@ -455,20 +431,38 @@ kable(tab, col.names = nome_colunas, format = "markdown")
   
 ## 7. Gráfico de Resíduos versus ajuste
 
-  - análise do gráfico para cada um dos residuos calculados no item 5 vs valores ajustados
-  
+Nessa sessão, avaliaremos os gráficos de cada um dos resíduos escalonados versus ajuste, obtidos no item anterior. Esse tipo de análise pode contribuir em exibir padrões não modulados pelo ajuste, sendo desejável a impressão de uma banda horizontal contendo os resíduos.
+
 ```{r}
-  tab %>% dplyr::select(!c(i,h)) %>%
-  mutate(y = dados$y) %>% 
-  pivot_longer(!y) %>% 
-  ggplot() +
-  geom_point(aes(x = y, y = value)) +
-  geom_hline(yintercept = 0) +
-  facet_wrap(~name)
+res_types <- c('res'= "Resíduos",
+                  'res.ext.st' = "Resíduos Studentizados Externamente",
+                  'res.int.st' = "Resíduos Studentizados Internamente",
+                  'res.padr' = "Resíduos Padronizados") %>% 
+            as_labeller()
 ```
 
-Não foi observado nenhum padrão nos plots residuais, o que nos fornece indícios gráficos da aleatoriedade dos resíduos.
+
+```{r}
+  fit_vs_val <- tab %>% bind_cols(fitted = fit$fitted.values) %>%
+  dplyr::select(!c(i,h)) %>%
+  pivot_longer(!fitted)
   
+  fit_vs_val %>% 
+  ggplot() +
+  geom_hline(yintercept = 0) +
+  geom_hline(yintercept = -2, lty = 3, color = "red") +
+  geom_hline(yintercept = 2, lty = 3, color = "red") +
+  facet_wrap(~name, scales = "free_y", labeller = res_types) +
+  geom_point(aes(x = fitted, y = value)) +
+  labs(title = "Resíduos versus ajuste",
+       x = "Valor ajustado",
+       y = "Resíduo") +
+  theme_pubclean()
+```
+
+Não foi observado nenhum padrão nos plots residuais, o que nos fornece indícios gráficos de uma certa dispersão aleatória dos resíduos, com os escalonamentos aparentando ter contribuído para dimição da variância, como seria esperado.  
+
+
   
 ## 8. Transformações
 
@@ -477,31 +471,39 @@ Não foi observado nenhum padrão nos plots residuais, o que nos fornece indíci
 
 ## 9. Teste de Falta de ajuste
 
-  - proponha um caso ou exemplo onde seja necessario a aplicação do teste da falta de ajuste
-  - residuos vs valores ajustados
-  - mostre a falta de ajuste dos dados
-  - ajuste o modelo
-  - ANOVA
-  - SQEP
-  - SQFA
-  - análise do teste F_0
-  
-**Criação de dataset artificial**
-
-Resolvemos utilizar um dataset que contém dados do comprimento da mandíbula de veados com relação à idade do animal.
+Adaptamos um dataset que contém dados do comprimento da mandíbula de veados com relação à idade do animal, arredondando os valores das variáveis para a inclusão de réplicas, a fim de simularmos a falta de ajuste do modelo, e propor uma transformação que solucione o problema.
 
 ```{r}
-dados2 <- read_delim("jaws.txt", "\t")
+dados2 <- read_delim("dados/mandibulas.txt", ",")
 #Ajustando um modelo linear
 fit2 <- lm(bone ~ age, data = dados2)
-summary(fit2)
+pander(fit2, format = "markdown")
+```
+
+```{r}
+dados2 %>% ggplot() +
+  geom_point(aes(x= age, y = bone))
+```
+
+```{r}
+tibble(res = fit2$residuals, fit = fit2$fitted.values) %>%
+  ggplot(aes(x = fit, y = res)) +
+  geom_point() + 
+stat_smooth(method = "lm", formula = y ~ x + I(x^2), size = 0) +
+  labs(title = "Resíduos versus ajuste",
+       x = "Valor ajustado",
+       y = "Resíduo") +
+  theme_pubclean()
 ```
 
 
-**Gráfico dos resíduos vs Valores Ajustados**
+Nota-se um certo padrão quadrático no gráfico acima, o que nos sugere indícios da falta de ajuste do modelo.
 
-
-
+  
+```{r}
+anovaPE(fit2)
+```
+  
   
 ## 10. Mínimos Quadrados Ponderados
 

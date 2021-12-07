@@ -203,7 +203,7 @@ frac_n
 fit <- lm(y ~ Temp + Tamanho, data = dados)
 pander(fit, "Ajuste do modelo linear reduzido")
 
-
+```
 Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamente uniforme dentre eles da média. 
 
 ## 3. Análise de resíduos
@@ -466,8 +466,135 @@ Não foi observado nenhum padrão nos plots residuais, o que nos fornece indíci
   
 ## 8. Transformações
 
-  - proponha uma transformação para seu modelo que corrija possíveis problemas e compare
-  - refazer os itens de 1 a 7 com o novo modelo
+*** Análise gráfica dos gráfico dos resíduos pelas covariáveis ***
+```{r}
+par(mfrow = c(1, 1))
+plot(res ~ dados$Temp, ylab = "Residuos", xlab = "covariavel temp", main = "Residuos versus Temperatura")
+```
+
+```{r}
+par(mfrow = c(1, 1))
+plot(res ~ dados$Tamanho, ylab = "Residuos", xlab = "covariavel tamanho", main = "Residuos versus Tamanho")
+```
+
+Conforme constatado através das análises realizadas acima e nas questões anteriores, é fácil concluir que o ajuste do modelo de regressão linear simples com as variáveis na sua forma original é inadequado neste caso. 
+
+A fim de solucionar os problemas, como não há uma relação bem definida entre as covariáveis, optaremos por uma transformação na variável resposta.
+
+Um fato relevante para ser levado em conta antes da transformação, é que conforme observado na questão 3 e comprovado pelo teste de shapiro, os resíduos apresentam distribuição normal. No entando, foi concluído pelo teste de Breush-Paganque há heterocedasticidade nos dados; nossos dados não possuem um padrão, e a variância não é constante.
+
+### Fazendo a tranformação na variável resposta
+```{r}
+mod_logy <- lm(log(y) ~ dados$Temp+dados$Tamanho , data = dados)
+summary(mod_logy)
+```
+**Significância da Regressão**
+```{r}
+anova(mod_logy)
+```
+
+** Interpretação **
+** Analisando os Resíduos **
+
+```{r}
+n <- length(dados$y)
+Xmod_logy <- NULL
+Xmod_logy <- matrix(c(rep(1,n),x2,x5), nrow=n, ncol=3 )
+Hmod_logy <- Xmod_logy %*% solve(t(Xmod_logy) %*% Xmod_logy) %*% t(Xmod_logy)
+hmod_logy <- diag(Hmod_logy)
+summary(hmod_logy)
+```
+# Resíduos
+```{r}
+n <- length(y)
+betasmod_logy <- as.vector(mod_logy$coefficients)
+b0_estmod_logy <- betasmod_logy[1]
+b1_estmod_logy <- betasmod_logy[2]
+b2_estmod_logy <- betasmod_logy[3]
+y_estmod_logy <- as.vector(mod_logy$fitted.values)
+resmod_logy <- log(y) - y_estmod_logy
+```
+
+
+
+```{r}
+p <- 3 # Número de Parâmetros Estimados
+SQResmod_logy <- sum((resmod_logy)^2)
+QMResmod_logy <- SQResmod_logy / (n-p)
+```
+
+```{r}
+shapiro.test(mod_logy$residuals)
+```
+
+```{r}
+par(mfrow = c(1, 1))
+qqnorm(mod_logy$residuals)
+qqline(mod_logy$residuals, col= 'red')
+```
+
+**Resíduos Escalonados**
+```{r}
+res_mod_logy <- mod_logy$residuals
+```
+
+**Resíduo Padronizado**
+```{r}
+res.padr_mod_logy <- resmod_logy / sqrt( QMResmod_logy)
+```
+
+**Resíduo Internamente Studentizado**
+```{r}
+res.int.st_mod_logy<-rstandard(mod_logy)
+res.int.st_mod_logy2 <- res_mod_logy / sqrt( QMResmod_logy * (1 - h))
+res.int.st_mod_logy - res.int.st_mod_logy2
+```
+
+**Resíduo Externamente Studentizado**
+```{r}
+res.ext.st_mod_logy <- rstudent(mod_logy)
+S_imod_logy <- ( (n - p) * QMResmod_logy - res_mod_logy^2 / (1 - h) ) / (n - p - 1)
+
+res.ext.st_mod_logy2 <- res_mod_logy / sqrt( S_imod_logy * (1 - h))
+res.ext.st_mod_logy - res.ext.st_mod_logy2
+```
+
+**Gráfico Resíduos pelos Valores Ajustados**
+```{r}
+par(mfrow = c(2, 2))
+y_estmod_logy <- mod_logy$fitted.values
+plot(res_mod_logy ~ y_estmod_logy, ylab = "Residuos", xlab = "Valores ajustados", main = "Res
+iduos")
+plot(res.padr_mod_logy ~ y_estmod_logy, ylab = "Residuos padronizados", xlab = "Valores ajust
+ados", main = "Padronizados", ylim = c(-3, 3))
+abline(h = c(-2, 2), col = 'red', lty = 3)
+which(res.padr_mod_logy > 2)
+plot(res.int.st_mod_logy ~ y_estmod_logy, ylab = "Residuos internamente studentizados", xlab
+ = "Valores ajustados", main = "Internamente studentizados")
+plot(res.ext.st_mod_logy ~ y_estmod_logy, ylab = "Residuos externamente studentizados", xlab
+ = "Valores ajustados", main = "Externamente studentizados")
+```
+**Vamos observar se há observações que podem ser remotas no espaço**
+
+```{r}
+sort(S_imod_logy)
+hist(S_imod_logy)
+```
+
+**Comparando os Valores dos Resíduos**
+
+```{r}
+cbind(res.padr_mod_logy, res.padr_mod_logy - res.int.st_mod_logy, res.int.st_mod_logy, hmod_logy, c(rep(2*p/n)), res.int.st_mod_logy - res.ext.st_mod_logy, 
+res.ext.st_mod_logy)
+```
+
+
+
+```{r}
+par(mfrow=c(1,1))
+plot(res_mod_logy~x2+x5)
+```
+  
 
 ## 9. Teste de Falta de ajuste
 

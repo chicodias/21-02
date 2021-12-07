@@ -145,20 +145,26 @@ Note como a covariável Tamanho foi capaz de separar bem as variáveis no eixo y
 
 ## 2. Matriz Hat
 
- - valores da matriz hat
- - apresentar os valores e analisar
- - determinar possiveis outliers e pontos de alavanca
+Criando e visualizando a nossa matriz X, em que a primeira coluna corresponde a uma repetição de números 1, a segunda na covariável x1 e, a terceira, x2:
 
 ```{r}
-X <- matrix(c(rep(1,n), dados$Temp, dados$Tamanho), ncol = 3, nrow = n, byrow = FALSE)
-#X
+X <- matrix(c(rep(1,n), x1, x2), ncol = 3, nrow = n, byrow = FALSE)
+
+X
 ```
+Definindo e visualizando nossa matriz Y, que contém apenas uma coluna e é a da variável preditora y - o vetor resposta:
 
 ```{r}
 Y <- matrix(dados$y, ncol = 1, nrow = length(dados$y))
-#Y
+
+Y
 ```
 
+A partir disso, podemos construir nossa matriz HAT, em que:
+
+$Hat: H = X(X^TX)^{−1}X^T$, onde
+$h_{ii}$: i-esimo elemento da diagonal de H;
+$h_{ij}$: elemento ij da matriz H.
 
 ```{r}
 H <- X %*% solve(t(X) %*% X) %*% t(X)
@@ -166,57 +172,69 @@ h <- diag(H)
 pander(summary(h), "Sumário da diagonal da matriz hat obtida")
 ```
 
+
 Devido ao comportamento singular de nosso conjunto de dados observado anteriormente na análise exploratória, todos os valores da diagonal da matriz hat são iguais, o que torna o exemplo muito interessante do ponto de vista do aprendizado.
 
+```{r}
+dadoshii <- data.frame(cbind(x1, x2, h))
 
 
-## 3. Análise de resíduos
+View(dadoshii)
 
-  - ajuste do modelo
-  - resumo do modelo
-  - resíduos vs valores ajustados
-  - qqplot
-  - raiz de resituos estandartizados versus valores ajustados
-  - distancia de cook (residuos estandartizados vs pontos de alavanca)
-  
-  
+```
+
+Temos que:
+
+$h_{ii} = \frac{1}{n} +\frac{(X_i − \overline{X})^2}{S_{XX}}$
+
+Levando isso em consideração, $h_{ii}$ deve atingir seu menor valor no ponto $\overline{X}$, se igualando a $\frac{1}{n}$. 
+Temos então que $h_{ii}$ é uma medida de alavanca, que nos informa o quão distante do centro a observação está. Ou seja, quanto mais a observação se distancia de $\overline{X}$, mais $h_{ii}$ cresce. Com isso, é possível determinarmos possível outliers - uma vez que, se $h_{ii}$ for relativamente maior do que os das demais observações, temos que ele provavelmente será um ponto influente e distante dos demais (e da média).
+
+Analisando os resultados obtidos na tabela acima, e aplicando esses pontos, podemos observar que todos nossos pontos possuem a mesma influência, uma vez que $h_{ii}$ se mantém constante para todas as observações. Logo, provavelmente também não contamos com outliers dentre as nossas observações.
+
+Calculando $\frac{1}{n}$ e o comparando com nosso $h_{ii}$:
 
 ```{r}
 
-# Modelo  reduzido do Ex 2
+frac_n = 1/n
+
+frac_n
 
 fit <- lm(y ~ Temp + Tamanho, data = dados)
 pander(fit, "Ajuste do modelo linear reduzido")
+
+
+Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamente uniforme dentre eles da média. 
+
+## 3. Análise de resíduos
+
+Primeiramente, vamos construir nosso modelo e utilizar a função _summary_ para observarmos as principais medidas descritivas do mesmo, sendo:
+
+```{r}
+mod <- lm(y ~ x1 + x2, dados) 
 ```
 
 ```{r}
-res <- fit$residuals
-
-p <- ggplot(tibble(res), aes(sample = res)) +
-  stat_qq() +
-  stat_qq_line() +
-  labs(
-    x = "Amostra",
-    y = "Quantis Teóricos",
-    title = "Normal Q-Q Plot"
-  ) +
-  theme_pubclean()
-
-q <- ggplot(tibble(res), aes(res)) +
-  geom_histogram(aes(y = ..density..), binwidth = 4, stat = "bin") +
-  labs(
-    title = "Histograma dos resíduos",
-    y = "Densidade",
-    x = "Valor"
-  ) +
-  theme_pubclean()
-
-grid.arrange(p, q, ncol = 2)
+summary(mod)
 ```
 
-O Q-Q Plot nos mostra o quanto os resíduos estão distantes do esperado dado que os dados têm distribuição normal, enquanto que o histograma dos resíduos nos fornece aproximações a respeito da distribuição de $\xi$.
+```{r}
+par(mfrow=c(2,2)) 
+```
 
-A partir dos gráficos acima, podemos notar que os resíduos não estão muito afastados dos quantis teóricos, embora sua distribuição seja ligeiramente assimétrica, conforme constatado no histograma. Podemos também utilizar o teste de Shapiro-Wilk para verificar a normalidade dos dados.
+```{r}
+plot(mod) 
+```
+
+1) Para a primeira plotagem, obtemos o gráfico dos resíduos comparados com os valores ajustados, onde é possível avaliar o pressuposto de linearidade. 
+Nesse gráfico, podemos notar que a linha vermelha está muito próxima de estar completamente no eixo horizontal, uma vez que o balanceamento de valores é muito equilibrado. Ou seja, não temos nenhuma observação que influencia nosso ajuste muito fortemente - seja positivamente ou negativamente.
+
+2) Já no segundo gráfico temos um QQ plot. Nele, podemos verificar se os resíduos apresentaram distribuição normal.  
+Podemos ver que, existe sim uma tendência à esta distribuição - principalmente nos pontos  mais centrais; entretanto, há um leve afastamento nas extremidades, e um falta de preenchimento de espaço no centro do gráfico, o que pode nos indicar que essa tendência não é tão forte.
+
+3) No terceira gráfico era esperado termos os resíduos estandardizados vs valores ajustados, que serviria para verificar a  homocedasticidade. Entretanto, por conta dos valores da nossa matriz HAT serem uniformes, não é possível realizar tal plotagem. 
+
+4) Na última plotagem, podemos verificar caso existam dutliers e possíveis pontos influentes, reiterando o pressuposto no item 2 do trabalho. Como podemos ver, há uma influência alternada entre positiva e negativa, porém em aproximadamente mesmos graus de intensidade e distanciamento. Também podemos verificar a ausência de outliers, uma vez que, se houvesse, deveria haver uma linha pontilhada vermelha com pontos para fora desta. 
 
 
 

@@ -218,8 +218,7 @@ plot(fit)
 1) Para a primeira plotagem, obtemos o gráfico dos resíduos comparados com os valores ajustados, onde é possível avaliar o pressuposto de linearidade. 
 Nesse gráfico, podemos notar que a linha vermelha está muito próxima de estar completamente no eixo horizontal, uma vez que o balanceamento de valores é muito equilibrado. Ou seja, não temos nenhuma observação que influencia nosso ajuste muito fortemente - seja positivamente ou negativamente.
 
-2) Já no segundo gráfico temos um QQ plot. Nele, podemos verificar se os resíduos apresentaram distribuição normal.  
-Podemos ver que, existe sim uma tendência à esta distribuição - principalmente nos pontos  mais centrais; entretanto, há um leve afastamento nas extremidades, e um falta de preenchimento de espaço no centro do gráfico, o que pode nos indicar que essa tendência não é tão forte.
+2) Já no segundo gráfico temos um QQ plot. Nele, podemos verificar se os resíduos apresentaram distribuição normal. Podemos ver que existe uma tendência a esta distribuição - principalmente nos pontosmais centrais. Entretanto, há um leve afastamento nas extremidades, e um falta de preenchimento de espaço no centro do gráfico, o que pode nos indicar que essa tendência não é tão forte.
 
 3) No terceiro gráfico era esperado termos os resíduos estandardizados vs valores ajustados, que serviria para verificar a  homocedasticidade. Entretanto, por conta dos valores da nossa matriz HAT serem uniformes, não é possível realizar tal plotagem. 
 
@@ -248,6 +247,7 @@ ggplot(tibble(res), aes(res)) +
   ) +
   theme_pubclean()
 ```
+
 Embora haja uma leve assimetria no gráfico, tal comportamento também pode ser em decorrência ao número reduzido de observações, mas, é difícil mensurar essa suposição sem a utilização de testes apropriados.
 
 ### Teste de normalidade
@@ -413,7 +413,7 @@ Como o quadrado médio dos resíduos diminuiu, concluímos que a retirada da obs
 
 ```{r}
 nome_colunas <- c('$i$', '$e_i (1)$', '$d_i (2)$', '$r_i (3)$', '$h_{ii}$', '$t_i (4)$')
-tab <- tibble(i= 1:16,res, res.ext.st, res.int.st,h,res.padr)
+tab <- tibble(i= 1:16, res, res.padr, res.int.st, h, res.ext.st)
 pander(tab, col.names = nome_colunas, "Resíduos escalonados obtidos")
 ```
 
@@ -462,17 +462,18 @@ Não foi observado nenhum padrão nos plots residuais, o que nos fornece indíci
 Conforme observado através do resultado obtido na questão anterior, constatamos que nosso ajuste obteve algum sucesso dado que vários dos probelmas iniciais foram solucionados. No entanto, apesar da melhora ser visível, ainda é possível melhorar alguns pontos, tais como a presença de  heterocedasticidade nos dados; e a constância da variância. Então, com a finalidade de comparar,  como não há uma relação bem definida entre as covariáveis, optaremos por uma transformação na variável resposta.
 
 ### Fazendo a tranformação na variável resposta
+
 ```{r}
-mod_logy <- lm(log(dados$y) ~ dados$Temp+dados$Tamanho , data = dados)
-summary(mod_logy)
-```
-### Significância da Regressão
-```{r}
-anova(mod_logy)
+mod_logy <- lm(log(y) ~ Temp + Tamanho , data = dados)
+pander(mod_logy)
 ```
 
-** Interpretação **
-** Analisando os Resíduos **
+### Significância da Regressão
+
+```{r}
+pander(anova(mod_logy))
+```
+
 
 ```{r}
 n <- length(dados$y)
@@ -480,7 +481,7 @@ Xmod_logy <- NULL
 Xmod_logy <- matrix(c(rep(1,n),dados$Temp,dados$Tamanho), nrow=n, ncol=3 )
 Hmod_logy <- Xmod_logy %*% solve(t(Xmod_logy) %*% Xmod_logy) %*% t(Xmod_logy)
 hmod_logy <- diag(Hmod_logy)
-summary(hmod_logy)
+pander(summary(hmod_logy), 'Sumário de $h_{ii}$')
 ```
 
 ```{r}
@@ -493,7 +494,9 @@ y_estmod_logy <- as.vector(mod_logy$fitted.values)
 resmod_logy <- log(dados$y) - y_estmod_logy
 betasmod_logy
 ```
-Interpretação dos coeficientes:
+
+
+### Interpretação dos coeficientes:
 
  - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ passou de 80.134 para  4.374.
  - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperávamos um aumento de 0.282 em $y$, agora esperamos um de 0.006 com todo o resto mantido constante.
@@ -511,11 +514,13 @@ QMResmod_logy
 ```{r}
 pander(bptest(mod_logy))
 ```
+
 Vale ressaltar que mesmo este novo modelo tendo apresentado um aumento referente ao modelo inicial, o p-valor para o teste de Breusch-Pagan continua sendo menor que 0.05, novamente rejeitamos a hipótese nula, e pode-se concluir que continua havendo heterocedasticidade nos dados a um nível de significância de $5\%$
 
 ```{r}
 pander(shapiro.test(mod_logy$residuals))
 ```
+
 Neste novo modelo, houve um aumento significativo no p-valor, reafirmando que os dados realmente possuem distribuição normal.
 
 ```{r}
@@ -524,40 +529,37 @@ qqnorm(mod_logy$residuals)
 qqline(mod_logy$residuals, col= 'red')
 ```
 
-**Resíduos Escalonados**
+#### Resíduos
+
 ```{r}
 res_mod_logy <- mod_logy$residuals
 ```
 
-**Resíduo Padronizado**
+#### Resíduo Padronizado
 ```{r}
 res.padr_mod_logy <- resmod_logy / sqrt( QMResmod_logy)
 ```
 
-**Resíduo Internamente Studentizado**
+#### Resíduo Internamente Studentizado
+
 ```{r}
 res.int.st_mod_logy<-rstandard(mod_logy)
-res.int.st_mod_logy2 <- res_mod_logy / sqrt( QMResmod_logy * (1 - h))
-res.int.st_mod_logy - res.int.st_mod_logy2
 ```
 
-**Resíduo Externamente Studentizado**
+#### Resíduo Externamente Studentizado
 ```{r}
 res.ext.st_mod_logy <- rstudent(mod_logy)
-S_imod_logy <- ( (n - p) * QMResmod_logy - res_mod_logy^2 / (1 - h) ) / (n - p - 1)
-
-res.ext.st_mod_logy2 <- res_mod_logy / sqrt( S_imod_logy * (1 - h))
-res.ext.st_mod_logy - res.ext.st_mod_logy2
 ```
 
-**Gráfico Resíduos pelos Valores Ajustados**
+#### Resíduos pelos Valores Ajustados
+
 ```{r}
 par(mfrow = c( 2, 2))
 y_estmod_logy <- mod_logy$fitted.values
-plot(res_mod_logy ~ y_estmod_logy, ylab = "Residuos", xlab = "Valores ajustados", main = "Res
-iduos")
-plot(res.padr_mod_logy ~ y_estmod_logy, ylab = "Residuos padronizados", xlab = "Valores ajust
-ados", main = "Padronizados", ylim = c(-3, 3))
+plot(res_mod_logy ~ y_estmod_logy,
+     ylab = "Residuos", xlab = "Valores ajustados", main = "Residuos")
+plot(res.padr_mod_logy ~ y_estmod_logy,
+    ylab = "Residuos padronizados", xlab = "Valores ajustados", main = "Padronizados", ylim = c(-3, 3))
 abline(h = c(-2, 2), col = 'red', lty = 3)
 which(res.padr_mod_logy > 2)
 plot(res.int.st_mod_logy ~ y_estmod_logy, ylab = "Residuos internamente studentizados", xlab
@@ -565,23 +567,19 @@ plot(res.int.st_mod_logy ~ y_estmod_logy, ylab = "Residuos internamente studenti
 plot(res.ext.st_mod_logy ~ y_estmod_logy, ylab = "Residuos externamente studentizados", xlab
  = "Valores ajustados", main = "Externamente studentizados")
 ```
-Novamente não foi observado nenhum padrão nos plots residuais, o que reforça nossos indícios gráficos de uma certa dispersão aleatória dos resíduos.Porém, no ajuste realizado na questão anterior apenas a observação 7 encontrava-se fora das bandas de controle estipuladas no caso dos resíduos studentizados, já agora, através da visualização gráfica, o número de outliers parece ter aumentado. 
 
+Novamente não foi observado nenhum padrão nos plots residuais, o que reforça nossos indícios gráficos de uma certa dispersão aleatória dos resíduos. Porém, no ajuste realizado na questão anterior apenas a observação 7 encontrava-se fora das bandas de controle estipuladas no caso dos resíduos studentizados, já agora, através da visualização gráfica, o número de outliers parece ter aumentado. 
 
-**Vamos observar se há observações que podem ser remotas no espaço**
-
-  
-```{r}
-sort(S_imod_logy)
-hist(S_imod_logy)
-```
-
-**Comparando os Valores dos Resíduos**
+### Comparação dos Resíduos
 
 ```{r}
-cbind(res.padr_mod_logy, res.padr_mod_logy - res.int.st_mod_logy, res.int.st_mod_logy, hmod_logy, c(rep(2*p/n)), res.int.st_mod_logy - res.ext.st_mod_logy, 
-res.ext.st_mod_logy)
+
+tab <- tibble(i= 1:16, res_mod_logy, res.padr_mod_logy, res.int.st_mod_logy, h, res.ext.st_mod_logy)
+
+pander(tab, col.names = nome_colunas, "Resíduos escalonados obtidos")
+
 ```
+
 Os resíduos escalonados são úteis para identificarmos valores extremos, sendo os resíduos padronizados uma estimativa para a variância dos resíduos. Logo, como houve um aumento significativo destes, constatou-se um aumento no número de outliers.
 
 ```{r}
@@ -730,7 +728,7 @@ Abaixo encontra-se nosso comando R para o ajuste do modelo via Método de Mínim
 
 ```{r}
 ajuste_ponderado=lm(formula = y ~ x, weights = 1/x)
-pander(summary(ajuste_ponderado))
+pander(ajuste_ponderado)
 ```
 
 ### Cálculo da Anova

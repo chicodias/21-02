@@ -195,6 +195,7 @@ Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que 
 
 Para verificar se os pressupostos básicos que precisamos assumir para ajustar o modelo de regressão linear estão sendo satisfeitos, podemos analisar os resíduos e procurar por padrões que não tenham sido modulados. 
 
+
 ### Ajuste do modelo
 
 Primeiramente, vamos construir nosso modelo e utilizar a função _summary_ para observarmos as principais medidas descritivas de nosso modelo de regressão linear.
@@ -280,7 +281,6 @@ Dado que o p-valor para o teste de Breusch-Pagan é menor que 0.05, rejeitamos a
 Já verificamos anteriormente através dos gráficos de dispersão que não existe colinearidade entre a maioria das variáveis independentes. Podemos formalizar este resultado através da medida $VIF$
 
 ```{r}
-## Ausência de Multicolinearidade
 pander(vif(fit),caption= "VIF das covariáveis do modelo reduzido")
 ```
 Considerando o nosso modelo reduzido, uma vez que $VIF = 1$ para as duas covariáveis, podemos concluir que não existe correlação linear entre elas.
@@ -463,10 +463,10 @@ Conforme observado através do resultado obtido na questão anterior, constatamo
 
 ### Fazendo a tranformação na variável resposta
 ```{r}
-mod_logy <- lm(log(y) ~ dados$Temp+dados$Tamanho , data = dados)
+mod_logy <- lm(log(dados$y) ~ dados$Temp+dados$Tamanho , data = dados)
 summary(mod_logy)
 ```
-**Significância da Regressão**
+### Significância da Regressão
 ```{r}
 anova(mod_logy)
 ```
@@ -482,17 +482,15 @@ Hmod_logy <- Xmod_logy %*% solve(t(Xmod_logy) %*% Xmod_logy) %*% t(Xmod_logy)
 hmod_logy <- diag(Hmod_logy)
 summary(hmod_logy)
 ```
-Conforme resultado anterior, temos que os pontos se encontram com um afastamente uniforme dentre eles da média.
 
-# Resíduos
 ```{r}
-n <- length(y)
+n <- length(dados$y)
 betasmod_logy <- as.vector(mod_logy$coefficients)
 b0_estmod_logy <- betasmod_logy[1]
 b1_estmod_logy <- betasmod_logy[2]
 b2_estmod_logy <- betasmod_logy[3]
 y_estmod_logy <- as.vector(mod_logy$fitted.values)
-resmod_logy <- log(y) - y_estmod_logy
+resmod_logy <- log(dados$y) - y_estmod_logy
 betasmod_logy
 ```
 Interpretação dos coeficientes:
@@ -500,6 +498,7 @@ Interpretação dos coeficientes:
  - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ passou de 80.134 para  4.374.
  - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperávamos um aumento de 0.282 em $y$, agora esperamos um de 0.006 com todo o resto mantido constante.
  - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, era esperado um descréscimo de 16.065 unidades em $y$, agora esperamos um de -0.331 com todo o resto mantido constante.
+
 
 ```{r}
 p <- 3 # Número de Parâmetros Estimados
@@ -515,7 +514,7 @@ pander(bptest(mod_logy))
 Vale ressaltar que mesmo este novo modelo tendo apresentado um aumento referente ao modelo inicial, o p-valor para o teste de Breusch-Pagan continua sendo menor que 0.05, novamente rejeitamos a hipótese nula, e pode-se concluir que continua havendo heterocedasticidade nos dados a um nível de significância de $5\%$
 
 ```{r}
-shapiro.test(mod_logy$residuals)
+pander(shapiro.test(mod_logy$residuals))
 ```
 Neste novo modelo, houve um aumento significativo no p-valor, reafirmando que os dados realmente possuem distribuição normal.
 
@@ -585,10 +584,9 @@ res.ext.st_mod_logy)
 ```
 Os resíduos escalonados são úteis para identificarmos valores extremos, sendo os resíduos padronizados uma estimativa para a variância dos resíduos. Logo, como houve um aumento significativo destes, constatou-se um aumento no número de outliers.
 
-
 ```{r}
 par(mfrow=c(1,1))
-plot(res_mod_logy~x2+x5)
+plot(res_mod_logy~dados$Temp+dados$Tamanho)
 ```
   
   

@@ -191,7 +191,6 @@ Calculando $\frac{1}{n}$ e o comparando com nosso $h_{ii}$:
 
 Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamente uniforme dentre eles da média. 
 
-
 ## 3. Análise de resíduos
 
 Para verificar se os pressupostos básicos que precisamos assumir para ajustar o modelo de regressão linear estão sendo satisfeitos, podemos analisar os resíduos e procurar por padrões que não tenham sido modulados. 
@@ -460,30 +459,14 @@ Não foi observado nenhum padrão nos plots residuais, o que nos fornece indíci
   
 ## 8. Transformações
 
-###  Gráfico dos resíduos versus covariáveis
-
-```{r}
-par(mfrow = c(1, 1))
-plot(res ~ dados$Temp, ylab = "Residuos", xlab = "covariavel temp", main = "Residuos versus Temperatura")
-```
-
-```{r}
-par(mfrow = c(1, 1))
-plot(res ~ dados$Tamanho, ylab = "Residuos", xlab = "covariavel tamanho", main = "Residuos versus Tamanho")
-```
-
-Conforme constatado através das análises realizadas acima e nas questões anteriores, é fácil concluir que o ajuste do modelo de regressão linear simples com as variáveis na sua forma original é inadequado neste caso. 
-
-A fim de solucionar os problemas, como não há uma relação bem definida entre as covariáveis, optaremos por uma transformação na variável resposta.
-
-Um fato relevante para ser levado em conta antes da transformação, é que conforme observado na questão 3 e comprovado pelo teste de shapiro, os resíduos apresentam distribuição normal. No entando, foi concluído pelo teste de Breush-Paganque há heterocedasticidade nos dados; nossos dados não possuem um padrão, e a variância não é constante.
+Conforme observado através do resultado obtido na questão anterior, constatamos que nosso ajuste obteve algum sucesso dado que vários dos probelmas iniciais foram solucionados. No entanto, apesar da melhora ser visível, ainda é possível melhorar alguns pontos, tais como a presença de  heterocedasticidade nos dados; e a constância da variância. Então, com a finalidade de comparar,  como não há uma relação bem definida entre as covariáveis, optaremos por uma transformação na variável resposta.
 
 ### Fazendo a tranformação na variável resposta
 ```{r}
 mod_logy <- lm(log(dados$y) ~ dados$Temp+dados$Tamanho , data = dados)
 summary(mod_logy)
 ```
-**Significância da Regressão**
+### Significância da Regressão
 ```{r}
 anova(mod_logy)
 ```
@@ -500,8 +483,6 @@ hmod_logy <- diag(Hmod_logy)
 summary(hmod_logy)
 ```
 
-### Resíduos
-
 ```{r}
 n <- length(dados$y)
 betasmod_logy <- as.vector(mod_logy$coefficients)
@@ -510,18 +491,32 @@ b1_estmod_logy <- betasmod_logy[2]
 b2_estmod_logy <- betasmod_logy[3]
 y_estmod_logy <- as.vector(mod_logy$fitted.values)
 resmod_logy <- log(dados$y) - y_estmod_logy
+betasmod_logy
 ```
+Interpretação dos coeficientes:
+
+ - $\beta_0$: Quando todos os $x_i$ são iguais a zero, o valor esperado de $y$ passou de 80.134 para  4.374.
+ - $\beta_2$: Em média, para cada aumento de 1 ponto na Temperatura, esperávamos um aumento de 0.282 em $y$, agora esperamos um de 0.006 com todo o resto mantido constante.
+ - $\beta_5$:  Em média, a cada aumento de 1 ponto no Tamanho, era esperado um descréscimo de 16.065 unidades em $y$, agora esperamos um de -0.331 com todo o resto mantido constante.
 
 
 ```{r}
 p <- 3 # Número de Parâmetros Estimados
 SQResmod_logy <- sum((resmod_logy)^2)
 QMResmod_logy <- SQResmod_logy / (n-p)
+SQResmod_logy
+QMResmod_logy
 ```
+
+```{r}
+pander(bptest(mod_logy))
+```
+Vale ressaltar que mesmo este novo modelo tendo apresentado um aumento referente ao modelo inicial, o p-valor para o teste de Breusch-Pagan continua sendo menor que 0.05, novamente rejeitamos a hipótese nula, e pode-se concluir que continua havendo heterocedasticidade nos dados a um nível de significância de $5\%$
 
 ```{r}
 pander(shapiro.test(mod_logy$residuals))
 ```
+Neste novo modelo, houve um aumento significativo no p-valor, reafirmando que os dados realmente possuem distribuição normal.
 
 ```{r}
 par(mfrow = c(1, 1))
@@ -557,7 +552,7 @@ res.ext.st_mod_logy - res.ext.st_mod_logy2
 
 **Gráfico Resíduos pelos Valores Ajustados**
 ```{r}
-par(mfrow = c(2, 2))
+par(mfrow = c( 2, 2))
 y_estmod_logy <- mod_logy$fitted.values
 plot(res_mod_logy ~ y_estmod_logy, ylab = "Residuos", xlab = "Valores ajustados", main = "Res
 iduos")
@@ -570,8 +565,12 @@ plot(res.int.st_mod_logy ~ y_estmod_logy, ylab = "Residuos internamente studenti
 plot(res.ext.st_mod_logy ~ y_estmod_logy, ylab = "Residuos externamente studentizados", xlab
  = "Valores ajustados", main = "Externamente studentizados")
 ```
+Novamente não foi observado nenhum padrão nos plots residuais, o que reforça nossos indícios gráficos de uma certa dispersão aleatória dos resíduos.Porém, no ajuste realizado na questão anterior apenas a observação 7 encontrava-se fora das bandas de controle estipuladas no caso dos resíduos studentizados, já agora, através da visualização gráfica, o número de outliers parece ter aumentado. 
+
+
 **Vamos observar se há observações que podem ser remotas no espaço**
 
+  
 ```{r}
 sort(S_imod_logy)
 hist(S_imod_logy)
@@ -583,14 +582,14 @@ hist(S_imod_logy)
 cbind(res.padr_mod_logy, res.padr_mod_logy - res.int.st_mod_logy, res.int.st_mod_logy, hmod_logy, c(rep(2*p/n)), res.int.st_mod_logy - res.ext.st_mod_logy, 
 res.ext.st_mod_logy)
 ```
-
+Os resíduos escalonados são úteis para identificarmos valores extremos, sendo os resíduos padronizados uma estimativa para a variância dos resíduos. Logo, como houve um aumento significativo destes, constatou-se um aumento no número de outliers.
 
 ```{r}
 par(mfrow=c(1,1))
 plot(res_mod_logy~dados$Temp+dados$Tamanho)
 ```
   
-
+  
 ## 9. Teste de Falta de ajuste
 
 Adaptamos um dataset que contém dados do comprimento da mandíbula de veados com relação à idade do animal, arredondando os valores das variáveis para a inclusão de réplicas, a fim de simularmos a falta de ajuste do modelo, e propor uma transformação que solucione o problema.

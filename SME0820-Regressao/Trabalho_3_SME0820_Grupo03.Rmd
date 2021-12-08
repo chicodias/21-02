@@ -189,17 +189,13 @@ Calculando $\frac{1}{n}$ e o comparando com nosso $h_{ii}$:
 1/n
 ```
 
-Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamento uniforme da média. 
-
-
-<<<<<<< HEAD
-```
 Como contamos com  $h_{ii} = 0.1875$ para todos os valores da tabela, temos que os pontos se encontram com um afastamente uniforme dentre eles da média. 
-=======
+
+
 ## 3. Análise de resíduos
 
 Para verificar se os pressupostos básicos que precisamos assumir para ajustar o modelo de regressão linear estão sendo satisfeitos, podemos analisar os resíduos e procurar por padrões que não tenham sido modulados. 
->>>>>>> ee29639face3efa390b1b29cee3927b4fa6a3a1b
+
 
 ### Ajuste do modelo
 
@@ -286,7 +282,6 @@ Dado que o p-valor para o teste de Breusch-Pagan é menor que 0.05, rejeitamos a
 Já verificamos anteriormente através dos gráficos de dispersão que não existe colinearidade entre a maioria das variáveis independentes. Podemos formalizar este resultado através da medida $VIF$
 
 ```{r}
-## Ausência de Multicolinearidade
 pander(vif(fit),caption= "VIF das covariáveis do modelo reduzido")
 ```
 Considerando o nosso modelo reduzido, uma vez que $VIF = 1$ para as duas covariáveis, podemos concluir que não existe correlação linear entre elas.
@@ -465,7 +460,8 @@ Não foi observado nenhum padrão nos plots residuais, o que nos fornece indíci
   
 ## 8. Transformações
 
-*** Análise gráfica dos gráfico dos resíduos pelas covariáveis ***
+###  Gráfico dos resíduos versus covariáveis
+
 ```{r}
 par(mfrow = c(1, 1))
 plot(res ~ dados$Temp, ylab = "Residuos", xlab = "covariavel temp", main = "Residuos versus Temperatura")
@@ -484,7 +480,7 @@ Um fato relevante para ser levado em conta antes da transformação, é que conf
 
 ### Fazendo a tranformação na variável resposta
 ```{r}
-mod_logy <- lm(log(y) ~ dados$Temp+dados$Tamanho , data = dados)
+mod_logy <- lm(log(dados$y) ~ dados$Temp+dados$Tamanho , data = dados)
 summary(mod_logy)
 ```
 **Significância da Regressão**
@@ -498,22 +494,23 @@ anova(mod_logy)
 ```{r}
 n <- length(dados$y)
 Xmod_logy <- NULL
-Xmod_logy <- matrix(c(rep(1,n),x2,x5), nrow=n, ncol=3 )
+Xmod_logy <- matrix(c(rep(1,n),dados$Temp,dados$Tamanho), nrow=n, ncol=3 )
 Hmod_logy <- Xmod_logy %*% solve(t(Xmod_logy) %*% Xmod_logy) %*% t(Xmod_logy)
 hmod_logy <- diag(Hmod_logy)
 summary(hmod_logy)
 ```
-# Resíduos
+
+### Resíduos
+
 ```{r}
-n <- length(y)
+n <- length(dados$y)
 betasmod_logy <- as.vector(mod_logy$coefficients)
 b0_estmod_logy <- betasmod_logy[1]
 b1_estmod_logy <- betasmod_logy[2]
 b2_estmod_logy <- betasmod_logy[3]
 y_estmod_logy <- as.vector(mod_logy$fitted.values)
-resmod_logy <- log(y) - y_estmod_logy
+resmod_logy <- log(dados$y) - y_estmod_logy
 ```
-
 
 
 ```{r}
@@ -523,7 +520,7 @@ QMResmod_logy <- SQResmod_logy / (n-p)
 ```
 
 ```{r}
-shapiro.test(mod_logy$residuals)
+pander(shapiro.test(mod_logy$residuals))
 ```
 
 ```{r}
@@ -588,10 +585,9 @@ res.ext.st_mod_logy)
 ```
 
 
-
 ```{r}
 par(mfrow=c(1,1))
-plot(res_mod_logy~x2+x5)
+plot(res_mod_logy~dados$Temp+dados$Tamanho)
 ```
   
 

@@ -1,0 +1,123 @@
+---
+title: "SME0809 - Inferência Bayesiana - Prova 2"
+subtitle: High-Dimensional Multivariate Bayesian Variable and Covariance Selection in Linear Regression [@BayesSUR2021]
+author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
+date: "Dezembro 2021"
+output: 
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    nature:
+      slideNumberFormat: "%current%"
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(
+  fig.width=9, fig.height=3.5, fig.retina=3,
+  out.width = "100%",
+  cache = FALSE,
+  echo = TRUE,
+  message = FALSE, 
+  warning = FALSE,
+  hiline = TRUE
+)
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+style_duo_accent(
+  primary_color = "#1381B0",
+  secondary_color = "#FF961C",
+  inverse_header_color = "#FFFFFF"
+)
+```
+
+
+## Introdução 
+
+
+Com o desenvolvimento de técnicas de alto processamento na biologia molecular, a caracterização molecular em alta escala tornou-se um lugar comum, com o advento de técnicas como:
+
+ - genome-wide measurement of gene expression
+ - single nucleotide polymorphisms
+ - CpG methylation status
+ - pharmacological profiling for large-scale cancer drug screen.
+ 
+A análise de associações conjuntas entre múltiplos fenótipos correlacionados e atributos moleculares de alta dimensionalidade é desafiadora.
+
+---
+
+Quando múltiplos fenótipos e informação genômica de alta dimensionalidade são analisados conjuntamente, a abordagem bayesiana permite especificar de maneira flexível as relações complexas entre os conjunto de dados altamente estruturados.
+
+O pacote `BayesSUR` combina diversos modelos que foram propostos para a regressão multidimentional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e para diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
+
+---
+
+## Metodologia
+
+ - múltiplas opções de seleção de variáveis
+ - a matriz de covariância pode ser diagonal, densa ou esparsa.
+ - engloba três classes de modelos de regressão linear de múltipla resposta:
+  - HRR
+  - dSUR e SSUR
+  - MRF
+ 
+ 
+ O modelo de regressão é escrito como:
+ 
+$$\boldsymbol{Y} = \boldsymbol{XB} + \boldsymbol{U}$$
+$$\text{vec}{(\boldsymbol{U})} \sim \mathcal{N}(\boldsymbol{0}, C \otimes \mathbb{I}_n) $$
+
+onde:
+
+ - $\boldsymbol{Y}$ é uma matriz $s \times s$ das variáveis resposta com matriz de covariância C;
+ - $\boldsymbol{X}$ é uma matriz $n \times p$ de preditores para todas as respostas;
+ - $\boldsymbol{U}$ é a matriz dos resíduos;
+ - $\text{vec}(\cdot)$ denota a vetorização da matriz;
+ - $\mathcal{N}(\boldsymbol{\mu},\boldsymbol{\Sigma})$ denota uma distribuição normal multivariada com vetor de médias $\boldsymbol{\mu}$ e matriz de covariâncias $\boldsymbol{\Sigma}$;
+ - $\boldsymbol{0}$ denota um vetor coluna com todos os elementos nulos,
+ - $\otimes$ é o produto de Kronecker e $\mathbb{I}_n$ a matriz identidade de ordem $n$.
+
+---
+
+A seleção de variáveis é realizada através de uma matriz indicadora binária latente $\boldsymbol{\Gamma} = \{\gamma_{jk}\}$.
+
+Uma *priori* "spike-and-slab" é utilizada para encontrar um subconjunto esparso relevante de preditores que expliquem a variabilidade de $\boldsymbol{Y}$: condicional em $\gamma_{jk} = 0\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)$
+
+Definem-se $\beta_{jk} = 0$ condicionado em $\gamma_{jk} = 1$ seguem uma distribuição normal difusa:
+
+$$\beta_\gamma \sim \mathcal{N}(\textbf{0}, W^{-1}_\gamma)$$
+
+Onde $\beta = \text{vec}(\textbf{B})$, $\gamma = \text{vec}( \boldsymbol{\Gamma})$, $\beta_\gamma$ consiste somente nos coeficientes selecionados (i.e. $\gamma_{jk} = 1$), assim $W_\gamma$ é a sub matriz de W formada pelos coeficientes selecionados correspondentes.
+
+A matriz de precisão, W, é geralmente decomposta em coeficientes de encolhimento e uma matriz que governa a estrutura de covariância dos coeficientes de regressão. É utilizado aqui $W = w^{-1} \mathbb{I}_{sp}$, o que significa que todos os coeficientes de regressão são independentes a priori, com uma *hiperpriori* no coeficiente de encolhimento $w$, i.e. $w \sim \mathcal{IG}\text{amma}(a_w, b_w)$.
+
+A matriz indicadora binária latente $\boldsymbol \Gamma$ tem três opções de *priori*:
+
+  - Bernoulli independente hierárquica
+  - hotspot prior
+  - MRF prior
+  
+A matriz de covariância $C$ também possui três *prioris*:
+
+  - Gama inversa independente
+  - Wishart inversa
+  - hiper-inversa Wishart
+  
+São considerados no total nove possíveis modelos dentre as combinações de $C$ e $\boldsymbol \Gamma$
+
+---
+
+## Dados
+
+---
+
+## Análise
+
+---
+
+## Conclusão

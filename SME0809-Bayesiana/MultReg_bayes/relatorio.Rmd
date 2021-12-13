@@ -1,17 +1,20 @@
 ---
-title: "SME0809 - Inferência Bayesiana - Prova 2"
+title: "SME0809 - Inferência Bayesiana - Prova 2 - Grupo 13"
 subtitle: "High-Dimensional Multivariate Bayesian Variable and Covariance Selection in Linear Regression [@BayesSUR2021]"
-author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
+author:
+  - "Francisco Miranda - 4402962"
+  - "Heitor Carvalho - 11833351"
 date: "Dezembro 2021"
+institution: "ICMC - USP"
 output: pdf_document
 bibliography: packages.bib
 ---
-  
-  ```{r setup, include=FALSE}
+
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Introdução 
+# Introdução 
 
 Com o desenvolvimento de técnicas de alto processamento na biologia molecular, a caracterização molecular em alta escala tornou-se um lugar comum, com o advento de técnicas como:
 
@@ -28,7 +31,7 @@ Quando múltiplos fenótipos e informação genômica de alta dimensionalidade s
 O pacote `BayesSUR` combina diversos modelos que foram propostos para a regressão multidimentional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e para diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
 
 
-## Metodologia
+# Metodologia
 
  - múltiplas opções de seleção de variáveis
  - a matriz de covariância pode ser diagonal, densa ou esparsa.
@@ -109,6 +112,7 @@ Para uma *priori* simples de seleção do modelo de regressão, os indicadores b
 \gamma_{jk}|\omega_{jk} \sim \mathcal Ber(\omega_{jk})\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)  \label{eq:3} 
 \end{equation}
 
+
 Com uma priori hierárquica Beta em $\omega_j$, i.e. $\omega_j \sim \mathcal Beta(a_\omega, b_\omega)$, que quantifica a probabilidade de cada preditor ser associado com qualquer uma das variáveis resposta.
 
 ### HRR com uma *priori* hotspot
@@ -130,14 +134,151 @@ Para modelar a matriz de covariância $C$ é especificado uma *priori* hiper-Inv
 
 Um grafo esparso corresponde à matriz esparsa de precisão $C^{-1}$. Do ponto de vista computacional, é impraticável especificar uma priori hiper-inversa Wishart diretamente em $C^{-1}$. É realizada uma transformação em $C$ para fatorar a verossimilhança. A distribuição hiper inversa de Wishart i.e $C \sim \mathcal{HIW}_\mathcal G(\nu, \tau \mathbb I_s)$ transforma-se na variância escalar $\sigma^2_{qt}$ e no vetor de correlação associado $\boldsymbol \rho _{qt} = ( \rho _{1,qt},  \rho _{2,qt}, ...  ,\rho _{t-1,qt})^T$, com:
 
+\begin{equation}
+\sigma^2_{qt} \sim \mathcal{IG}amma \left(\frac{\nu - s + t + |S_q|}{2}, \frac \tau 2 \right), \  q = 1, ..., Q,\ t = 1,..., |R_q|, \boldsymbol \rho_{qt} | \sigma^2_{qt} \ 
+\sim \mathcal N \left(\boldsymbol 0, \frac{\sigma^2_{qt}}{\tau} \mathbb I_{t-1}\right) \label{eq:5}
+\end{equation}
+
+onde $Q$ é o número de componentes primos no grafo decomposto $\mathcal G$, $S_q$ e $R_q$ são os separadores e os componentes residuais de $\mathcal G$, respectivamente.
+
+Como *priori* para o grafo é utilizado uma Bernoulli com probabilidade $\eta$ em cada vértice $E_{kk'}$ de $\mathcal G$ como em:
+
+
+\begin{equation}
+\mathbb P (E_{kk'} \in \mathcal G) = \eta, \ \ \eta \sim \mathcal Beta (a_\eta, b_\eta). \label{eq:6}
+\end{equation}
+
+São admitidas três *prioris* em $\beta_\gamma$.
+
 ## Amostragem MCMC e inferência *a posteriori*
 
 
-## Referências
+Para amostrar da distribuição a *posteriori*, os autores utilizam o algoritmo de busca estocástica evolucionária, que utiliza uma forma particular do Monte Carlo evolucionário (EMC).
+
+Múltiplas cadeias de Markov temperadas são processadas paralelamente e movimentos de troca ou mudança são permitidos dentre as cadeias para melhorar a mistura entre modelos potencialmente diferentes da *posteriori*. A temperatura é adaptada durante a fase de burn-in.
+
+A cadeia principal provém amostras da distribuição a *posteriori* não-temperada, que é utilizada para toda a inferência. Para cada variável resposta, os autores utilizam um amostrador de Gibbs para atualizar o vetor dos coeficientes de regressão $\beta_k(k = 1, ...,s)$, baseado na distribuição a *posteriori* condicional correspondente ao modelo específico, selecionado entre os modelos apresentados anteriormente.
+
+Após $L$ iterações do MCMC, obtêm-se $\boldsymbol B^{(1)}, ..., \boldsymbol B^{(L)}$ e a estimativa da média a *posteriori* é:
+
+$$ \hat{\boldsymbol B} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol B^{(t)}$$
+
+onde $b$ é o número de iterações de *burn-in*. As distribuições condicionais completas a *posteriori* também estão disponíveis no modelo SSUR. Já nos modelos HRR, os coeficientes de regressão e as covariâncias residuais foram integrados para fora e ainda assim a saída do MCMC não pode ser utilizada diretamente para inferencia posterior desses parâmetros.
+
+Contudo, para $\boldsymbol B$, a distribuição *posteriori* condicional em $\boldsymbol \Gamma$ pode ser obtida analiticamente nos modelos HRR, e é essa a saída oferecida.
+
+Em cada iteração $t$ do MCMC também é atualizado cada vetor binário latente $\gamma_k(k=1,..., s)$ via Metropolis-Hastings, propondo conjuntamente uma atualização para o correspondente $\beta_k$. Após $L$ iterações, usando as matrizes binárias $\boldsymbol \Gamma^{(1)}, ..., \boldsymbol \Gamma^{(L)}$, as probabilidades de inclusão marginal a *posteriori* são estimadas por:
+
+$$\hat{\boldsymbol \Gamma} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol \Gamma^{(t)}$$
+
+Outro parâmetro importante dos modelos SSUR é $\mathcal G$ na *priori* Wisahrt hiper-inversa para a matriz de covariância $C$. Ela é atualizada via _junction tree sampler_ conjuntamente com a proposta correspondente para $\sigma^2_{qt}$ e $\boldsymbol \rho_{qt} | \sigma^2_{qt}$ em  \eqref{eq:5}.
+
+A cada iteração do MCMC é extraída a matriz de adjacência $\mathcal G^{(t)} (t=1,...,L)$, do qual são derivadas as estimativas da média a *posteriori* das probabilidades de inclusão das areastas como:
+
+$$\hat{\mathcal G} = \frac{1}{L-b} \sum^L_{t = b+1} \mathcal G^{(t)}$$
+
+Mesmo que a *priori* o grafo $\mathcal G$ seja decomposto, a média estimada posteriormente $\hat{\mathcal G}$ pode estar pode do espaço de modelos decompostos.
+
+O hiperparâmetro $\tau$ da Wishart hiper-inversa é atualizado através de um passeio aleatório do amostrador Metropolis-Hastings. Já $\eta$ e a variância $w$ na priori pico-e-tapa são amostrados das condicionais posteriores.
+
+# Conjunto de Dados
+
+Os autores simularam dados de polimorfismo de nucleotídeo único (SNP) dentro de um modelo verdadeiro conhecido para demonstrar a performance de recuperação dos modelos introduzidos anteriormente. O algoritmo completo pode ser encontrado em [@BayesSUR2021].
+
+Para construir variáveis resposta múltiplas $\boldsymbol Y$ (com $s=10$) com uma relação estruturada, os autores fixam uma variável indicadora esparsa $\boldsymbol \Gamma$ e desenham um grafo decomposto para as respostas, para construir padrões de associação dentre os múltiplos regressores e variáveis resposta.
+
+```{r data-load, echo=FALSE}
+library(BayesSUR)
+data("exampleEQTL", package = "BayesSUR")
+attach(exampleEQTL)
+```
+
+```{r prior-graphs,echo=FALSE, message = F, fig.cap="Parâmetros verdadeiros dos dados gerados no conjunto de dados de exemplo"}
+library(tidyverse)
+library(gridExtra)
+
+ plot_heatmap<- function(df){
+reshape2::melt(df) %>% ggplot(aes(x=Var1, y=Var2, fill=value)) + 
+    geom_raster() + guides(fill="none")
+ }
+  
+ 
+p <- plot_heatmap(gamma)
+q <- plot_heatmap(Gy)
+
+grid.arrange(p,q, ncol = 2) 
+```
+
+
+
+
+# Análise dos Dados
+
+```{r model-fit, echo= FALSE, message = FALSE, }
+fit <- BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]],
+                outFilePath = "results", nIter = 5000, nChains = 3,
+                burnin = 1000, covariancePrior = "HIW",
+                gammaPrior = "hotspot",
+                output_CPO = TRUE,
+                )
+```
+
+```{r responses-est-graph, echo = FALSE, out.width="100%", out.height="100%"}
+plot(fit, estimator = c("beta", "gamma", "Gy"), type = "heatmap",
+     fig.tex = FALSE)
+```
+
+```{r echo=FALSE, fig.height = 6, fig.width = 12}
+layout(matrix(1:2, ncol = 2))
+plot(fit, estimator = "Gy", type = "graph")
+plotGraph(Gy)
+```
+
+```{r plot-expr, echo = FALSE, fig.width=10, fig.height=10}
+plot(fit, estimator = c("gamma", "Gy"), type = "network",
+     name.predictors = "SNPs", name.responses = "Gene expression")
+```
+
+```{r plot-manh, echo = FALSE, fig.width=8, fig.height=7}
+plot(fit, estimator = "gamma", type = "Manhattan")
+```
+
+
+```{r plot-diag, echo = FALSE, fig.width=10, fig.height=8}
+plot(fit, estimator = "logP", type = "diagnostics")
+```
+```{r}
+plotCPO(fit)
+```
+
+```{r}
+plotEstimator(fit, "gamma")
+```
+
+```{r}
+BayesSUR::plotEstimator(fit, "beta")
+```
+
+```{r}
+plotEstimator(fit,"Gy")
+```
+
+```{r}
+plotMCMCdiag(fit, HIWg = "lik")
+```
+
+```{r}
+summary(fit)
+```
+
+
+# Conclusão
+
+# Referências
 
 <div id="refs"></div>
 
-## Apêndice: códigos
+# Apêndice: códigos
 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```

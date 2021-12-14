@@ -63,7 +63,7 @@ onde:
 
 A seleção de variáveis é realizada através de uma matriz indicadora binária latente $\boldsymbol{\Gamma} = \{\gamma_{jk}\}$.
 
-Uma *priori* "spike-and-slab" é utilizada para encontrar um subconjunto esparso relevante de preditores que expliquem a variabilidade de $\boldsymbol{Y}$: condicional em $\gamma_{jk} = 0\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)$
+Uma *priori* "pico e tapa" é utilizada para encontrar um subconjunto esparso relevante de preditores que expliquem a variabilidade de $\boldsymbol{Y}$: condicional em $\gamma_{jk} = 0\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)$
 
 Definem-se $\beta_{jk} = 0$ condicionado em $\gamma_{jk} = 1$ seguem uma distribuição normal difusa:
 
@@ -231,18 +231,27 @@ O terceiro componente é a verdadeira matriz indicadora $\boldsymbol \Gamma$ dos
 
 Os autores utilizam o exemplo para ajustar um modelo SSUR com uma *priori* *hotspot* para as variáveis indicadoras $\boldsymbol \Gamma$ e a *priori* indutora de esparsidão Wishart hiper-inversa utilizando o pacote `BayesSUR`. No exemplo são 200000 iterações do MCMC, com burn-in de 100000, em três cadeias paralelamente. Para manter a reprodutibilidade, o código foi executado em um único núcleo.
 
-```{r model-fit, echo= FALSE}
+```{r model-fit, echo= FALSE, message=FALSE,eval=FALSE}
 set.seed(28173)
 tic("Tempo de ajuste do modelo")
 # ajuste do modelo
 fit <- BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]],
-                outFilePath = "results", nIter = 5000, nChains = 3,
-                burnin = 1000, covariancePrior = "HIW",
+                outFilePath = "results-hiw-hotspot", nIter = 200000, nChains = 3,
+                burnin = 100000, covariancePrior = "HIW",
                 gammaPrior = "hotspot",
                 output_CPO = TRUE,
                 )
 toc()
 ```
+
+
+```{r model-read, echo = FALSE}
+# ler o modelo ja ajustado
+load("results-hiw-hotspot/obj_BayesSUR.RData")
+fit <- obj_BayesSUR
+class(fit) <- "BayesSUR"
+```
+
 
 As Figuras \@ref(fig:plt-beta), \@ref(fig:plt-gamma) e \@ref(fig:plt-G) resumem os resultados da inferência a posteriori dos estimadores $\hat{\boldsymbol B}, \hat{\boldsymbol \Gamma}, \text{e} \ \hat{\mathcal G}$.
 
@@ -276,7 +285,7 @@ plotGraph(Gy)
 Utilizando o mesmo limiar, de $\hat{\mathcal G}$ limitado a 0.5, e $\hat{\boldsymbol \Gamma}$ limitado a 0.5, podemos visualizar a rede completa com as dez expressões gênicas e os 150 SNPs na \@ref(fig:plot-expr).
 
 
-```{r plot-expr, echo = FALSE, fig.width=10, fig.height=10, fig.cap="Representação da rede entre as expressões gênicas ($\\boldsymbol Y$), com $\\hat{\\mathcal G}$ limitado a 0.5, e os SNPs ($\\boldsymbol X$), com $\\hat{\\boldsymbol \\Gamma}$ limitado a 0.5."}
+```{r plot-expr, echo = FALSE, fig.width=10, fig.height=8, fig.cap="Representação da rede entre as expressões gênicas ($\\boldsymbol Y$), com $\\hat{\\mathcal G}$ limitado a 0.5, e os SNPs ($\\boldsymbol X$), com $\\hat{\\boldsymbol \\Gamma}$ limitado a 0.5."}
 # estrutura entre X e Y
 plot(fit, estimator = c("gamma", "Gy"), type = "network",
      name.predictors = "SNPs", name.responses = "Gene expression")
@@ -284,7 +293,7 @@ plot(fit, estimator = c("gamma", "Gy"), type = "network",
 
 Além disso, os plots estilo Manhattan na Figura \@ref(fig:plot-manh) mostram as probabilidades de inclusão marginal (mPIP) dos SNPs (painel superior) e o número de expressões gênicas da resposta associado com cada SNP (painel inferior). O número de respostas é baseado em $\hat{\boldsymbol \Gamma}$ limitado a 0.5.
 
-```{r plot-manh, echo = FALSE, fig.width=8, fig.height=7, fig.cap="Plots estilo Manhattan, mostrando as probabilidades de inclusão marginal posterior (em cima) e o número de expressões gênicas da resposta associada a cada SNP (embaixo)."}
+```{r plot-manh, echo = FALSE, fig.width=8, fig.height=6, fig.cap="Plots estilo Manhattan, mostrando as probabilidades de inclusão marginal posterior (em cima) e o número de expressões gênicas da resposta associada a cada SNP (embaixo)."}
 plot(fit, estimator = "gamma", type = "Manhattan")
 ```
 
@@ -325,13 +334,14 @@ detach(exampleEQTL)
 
 # Conclusão
 
+Neste relatório, procuramos apresentar os modelos para regressão e regularização partindo de uma abordagem Bayesiana, utilizamos o bacote `BayesSUR` para efetuar a regressão e seleção de modelos no conjunto de teste de exemplo apresentado por @BayesSUR2021.
 
+Foram introduzidos brevemente os aspectos da modelagem da seleção de variáveis, assim como a recuperação das estruturas para identificar relacionamentos entre respostas multivariadas em preditores de alta dimensionalidade. 
+
+Como ponto negativo, não foi possível realizar a análise convencional das cadeias conforme esperávamos, contudo dada a complexidade do modelo tal ausência é justificada pela estrutura matricial dos preditores e resposta, que se mostrou um grande desafio em nossa análise.
+
+Entretanto, foi uma oportunidade muito valiosa de conhecer modelos estado-da-arte na área de biologia molecular, implementados de forma eficiente e bem documentada pelos autores do artigo que aqui apresentamos.
 
 # Referências
 
 <div id="refs"></div>
-
-# Apêndice: códigos {-}
-
-```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
-```

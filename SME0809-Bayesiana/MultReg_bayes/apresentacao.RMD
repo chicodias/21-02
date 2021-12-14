@@ -5,15 +5,13 @@ author: "Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351"
 date: "Dezembro 2021"
 output: 
   xaringan::moon_reader:
-    css: xaringan-themer.css
+    css: "xaringan-themer.css"
     nature:
       slideNumberFormat: "%current%"
       highlightStyle: github
       highlightLines: true
       ratio: 16:9
       countIncrementalSlides: true
-includes:
-      in_header: "mathjax-equation-numbers.html"
 ---
 
 
@@ -382,10 +380,9 @@ plotCPO(fit)
 ---
 # Sumário do modelo
 
-.scroll-output[
 
 Finalizamos nossa análise com um sumário do modelo obtido. Após isso, desatachamos o conjunto de dados utilizado.
-
+.scroll-box-20[
 ```{r model-summary, echo = FALSE}
 # sumario do modelo
 summary(fit)

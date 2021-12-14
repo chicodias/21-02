@@ -188,89 +188,135 @@ Os autores simularam dados de polimorfismo de nucleotídeo único (SNP) dentro d
 Para construir variáveis resposta múltiplas $\boldsymbol Y$ (com $s=10$) com uma relação estruturada, os autores fixam uma variável indicadora esparsa $\boldsymbol \Gamma$ e desenham um grafo decomposto para as respostas, para construir padrões de associação dentre os múltiplos regressores e variáveis resposta.
 
 ```{r data-load, echo=FALSE}
+# pacote principal
 library(BayesSUR)
 data("exampleEQTL", package = "BayesSUR")
+# attach nos dados para um código mais compacto
 attach(exampleEQTL)
 ```
 
-```{r prior-graphs,echo=FALSE, message = F, fig.cap="Parâmetros verdadeiros dos dados gerados no conjunto de dados de exemplo"}
+```{r prior-graphs,echo=FALSE, message = F, fig.cap="Parâmetros verdadeiros dos dados gerados no conjunto de dados de exemplo. Valores em branco representam 0 e, em azul, 1"}
+# bibliotecas para gráficos
 library(tidyverse)
 library(gridExtra)
-
+library(ggpubr)
+library(tictoc)
+# funcao que recebe uma matriz e plota um mapa de calor
  plot_heatmap<- function(df){
-reshape2::melt(df) %>% ggplot(aes(x=Var1, y=Var2, fill=value)) + 
-    geom_raster() + guides(fill="none")
+reshape2::melt(df) %>% ggplot(aes(x=Var1, y=Var2, fill=-value)) + 
+    geom_raster() + guides(fill="none") +
+    scale_fill_fermenter()
  }
-  
- 
-p <- plot_heatmap(gamma)
-q <- plot_heatmap(Gy)
+# rotulos da escala
+labs <- as_labeller(
+          c("1" = "GEX1", "2" =  "GEX2",  "3" =  "GEX3", "4" = "GEX4","5" = "GEX5",
+          "6" = "GEX6", "7" = "GEX7", "8" = "GEX8", "9" = "GEX9", "10" = "GEX10"))
+# mapa de calor Y versus X
+p <- plot_heatmap(gamma) + scale_y_continuous(breaks= 1:10,labels = labs)
+# mapa de calor Y versus Y
+q <- plot_heatmap(Gy)  + scale_x_continuous(breaks= 1:10,labels = labs)
 
 grid.arrange(p,q, ncol = 2) 
 ```
 
+Aqui, temos 10 colunas, que são as respostas em $\boldsymbol Y$, e 150 linhas, que são as regressores em $\boldsymbol X$. O segundo componente do exemplo é uma `blockList` que especifica os índices de $\boldsymbol Y$ e $\boldsymbol X$ em `data`.
 
+O terceiro componente é a verdadeira matriz indicadora $\boldsymbol \Gamma$ dos coeficientes de regressão. O quarto componente é o grafo verdadeiro $\mathcal G$ entre as variáveis resposta. A Figura \ref(fig:prior-graphs) mostra os verdadeiros $\boldsymbol \Gamma$ e $\mathcal G$ utilizados para simular ao exemplo. As matrizes de associação são exibidas na forma de mapas de calor.
 
 
 # Análise dos Dados
 
-```{r model-fit, echo= FALSE, message = FALSE, }
+Os autores utilizam o exemplo para ajustar um modelo SSUR com uma *priori* *hotspot* para as variáveis indicadoras $\boldsymbol \Gamma$ e a *priori* indutora de esparsidão Wishart hiper-inversa utilizando o pacote `BayesSUR`. No exemplo são 200000 iterações do MCMC, com burn-in de 100000, em três cadeias paralelamente. Para manter a reprodutibilidade, o código foi executado em um único núcleo.
+
+```{r model-fit, echo= FALSE}
+set.seed(28173)
+tic("Tempo de ajuste do modelo")
+# ajuste do modelo
 fit <- BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]],
                 outFilePath = "results", nIter = 5000, nChains = 3,
                 burnin = 1000, covariancePrior = "HIW",
                 gammaPrior = "hotspot",
                 output_CPO = TRUE,
                 )
+toc()
 ```
 
-```{r responses-est-graph, echo = FALSE, out.width="100%", out.height="100%"}
-plot(fit, estimator = c("beta", "gamma", "Gy"), type = "heatmap",
-     fig.tex = FALSE)
+As Figuras \ref(fig:plt-beta), \ref(fig:plt-gamma) e \ref(fig:plt-G) resumem os resultados da inferência a posteriori dos estimadores $\hat{\boldsymbol B}, \hat{\boldsymbol \Gamma}, \text{e} \ \hat{\mathcal G}$.
+
+
+```{r plt-beta, echo  = FALSE, fig.cap = "Coeficientes estimados da matriz $\\hat{\\boldsymbol B}$"}
+# plota estimador beta
+plotEstimator(fit, "beta")
 ```
 
-```{r echo=FALSE, fig.height = 6, fig.width = 12}
+```{r plt-gamma, echo  = FALSE, fig.cap = "Coeficientes estimados da matriz indicadora latente $\\hat{ \\boldsymbol \\Gamma}$"}
+# plota estimador gamma
+plotEstimator(fit, "gamma")
+```
+
+```{r plt-G, echo  = FALSE, fig.cap = "Esturutura aprendida de $\\hat{\\mathcal G}$ pelo modelo SSUR com priori hotspot e covariância esparsa"}
+# plota o grafo das respostas
+plotEstimator(fit,"Gy")
+```
+
+Vemos que o modelo SSUR possui uma boa recuperação do verdadeira matriz indicadora latente $\boldsymbol \Gamma$ e da estrutura das respostas representada por $\mathcal G$. Podemos comparar a verdadeira estrutura com a estimada quando limitamos a probabilidade de seleção a *posteriori* para $\boldsymbol \Gamma$ e $\mathcal G$ a 0.5, criando o grafo exibido à direita na \ref(fig:prior-graphs).
+
+
+```{r plt-graphs, echo=FALSE, fig.height = 6, fig.width = 12, fig.cap="Estrutura estimada das dez variáveis resposta com $\\hat{\\mathcal G}$ limitado a 0.5 (esquerda). Estrutura verdadeira de $\\mathcal G$ representada pela matriz de adjacência `Gy` (direita)."}
+# estrutura estimada vs estrutura verdadeira
 layout(matrix(1:2, ncol = 2))
 plot(fit, estimator = "Gy", type = "graph")
 plotGraph(Gy)
 ```
 
-```{r plot-expr, echo = FALSE, fig.width=10, fig.height=10}
+
+Utilizando o mesmo limiar, de $\hat{\mathcal G}$ limitado a 0.5, e $\hat{\boldsymbol \Gamma}$ limitado a 0.5, podemos visualizar a rede completa com as dez expressões gênicas e os 150 SNPs na \ref{fig:plot-expr}.
+
+
+```{r plot-expr, echo = FALSE, fig.width=10, fig.height=10, fig.cap="Representação da rede entre as expressões gênicas ($\\boldsymbol Y$), com $\\hat{\\mathcal G}$ limitado a 0.5, e os SNPs ($\\boldsymbol X$), com $\\hat{\\boldsymbol \\Gamma}$ limitado a 0.5."}
+# estrutura entre X e Y
 plot(fit, estimator = c("gamma", "Gy"), type = "network",
      name.predictors = "SNPs", name.responses = "Gene expression")
 ```
 
-```{r plot-manh, echo = FALSE, fig.width=8, fig.height=7}
+Além disso, os plots estilo Manhattan na Figura \ref{fig:plot-manh} mostram as probabilidades de inclusão marginal (mPIP) dos SNPs (painel superior) e o número de expressões gênicas da resposta associado com cada SNP (painel inferior). O número de respostas é baseado em $\hat{\boldsymbol \Gamma}$ limitado a 0.5.
+
+```{r plot-manh, echo = FALSE, fig.width=8, fig.height=7, fig.cap="Plots estilo Manhattan, mostrando as probabilidades de inclusão marginal posterior (em cima) e o número de expressões gênicas da resposta associada a cada SNP (embaixo)."}
 plot(fit, estimator = "gamma", type = "Manhattan")
 ```
 
+Para investigarmos o comportamento do nosso amostrador MCMC, podemos utilizar os plots de diagnóstico apresentados na \ref{fig:plot-diag}. Observa-se que as cadeias de Markov utilizadas aparentemente começam a amostrar da distribuição correta após aproximadamente 50.000 iterações.
+
+Os painéis inferiores da Figura \ref{fig:plot-diag} indicam que o logarítmo da distribuição a posteriori da variável indicadora latente $\boldsymbol \Gamma$ é estável para a última metade das cadeias, após subtraído o burn-in.
 
 ```{r plot-diag, echo = FALSE, fig.width=10, fig.height=8}
 plot(fit, estimator = "logP", type = "diagnostics")
 ```
-```{r}
-plotCPO(fit)
-```
 
-```{r}
-plotEstimator(fit, "gamma")
-```
+Embora não tenhamos acesso direto às cadeias simuladas, podemos também visualizar a verossimilhança das outras matrizes estimadas pelo modelo conforme mostra a Figura \ref{fig:lik-est}.
 
-```{r}
-BayesSUR::plotEstimator(fit, "beta")
-```
-
-```{r}
-plotEstimator(fit,"Gy")
-```
-
-```{r}
+```{r lik-est, echo = FALSE, fig.cap="Verossimilhança dos estimadores pelo número de iterações do MCMC."}
 plotMCMCdiag(fit, HIWg = "lik")
 ```
 
-```{r}
+
+É também possível utilizar o CPO para encontrar observações destoantes, como uma forma de validação cruzada do modelo com a amostra obtida, conforme mostra a Figura \ref{fig:plot-cpo}. Temos algumas poucas observações abaixo do limiar.
+
+```{r plot-cpo, echo = F, fig.cap="CPOs escalonados para o modelo de regressão ajustado"}
+# CPO
+plotCPO(fit)
+```
+
+Finalizamos nossa análise com um sumário do modelo obtido. Após isso, desatachamos o conjunto de dados utilizado.
+
+```{r model-summary, echo = FALSE}
+# sumario do modelo
 summary(fit)
 ```
 
+```{r detach, echo = FALSE}
+detach(exampleEQTL)
+```
 
 # Conclusão
 

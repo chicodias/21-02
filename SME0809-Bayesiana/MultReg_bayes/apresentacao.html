@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>SME0809 - Inferência Bayesiana - Prova 2</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351" />
+    <link href="apresentacao_files/remark-css/default.css" rel="stylesheet" />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } },
+      });
+    </script>
+    <style>
+    .mjx-mrow a {
+      color: black;
+      pointer-events: none;
+      cursor: default;
+    }
+    </style>
+    <link rel="stylesheet" href="assets/sydney-fonts.css" type="text/css" />
+    <link rel="stylesheet" href="assets/sydney.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# SME0809 - Inferência Bayesiana - Prova 2
+## High-Dimensional Multivariate Bayesian Variable and Covariance Selection in Linear Regression
+### Grupo 13 - Francisco Miranda - 4402962 - Heitor Carvalho - 11833351
+### Dezembro 2021
+
+---
+
+
+
+
+
+
+
+
+## Introdução 
+
+Com o desenvolvimento de técnicas de alto processamento na biologia molecular, a caracterização molecular em alta escala tornou-se um lugar comum, com o advento de técnicas como:
+
+ - Genome-wide measurement of gene expression
+ - Single nucleotide polymorphisms
+ - CpG methylation status
+ - Pharmacological profiling for large-scale cancer drug screen.
+ 
+A análise de associações conjuntas entre múltiplos fenótipos correlacionados e atributos moleculares de alta dimensionalidade é desafiadora.
+
+---
+
+## Introdução 
+
+Quando múltiplos fenótipos e informação genômica de alta dimensionalidade são analisados conjuntamente, a abordagem bayesiana permite especificar de maneira flexível as relações complexas entre os conjunto de dados altamente estruturados.
+
+O pacote `BayesSUR` combina diversos modelos que foram propostos para a regressão multidimentional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e para diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
+
+---
+
+## Metodologia
+
+O modelo de regressão é escrito como:
+ 
+`\begin{align}
+\boldsymbol{Y} = \boldsymbol{XB} + \boldsymbol{U} \label{eq:1}
+\end{align}`
+$$\text{vec}{(\boldsymbol{U})} \sim \mathcal{N}(\boldsymbol{0}, C \otimes \mathbb{I}_n) $$
+
+onde:
+
+ - `\(\boldsymbol{Y}\)` é uma matriz `\(s \times s\)` das variáveis resposta com matriz de covariância C;
+ - `\(\boldsymbol{X}\)` é uma matriz `\(n \times p\)` de preditores para todas as respostas;
+ - `\(\boldsymbol{U}\)` é a matriz dos resíduos;
+ - `\(\text{vec}(\cdot)\)` denota a vetorização da matriz;
+ - `\(\mathcal{N}(\boldsymbol{\mu},\boldsymbol{\Sigma})\)` denota uma distribuição normal multivariada com vetor de médias `\(\boldsymbol{\mu}\)` e matriz de covariâncias `\(\boldsymbol{\Sigma}\)`;
+ - `\(\boldsymbol{0}\)` denota um vetor coluna com todos os elementos nulos,
+ - `\(\otimes\)` é o produto de Kronecker e `\(\mathbb{I}_n\)` a matriz identidade de ordem `\(n\)`.
+
+---
+
+## Seleção de Variáveis
+
+A seleção de variáveis é realizada através de uma matriz indicadora binária latente `\(\boldsymbol{\Gamma} = \{\gamma_{jk}\}\)`.
+
+Uma *priori* "pico e tapa" é utilizada para encontrar um subconjunto de preditores que expliquem a variabilidade de `\(\boldsymbol{Y}\)`: condicional em `\(\gamma_{jk} = 0\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)\)`
+
+`\(\beta_{jk} = 0\)` condicionado em `\(\gamma_{jk} = 1\)` segue uma distribuição normal difusa:
+
+`\begin{align}
+\beta_\gamma \sim \mathcal{N}(\textbf{0}, W^{-1}_\gamma) \label{eq:2}
+\end{align}`
+
+Onde:
+
+ - `\(\beta = \text{vec}(\textbf{B})\)`, `\(\gamma = \text{vec}( \boldsymbol{\Gamma})\)`
+ - `\(\beta_\gamma\)` consiste somente nos coeficientes selecionados (i.e. `\(\gamma_{jk} = 1\)`), assim `\(W_\gamma\)` é a sub matriz de W formada pelos coeficientes selecionados correspondentes.
+
+A matriz de precisão `\(W\)` utilizada aqui é da forma `\(W = w^{-1} \mathbb{I}_{sp}\)`, o que significa que todos os coeficientes de regressão são independentes a priori, com uma *hiperpriori* no coeficiente de encolhimento `\(w\)`, i.e. `\(w \sim \mathcal{IG}\text{amma}(a_w, b_w)\)`.
+
+---
+
+## Modelos Hierárquicos
+
+O pacote `BayesSUR` suporta uma gama de nove possíveis modelos dentre as combinações de `\(C\)`, a matriz de covariância (que pode ser esparsa, densa, ou independente), e a matriz indicadora binária latente `\(\boldsymbol \Gamma\)`.
+
+|  | `\({\gamma_{jk}} \sim Bernoulli\)` | `\(\gamma_{jk} \sim\)` hotspot | `\(\gamma_{jk} \sim\)` MRF |
+|:---:|:---:|:---:|:---:|
+| `\(C\sim indep\)` | HRR-B | HRR-H | HRR-M |
+| `\(C\sim IW\)` | dSUR-B | dSUR-H | dSUR-M |
+| `\(C\sim HIW\)` | SSUR-B | SSUR-H | SSUR-M |
+
+
+---
+
+##  Regressão Hierárquica Relacionada (HRR)
+
+A Regressão Hierárquica Relacionada assume que `\(C\)` é uma matriz diagonal, o que se traduz em independência condicional entre múltiplas variáveis resposta.
+
+Uma *priori* gama inversa é especificada para a covariância dos resíduos:
+
+`$$\sigma^2_k \sim \mathcal{IG}\text{amma}(a_\sigma, b_\sigma)$$`
+
+Quando combinada com as *prioris* em \eqref{eq:2}, é conjulgado com a verossimilhança do modelo \eqref{eq:1}. Podemos então amostrar a estrutura de seleção de variáveis `\(\boldsymbol{\Gamma}\)` marginalmente com respeito a `\(C\)` e `\(\boldsymbol B\)`.
+
+
+---
+
+## HRR com uma *priori* Bernouli independente
+
+Para uma *priori* simples de seleção do modelo de regressão, os indicadores binários latentes seguem uma *priori* de Bernoulli:
+
+`\begin{align}
+\gamma_{jk}|\omega_{jk} \sim \mathcal Ber(\omega_{jk})\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)  \label{eq:3}
+\end{align}`
+
+
+Assim, temos uma priori hierárquica Beta em `\(\omega_j\)`, i.e. `\(\omega_j \sim \mathcal Beta(a_\omega, b_\omega)\)`, que quantifica a probabilidade de cada preditor ser associado com qualquer uma das variáveis resposta.
+
+
+---
+
+## HRR com uma *priori* hotspot
+
+É proposta a decomposição da probabilidade do parâmetro de associação `\(\omega_{jk}\)` em \eqref{eq:3}, onde `\(o_k\)` é responsável pela esparsividade de cada modelo de resposta e `\(\pi_j\)` controla a propensão de cada preditor a ser associado a múltiplas respostas simuntaneamente:
+
+`\begin{align}
+\gamma_{jk}|\omega_{jk} \sim \mathcal Ber(\omega_{jk})\ \ (j = 1, ..., p, \text{e}\ k=1, ..., s)  \label{eq:4} 
+\end{align}`
+`$$\begin{gathered}
+\omega_{jk} = o_k \times \pi_j \\
+o_k \sim \mathcal Beta (a_0, b_0) \\
+\pi_j \sim \mathcal Gamma(a_\pi, b_\pi)
+\end{gathered}$$`
+
+---
+
+## Regressão não relacionada aparentemente esparsa (SSUR)
+
+A matriz de covariância `\(C\)` é modelada através de um grafo corresponde à matriz esparsa de precisão `\(C^{-1}\)`, com *priori* Wishart hiper-Inversa. É impraticável computacionalmente especificar a priori dessa distribuição diretamente em `\(C^{-1}\)`.
+
+A distribuição hiper inversa de Wishart i.e `\(C \sim \mathcal{HIW}_\mathcal G(\nu, \tau \mathbb I_s)\)` é fatorada na variância escalar `\(\sigma^2_{qt}\)` e no vetor de correlação associado `\(\boldsymbol \rho _{qt} = ( \rho _{1,qt},  \rho _{2,qt}, ...  ,\rho _{t-1,qt})^T\)`, com:
+
+
+`\begin{equation}
+\sigma^2_{qt} \sim \mathcal{IG}amma \left(\frac{\nu - s + t + |S_q|}{2}, \frac \tau 2 \right), \  q = 1, ..., Q,\ t = 1,..., |R_q|, \boldsymbol \rho_{qt} | \sigma^2_{qt} \ 
+\sim \mathcal N \left(\boldsymbol 0, \frac{\sigma^2_{qt}}{\tau} \mathbb I_{t-1}\right) \label{eq:5}
+\end{equation}`
+
+onde:
+  - `\(Q\)` é o número de componentes primos no grafo decomposto
+  - `\(\mathcal G\)`, `\(S_q\)` e `\(R_q\)` são os separadores e os componentes residuais de `\(\mathcal G\)`, respectivamente.
+
+
+Como *priori* para `\(\mathcal G\)` é utilizado uma Bernoulli com probabilidade `\(\eta\)` em cada vértice `\(E_{kk'}\)` de `\(\mathcal G\)` como em:
+
+`\begin{align}
+\mathbb P (E_{kk'} \in \mathcal G) = \eta, \ \ \eta \sim \mathcal Beta (a_\eta, b_\eta) \label{eq:6}
+\end{align}`
+
+---
+
+## Amostragem MCMC e inferência *a posteriori*
+
+
+ - Para amostrar da distribuição a *posteriori*, os autores utilizam o algoritmo de busca estocástica evolucionária, que utiliza uma forma particular do Monte Carlo evolucionário (EMC).
+
+ - Múltiplas cadeias de Markov temperadas são processadas paralelamente e movimentos de troca ou mudança são permitidos dentre as cadeias para melhorar a mistura entre modelos potencialmente diferentes da *posteriori*.
+
+ - A cadeia principal provém amostras da distribuição a *posteriori* não-temperada, que é utilizada para toda a inferência.
+ 
+ - Para cada variável resposta, os autores utilizam um amostrador de Gibbs para atualizar o vetor dos coeficientes de regressão `\(\beta_k(k = 1, ...,s)\)`, baseado na distribuição a *posteriori* condicional correspondente ao modelo específico, selecionado entre os modelos apresentados anteriormente.
+
+---
+
+## Amostragem MCMC e inferência *a posteriori*
+
+Após `\(L\)` iterações do MCMC, obtêm-se `\(\boldsymbol B^{(1)}, ..., \boldsymbol B^{(L)}\)` e a estimativa da média a *posteriori* é:
+
+`$$\hat{\boldsymbol B} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol B^{(t)}$$`
+
+onde `\(b\)` é o número de iterações de *burn-in*.
+
+Em cada iteração `\(t\)` do MCMC também é atualizado cada vetor binário latente `\(\gamma_k(k=1,..., s)\)` via Metropolis-Hastings, propondo conjuntamente uma atualização para o correspondente `\(\beta_k\)`.
+
+--
+
+Após `\(L\)` iterações, usando as matrizes binárias `\(\boldsymbol \Gamma^{(1)}, ..., \boldsymbol \Gamma^{(L)}\)`, as probabilidades de inclusão marginal a *posteriori* são estimadas por:
+
+`$$\hat{\boldsymbol \Gamma} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol \Gamma^{(t)}$$`
+
+---
+
+## Amostragem MCMC e inferência *a posteriori*
+
+A *priori* Wishart hiper-inversa para a matriz de covariância `\(C\)` é atualizada via _junction tree sampler_ conjuntamente com a proposta correspondente para `\(\sigma^2_{qt}\)` e `\(\boldsymbol \rho_{qt} | \sigma^2_{qt}\)` em  \eqref{eq:5}.
+
+A cada iteração do MCMC é extraída a matriz de adjacência `\(\mathcal G^{(t)} (t=1,...,L)\)`, do qual são derivadas as estimativas da média a *posteriori* das probabilidades de inclusão das areastas como:
+
+`$$\hat{\mathcal G} = \frac{1}{L-b} \sum^L_{t = b+1} \mathcal G^{(t)}$$`
+
+Mesmo que a *priori* o grafo `\(\mathcal G\)` seja decomposto, a média estimada posteriormente `\(\hat{\mathcal G}\)` pode estar fora do espaço de modelos decompostos.
+
+O hiperparâmetro `\(\tau\)` da Wishart hiper-inversa é atualizado através de um passeio aleatório do amostrador Metropolis-Hastings. Já `\(\eta\)` e a variância `\(w\)` na priori pico-e-tapa são amostrados das condicionais posteriores.
+
+---
+class: segue-red
+
+# Conjunto de Dados
+
+---
+
+## Conjunto de Dados
+
+Os autores simularam dados de polimorfismo de nucleotídeo único (SNP) dentro de um modelo verdadeiro conhecido para demonstrar a performance de recuperação dos modelos introduzidos anteriormente.
+
+&lt;img src="https://www.onconews.com.br/site/images/artigos/2021/drops_polimorfismos_nucleot%C3%ADdeo_unico.jpg" width="50%" height="50%" style="display: block; margin: auto;" /&gt;
+
+
+
+Para construir variáveis resposta múltiplas `\(\boldsymbol Y\)` (com `\(s=10\)`) com uma relação estruturada, os autores fixam uma variável indicadora esparsa `\(\boldsymbol \Gamma\)` e desenham um grafo decomposto para as respostas, para construir padrões de associação dentre os múltiplos regressores e variáveis resposta.
+
+
+
+---
+
+## Conjunto de Dados
+
+&lt;img src="apresentacao_files/figure-html/prior-graphs-1.png" width="100%" /&gt;
+
+O conjunto de dados consiste em 10 colunas, que são as respostas em `\(\boldsymbol Y\)`,  150 linhas, que são as regressores em `\(\boldsymbol X\)`, e  uma `blockList` que especifica os índices de `\(\boldsymbol Y\)` e `\(\boldsymbol X\)`
+
+---
+
+## Análise dos Dados
+
+Os autores utilizam o exemplo para ajustar um modelo SSUR com uma *priori* *hotspot* para as variáveis indicadoras `\(\boldsymbol \Gamma\)` e a *priori* indutora de esparsidão Wishart hiper-inversa utilizando o pacote `BayesSUR`.
+
+No exemplo são 200000 iterações do MCMC, com burn-in de 100000, em três cadeias paralelamente. Para manter a reprodutibilidade, o código foi executado em um único núcleo.
+
+
+```r
+library(BayesSUR)
+library(tictoc)
+
+set.seed(28173)
+tic("Tempo de ajuste do modelo")
+# ajuste do modelo
+fit &lt;- BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]],
+                outFilePath = "results-hiw-hotspot", nIter = 200000, nChains = 3,
+                burnin = 100000, covariancePrior = "HIW",
+                gammaPrior = "hotspot",
+                output_CPO = TRUE
+                )
+toc()
+```
+
+O ajuste demorou cerca de 90 minutos.
+
+
+
+---
+
+## Análise dos Dados
+
+Resultados da inferência a posteriori dos estimadores `\(\hat{\boldsymbol B}, \hat{\boldsymbol \Gamma}, \text{e} \ \hat{\mathcal G}\)`.
+
+
+&lt;img src="apresentacao_files/figure-html/plt-beta-1.png" width="100%" /&gt;
+
+---
+
+## Análise dos Dados
+
+&lt;div class="figure"&gt;
+&lt;img src="apresentacao_files/figure-html/plt-gamma-1.png" alt="Coeficientes estimados da matriz indicadora latente `\(\hat{ \boldsymbol \Gamma}\)`" width="100%" /&gt;
+&lt;p class="caption"&gt;Coeficientes estimados da matriz indicadora latente `\(\hat{ \boldsymbol \Gamma}\)`&lt;/p&gt;
+&lt;/div&gt;
+
+ - Aparentemente o modelo SSUR possui uma boa recuperação do verdadeira matriz indicadora latente `\(\boldsymbol \Gamma\)` e da estrutura das respostas representada por `\(\mathcal G\)`.
+ 
+---
+
+## Análise dos Dados
+
+&lt;img src="apresentacao_files/figure-html/plt-graphs-1.png" width="100%" /&gt;
+
+
+Utilizando o mesmo limiar, de `\(\hat{\mathcal G}\)` limitado a 0.5, e `\(\hat{\boldsymbol \Gamma}\)` limitado a 0.5, podemos visualizar a rede completa com as dez expressões gênicas e os 150 SNPs.
+
+---
+
+## Análise dos Dados
+
+&lt;img src="apresentacao_files/figure-html/plot-expr-1.png" width="100%" /&gt;
+
+---
+
+## Análise dos Dados
+
+&lt;img src="apresentacao_files/figure-html/plot-manh-1.png" width="100%" /&gt;
+
+---
+
+## Análise dos Dados
+
+&lt;img src="apresentacao_files/figure-html/plot-diag-1.png" width="100%" /&gt;
+
+---
+
+## Análise dos Dados
+
+ - Os plots estilo Manhattan mostram as probabilidades de inclusão marginal (mPIP) dos SNPs (painel superior) e o número de expressões gênicas da resposta associado com cada SNP (painel inferior). O número de respostas é baseado em `\(\hat{\boldsymbol \Gamma}\)` limitado a 0.5.
+
+ - Observa-se nos plots de diagnóstico que as cadeias de Markov utilizadas aparentemente começam a amostrar da distribuição correta após aproximadamente 50.000 iterações.
+
+ - Os painéis inferiores indicam que o logarítmo da distribuição a posteriori da variável indicadora latente `\(\boldsymbol \Gamma\)` aparentemente estabilizou-se para a última metade das cadeias, após subtraído o burn-in.
+
+---
+
+## Análise dos Dados
+
+Embora não tenhamos acesso direto às cadeias simuladas, podemos também visualizar a verossimilhança das outras matrizes estimadas pelo modelo.
+
+&lt;img src="apresentacao_files/figure-html/lik-est-1.png" width="100%" /&gt;
+
+---
+
+## Análise dos Dados
+
+É também possível utilizar o CPO para encontrar observações destoantes, como uma forma de validação cruzada do modelo com a amostra obtida. Temos algumas poucas observações abaixo do limiar.
+
+&lt;img src="apresentacao_files/figure-html/plot-cpo-1.png" width="100%" /&gt;
+
+---
+
+## Análise dos Dados
+
+Finalizamos nossa análise com um sumário do modelo obtido.
+
+.scroll-box-20[
+
+```
+## 
+## Call:
+##   BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]], ...)
+## 
+## CPOs:
+##         Min.      1st Qu.       Median      3rd Qu.         Max. 
+## 0.0006981173 0.1984357123 0.3125505299 0.3715488386 0.4266639028 
+## 
+## Number of selected predictors (mPIP &gt; 0.5): 165 of 10x150
+## 
+## Top 10 predictors on average mPIP across all responses:
+##     SNP48     SNP49     SNP47     SNP46    SNP117     SNP75     SNP45     SNP37 
+## 0.9040660 0.8577530 0.7152859 0.6919080 0.6294290 0.6180328 0.5822639 0.5345648 
+##     SNP26     SNP29 
+## 0.5224508 0.5169448 
+## 
+## Top 10 responses on average mPIP across all predictors:
+##       GEX4       GEX9       GEX7       GEX5      GEX10       GEX6       GEX3 
+## 0.14889411 0.14059070 0.13917972 0.13790778 0.11259638 0.10842810 0.10746704 
+##       GEX8       GEX1       GEX2 
+## 0.10278926 0.06938224 0.06500430 
+## 
+## Expected log pointwise predictive density (elpd) estimates:
+##   elpd.LOO = -1435.736,  elpd.WAIC = -1439.831
+## 
+## MCMC specification:
+##   iterations = 2e+05,  burn-in = 1e+05,  chains = 3
+##   gamma local move sampler: bandit
+##   gamma initialisation: R
+## 
+## Model specification:
+##   covariance prior: HIW
+##   gamma prior: hotspot
+## 
+## Hyper-parameters:
+##   a_w   b_w   a_o   b_o  a_pi  b_pi    nu a_tau b_tau a_eta b_eta 
+##   2.0   5.0   2.0 148.0   2.0   1.0  12.0   0.1  10.0   0.1   1.0
+```
+]
+
+
+
+---
+
+## Conclusão
+
+Neste relatório, procuramos apresentar os modelos para regressão e regularização partindo de uma abordagem Bayesiana, utilizamos o bacote `BayesSUR` para efetuar a regressão e seleção de modelos no conjunto de teste de exemplo apresentado por Zhao, Banterle, Bottolo, Richardson, Lewin, and Zucknick (2021).
+
+Foram introduzidos brevemente os aspectos da modelagem da seleção de variáveis, assim como a recuperação das estruturas para identificar relacionamentos entre respostas multivariadas em preditores de alta dimensionalidade. 
+
+Foi uma oportunidade muito valiosa de conhecer modelos estado-da-arte na área de biologia molecular, implementados de forma eficiente e bem documentada pelos autores do artigo que aqui apresentamos.
+
+---
+
+## Referências
+
+
+[1] Z. Zhao, M. Banterle, L. Bottolo, et al. "BayesSUR: An R Package
+for High-Dimensional Multivariate Bayesian Variable and Covariance
+Selection in Linear Regression". In: _Journal of Statistical Software_
+100.11 (2021), pp. 1-32. DOI: 10.18637/jss.v100.i11.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="assets/remark-zoom.js"></script>
+<script src="https://platform.twitter.com/widgets.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"ratio": "16:9",
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -61,9 +61,9 @@ A análise de associações conjuntas entre múltiplos fenótipos correlacionado
 
 ## Introdução 
 
-Quando múltiplos fenótipos e informação genômica de alta dimensionalidade são analisados conjuntamente, a abordagem bayesiana permite especificar de maneira flexível as relações complexas entre os conjunto de dados altamente estruturados.
+Quando múltiplos fenótipos e informação genômica de alta dimensionalidade são analisados conjuntamente, a abordagem bayesiana permite especificar de maneira flexível as complexas relações entre os conjuntos de dados altamente estruturados.
 
-O pacote `BayesSUR` combina diversos modelos que foram propostos para a regressão multidimentional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e para diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
+O pacote `BayesSUR` combina diversos modelos que foram propostos para a regressão multidimensional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e permitindo também diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
 
 ---
 

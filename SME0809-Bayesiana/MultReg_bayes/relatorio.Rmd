@@ -11,25 +11,37 @@ output:
 bibliography: packages.bib
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # Introdução 
 
 Com o desenvolvimento de técnicas de alto processamento na biologia molecular, a caracterização molecular em alta escala tornou-se um lugar comum, com o advento de técnicas como:
 
- - Genome-wide measurement of gene expression
- - Single nucleotide polymorphisms
+ - genome-wide measurement of gene expression
+ - single nucleotide polymorphisms
  - CpG methylation status
- - Pharmacological profiling for large-scale cancer drug screen.
+ - pharmacological profiling for large-scale cancer drug screen.
  
 A análise de associações conjuntas entre múltiplos fenótipos correlacionados e atributos moleculares de alta dimensionalidade é desafiadora.
 
 
 Quando múltiplos fenótipos e informação genômica de alta dimensionalidade são analisados conjuntamente, a abordagem bayesiana permite especificar de maneira flexível as relações complexas entre os conjunto de dados altamente estruturados.
 
-O pacote `BayesSUR` [@BayesSUR2021] combina diversos modelos que foram propostos para a regressão multidimentional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e para diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
+O pacote `BayesSUR` combina diversos modelos que foram propostos para a regressão multidimentional com resposta múltipla e introduz um novo modelo, que permite diferentes *prioris* na seleção de variáveis dos modelos de regressão e para diferentes pressupostos a respeito da estrutura de dependência entre as respostas.
 
 
 # Metodologia
 
+ - múltiplas opções de seleção de variáveis
+ - a matriz de covariância pode ser diagonal, densa ou esparsa.
+ - engloba três classes de modelos de regressão linear de múltipla resposta:
+  - HRR
+  - dSUR e SSUR
+  - MRF
+ 
+ 
  O modelo de regressão é escrito como:
  
 \begin{equation}
@@ -61,19 +73,19 @@ Definem-se $\beta_{jk} = 0$ condicionado em $\gamma_{jk} = 1$ seguem uma distrib
 
 Onde $\beta = \text{vec}(\textbf{B})$, $\gamma = \text{vec}( \boldsymbol{\Gamma})$, $\beta_\gamma$ consiste somente nos coeficientes selecionados (i.e. $\gamma_{jk} = 1$), assim $W_\gamma$ é a sub matriz de W formada pelos coeficientes selecionados correspondentes.
 
-A matriz de precisão, $W$, é geralmente decomposta em coeficientes de encolhimento e uma matriz que governa a estrutura de covariância dos coeficientes de regressão. É utilizado aqui $W = w^{-1} \mathbb{I}_{sp}$, o que significa que todos os coeficientes de regressão são independentes a priori, com uma *hiperpriori* no coeficiente de encolhimento $w$, i.e. $w \sim \mathcal{IG}\text{amma}(a_w, b_w)$.
+A matriz de precisão, W, é geralmente decomposta em coeficientes de encolhimento e uma matriz que governa a estrutura de covariância dos coeficientes de regressão. É utilizado aqui $W = w^{-1} \mathbb{I}_{sp}$, o que significa que todos os coeficientes de regressão são independentes a priori, com uma *hiperpriori* no coeficiente de encolhimento $w$, i.e. $w \sim \mathcal{IG}\text{amma}(a_w, b_w)$.
 
 A matriz indicadora binária latente $\boldsymbol \Gamma$ tem três opções de *priori*:
 
   - Bernoulli independente hierárquica
-  - *prior* hotspot
-  - *priori* MRF 
+  - hotspot prior
+  - MRF prior
   
 A matriz de covariância $C$ também possui três *prioris*:
 
   - Gama inversa independente
-  - Wishart inversa (densa)
-  - hiper-inversa Wishart (esparsa)
+  - Wishart inversa
+  - hiper-inversa Wishart
   
 São considerados no total nove possíveis modelos dentre as combinações de $C$ e $\boldsymbol \Gamma$
 
@@ -83,13 +95,11 @@ São considerados no total nove possíveis modelos dentre as combinações de $C
 | $C\sim IW$ | dSUR-B | dSUR-H | dSUR-M |
 | $C\sim HIW$ | SSUR-B | SSUR-H | SSUR-M |
 
-Neste trabalho, utilizaremos ao modelo SSUR-H. 
-
 ##  Regressão Hierárquica Relacionada (HRR)
 
 A Regressão Hierárquica Relacionada assume que $C$ é uma matriz diagonal, o que se traduz em independência condicional entre múltiplas variáveis resposta.
 
-Uma *priori* gama inversa é especificada para a covariância dos resíduos, i.e.
+Uma *priori* gama inversa é especificada para a covariância dos resíduos, i.e
 
 $$\sigma^2_k \sim \mathcal{IG}\text{amma}(a_\sigma, b_\sigma)$$
 
@@ -104,7 +114,7 @@ Para uma *priori* simples de seleção do modelo de regressão, os indicadores b
 \end{equation}
 
 
-Dessa forma, temos uma priori hierárquica Beta em $\omega_j$, i.e. $\omega_j \sim \mathcal Beta(a_\omega, b_\omega)$, que quantifica a probabilidade de cada preditor ser associado com qualquer uma das variáveis resposta.
+Com uma priori hierárquica Beta em $\omega_j$, i.e. $\omega_j \sim \mathcal Beta(a_\omega, b_\omega)$, que quantifica a probabilidade de cada preditor ser associado com qualquer uma das variáveis resposta.
 
 ### HRR com uma *priori* hotspot
 
@@ -154,7 +164,7 @@ A cadeia principal provém amostras da distribuição a *posteriori* não-temper
 
 Após $L$ iterações do MCMC, obtêm-se $\boldsymbol B^{(1)}, ..., \boldsymbol B^{(L)}$ e a estimativa da média a *posteriori* é:
 
-$$\hat{\boldsymbol B} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol B^{(t)}$$
+$$ \hat{\boldsymbol B} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol B^{(t)}$$
 
 onde $b$ é o número de iterações de *burn-in*. As distribuições condicionais completas a *posteriori* também estão disponíveis no modelo SSUR. Já nos modelos HRR, os coeficientes de regressão e as covariâncias residuais foram integrados para fora e ainda assim a saída do MCMC não pode ser utilizada diretamente para inferencia posterior desses parâmetros.
 
@@ -221,27 +231,18 @@ O terceiro componente é a verdadeira matriz indicadora $\boldsymbol \Gamma$ dos
 
 Os autores utilizam o exemplo para ajustar um modelo SSUR com uma *priori* *hotspot* para as variáveis indicadoras $\boldsymbol \Gamma$ e a *priori* indutora de esparsidão Wishart hiper-inversa utilizando o pacote `BayesSUR`. No exemplo são 200000 iterações do MCMC, com burn-in de 100000, em três cadeias paralelamente. Para manter a reprodutibilidade, o código foi executado em um único núcleo.
 
-```{r model-fit, echo= FALSE, message=FALSE,eval=FALSE}
+```{r model-fit, echo= FALSE, message=FALSE, eval=}
 set.seed(28173)
 tic("Tempo de ajuste do modelo")
 # ajuste do modelo
 fit <- BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]],
-                outFilePath = "results-hiw-hotspot", nIter = 200000, nChains = 3,
-                burnin = 100000, covariancePrior = "HIW",
+                outFilePath = "results", nIter = 5000, nChains = 3,
+                burnin = 1000, covariancePrior = "HIW",
                 gammaPrior = "hotspot",
                 output_CPO = TRUE,
                 )
 toc()
 ```
-
-
-```{r model-read, echo = FALSE}
-# ler o modelo ja ajustado
-load("results-hiw-hotspot/obj_BayesSUR.RData")
-fit <- obj_BayesSUR
-class(fit) <- "BayesSUR"
-```
-
 
 As Figuras \@ref(fig:plt-beta), \@ref(fig:plt-gamma) e \@ref(fig:plt-G) resumem os resultados da inferência a posteriori dos estimadores $\hat{\boldsymbol B}, \hat{\boldsymbol \Gamma}, \text{e} \ \hat{\mathcal G}$.
 
@@ -335,3 +336,8 @@ Entretanto, foi uma oportunidade muito valiosa de conhecer modelos estado-da-art
 # Referências
 
 <div id="refs"></div>
+
+# Apêndice: códigos {-}
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```

@@ -11,18 +11,14 @@ output:
 bibliography: packages.bib
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 # Introdução 
 
 Com o desenvolvimento de técnicas de alto processamento na biologia molecular, a caracterização molecular em alta escala tornou-se um lugar comum, com o advento de técnicas como:
 
- - genome-wide measurement of gene expression
- - single nucleotide polymorphisms
- - CpG methylation status
- - pharmacological profiling for large-scale cancer drug screen.
+ - Medida de expressão Gênica
+ - Poliomorfismos de Nucleotídeo Único (SNP)
+ - Status de Metilação CpG
+ - Perfil farmacológico para testes em larga escala.
  
 A análise de associações conjuntas entre múltiplos fenótipos correlacionados e atributos moleculares de alta dimensionalidade é desafiadora.
 
@@ -34,14 +30,6 @@ O pacote `BayesSUR` combina diversos modelos que foram propostos para a regress�
 
 # Metodologia
 
- - múltiplas opções de seleção de variáveis
- - a matriz de covariância pode ser diagonal, densa ou esparsa.
- - engloba três classes de modelos de regressão linear de múltipla resposta:
-  - HRR
-  - dSUR e SSUR
-  - MRF
- 
- 
  O modelo de regressão é escrito como:
  
 \begin{equation}
@@ -60,6 +48,7 @@ onde:
  - $\boldsymbol{0}$ denota um vetor coluna com todos os elementos nulos,
  - $\otimes$ é o produto de Kronecker e $\mathbb{I}_n$ a matriz identidade de ordem $n$.
 
+## Seleção de Variáveis
 
 A seleção de variáveis é realizada através de uma matriz indicadora binária latente $\boldsymbol{\Gamma} = \{\gamma_{jk}\}$.
 
@@ -75,25 +64,14 @@ Onde $\beta = \text{vec}(\textbf{B})$, $\gamma = \text{vec}( \boldsymbol{\Gamma}
 
 A matriz de precisão, W, é geralmente decomposta em coeficientes de encolhimento e uma matriz que governa a estrutura de covariância dos coeficientes de regressão. É utilizado aqui $W = w^{-1} \mathbb{I}_{sp}$, o que significa que todos os coeficientes de regressão são independentes a priori, com uma *hiperpriori* no coeficiente de encolhimento $w$, i.e. $w \sim \mathcal{IG}\text{amma}(a_w, b_w)$.
 
-A matriz indicadora binária latente $\boldsymbol \Gamma$ tem três opções de *priori*:
-
-  - Bernoulli independente hierárquica
-  - hotspot prior
-  - MRF prior
-  
-A matriz de covariância $C$ também possui três *prioris*:
-
-  - Gama inversa independente
-  - Wishart inversa
-  - hiper-inversa Wishart
-  
-São considerados no total nove possíveis modelos dentre as combinações de $C$ e $\boldsymbol \Gamma$
+A matriz indicadora binária latente $\boldsymbol \Gamma$ tem três opções de *priori*, assim como a matriz de covariância. São considerados no total nove possíveis modelos dentre as combinações de $C$ e $\boldsymbol \Gamma$, exibidos na Tabela 1.
 
 |  | ${\gamma_{jk}} \sim Bernoulli$ | $\gamma_{jk} \sim$ hotspot | $\gamma_{jk} \sim$ MRF |
 |:---:|:---:|:---:|:---:|
 | $C\sim indep$ | HRR-B | HRR-H | HRR-M |
 | $C\sim IW$ | dSUR-B | dSUR-H | dSUR-M |
 | $C\sim HIW$ | SSUR-B | SSUR-H | SSUR-M |
+Table: Modelos disponibilizados pelo pacote `BayesSUR`
 
 ##  Regressão Hierárquica Relacionada (HRR)
 
@@ -129,7 +107,7 @@ o_k \sim \mathcal Beta (a_0, b_0) \\
 \pi_j \sim \mathcal Gamma(a_\pi, b_\pi)
 \end{gathered}$$
 
-## Regressão não relacionada aparentemente esparsa (SSUR)
+### Regressão não relacionada aparentemente esparsa (SSUR)
 
 Para modelar a matriz de covariância $C$ é especificado uma *priori* hiper-Inversa Wishart, o que significa que as variáveis resposta têm por trás um grafo $\mathcal G$ que codifica a dependência condicional entre as respostas.
 
@@ -174,7 +152,7 @@ Em cada iteração $t$ do MCMC também é atualizado cada vetor binário latente
 
 $$\hat{\boldsymbol \Gamma} = \frac{1}{L-b} \sum^L_{t = b+1} \boldsymbol \Gamma^{(t)}$$
 
-Outro parâmetro importante dos modelos SSUR é $\mathcal G$ na *priori* Wisahrt hiper-inversa para a matriz de covariância $C$. Ela é atualizada via _junction tree sampler_ conjuntamente com a proposta correspondente para $\sigma^2_{qt}$ e $\boldsymbol \rho_{qt} | \sigma^2_{qt}$ em  \eqref{eq:5}.
+Outro parâmetro importante dos modelos SSUR é $\mathcal G$ na *priori* Wishart hiper-inversa para a matriz de covariância $C$. Ela é atualizada via _junction tree sampler_ conjuntamente com a proposta correspondente para $\sigma^2_{qt}$ e $\boldsymbol \rho_{qt} | \sigma^2_{qt}$ em  \eqref{eq:5}.
 
 A cada iteração do MCMC é extraída a matriz de adjacência $\mathcal G^{(t)} (t=1,...,L)$, do qual são derivadas as estimativas da média a *posteriori* das probabilidades de inclusão das areastas como:
 
@@ -198,7 +176,7 @@ data("exampleEQTL", package = "BayesSUR")
 attach(exampleEQTL)
 ```
 
-```{r prior-graphs,echo=FALSE, message = F, fig.cap="Parâmetros verdadeiros dos dados gerados no conjunto de dados de exemplo. Valores em branco representam 0 e, em azul, 1"}
+```{r prior-graphs,echo=FALSE, message = F, fig.height = 4, fig.width = 10, fig.cap="Parâmetros verdadeiros dos dados gerados no conjunto de dados de exemplo. Valores em branco representam 0 e, em azul, 1"}
 # bibliotecas para gráficos
 library(tidyverse)
 library(gridExtra)
@@ -208,21 +186,23 @@ library(tictoc)
  plot_heatmap<- function(df){
 reshape2::melt(df) %>% ggplot(aes(x=Var1, y=Var2, fill=-value)) + 
     geom_raster() + guides(fill="none") +
-    scale_fill_fermenter()
+    scale_fill_fermenter() + xlab(" ") + ylab(" ")
  }
 # rotulos da escala
 labs <- as_labeller(
           c("1" = "GEX1", "2" =  "GEX2",  "3" =  "GEX3", "4" = "GEX4","5" = "GEX5",
           "6" = "GEX6", "7" = "GEX7", "8" = "GEX8", "9" = "GEX9", "10" = "GEX10"))
 # mapa de calor Y versus X
-p <- plot_heatmap(gamma) + scale_y_continuous(breaks= 1:10,labels = labs)
+p <- plot_heatmap(gamma) + scale_y_continuous(breaks= 1:10,labels = labs) +
+  xlab("SNP") + ggtitle("Gamma verdadeiro")
 # mapa de calor Y versus Y
-q <- plot_heatmap(Gy)  + scale_x_continuous(breaks= 1:10,labels = labs)
+q <- plot_heatmap(Gy)  + scale_x_continuous(breaks= 1:10,labels = labs) +
+  theme(axis.text.x = element_text(angle = 45)) + ggtitle("G verdadeiro")
 
 grid.arrange(p,q, ncol = 2) 
 ```
 
-Aqui, temos 10 colunas, que são as respostas em $\boldsymbol Y$, e 150 linhas, que são as regressores em $\boldsymbol X$. O segundo componente do exemplo é uma `blockList` que especifica os índices de $\boldsymbol Y$ e $\boldsymbol X$ em `data`.
+As respostas em $\boldsymbol Y$ são representadas por uma matriz $10 \times 10$, já os preditores $\boldsymbol X$ são representados por uma matriz com 6 linhas, que é o tamanho de nossa amostra, e 150 colunas, representando os SNPs. Temos também uma `blockList` que especifica os índices de $\boldsymbol Y$ e $\boldsymbol X$ em `data`.
 
 O terceiro componente é a verdadeira matriz indicadora $\boldsymbol \Gamma$ dos coeficientes de regressão. O quarto componente é o grafo verdadeiro $\mathcal G$ entre as variáveis resposta. A Figura \@ref(fig:prior-graphs) mostra os verdadeiros $\boldsymbol \Gamma$ e $\mathcal G$ utilizados para simular ao exemplo. As matrizes de associação são exibidas na forma de mapas de calor.
 
@@ -231,7 +211,7 @@ O terceiro componente é a verdadeira matriz indicadora $\boldsymbol \Gamma$ dos
 
 Os autores utilizam o exemplo para ajustar um modelo SSUR com uma *priori* *hotspot* para as variáveis indicadoras $\boldsymbol \Gamma$ e a *priori* indutora de esparsidão Wishart hiper-inversa utilizando o pacote `BayesSUR`. No exemplo são 200000 iterações do MCMC, com burn-in de 100000, em três cadeias paralelamente. Para manter a reprodutibilidade, o código foi executado em um único núcleo.
 
-```{r model-fit, echo= FALSE, message=FALSE, eval=}
+```{r model-fit, echo= FALSE, message=FALSE, eval= FALSE}
 set.seed(28173)
 tic("Tempo de ajuste do modelo")
 # ajuste do modelo
@@ -244,75 +224,79 @@ fit <- BayesSUR(data = data, Y = blockList[[1]], X = blockList[[2]],
 toc()
 ```
 
-As Figuras \@ref(fig:plt-beta), \@ref(fig:plt-gamma) e \@ref(fig:plt-G) resumem os resultados da inferência a posteriori dos estimadores $\hat{\boldsymbol B}, \hat{\boldsymbol \Gamma}, \text{e} \ \hat{\mathcal G}$.
+
+```{r model-read, echo = FALSE}
+# ler o modelo ja ajustado
+load("results-hiw-hotspot/obj_BayesSUR.RData")
+fit <- obj_BayesSUR
+class(fit) <- "BayesSUR"
+```
 
 
-```{r plt-beta, echo  = FALSE, fig.cap = "Coeficientes estimados da matriz $\\hat{\\boldsymbol B}$"}
+As Figuras \@ref(fig:plt-gamma) e \@ref(fig:plt-beta) resumem os resultados da inferência a posteriori dos estimadores $\hat{\boldsymbol B}, \hat{\boldsymbol \Gamma}, \text{e} \ \hat{\mathcal G}$.
+
+```{r plt-gamma, echo  = FALSE, fig.height = 5, fig.width = 10, fig.cap = "Coeficientes de seleção de variáveis estimados da matriz indicadora latente $\\hat{ \\boldsymbol \\Gamma}$ (esquerda) e Esturutura aprendida de $\\hat{\\mathcal G}$ pelo modelo SSUR com priori hotspot e covariância esparsa (direita)"}
+# plota estimador gamma
+plotEstimator(fit, c("gamma", "Gy"))
+```
+
+
+```{r plt-beta, echo  = FALSE, fig.height = 4, fig.width = 10, fig.cap = "Coeficientes de regressão linear de cada SNP estimados da matriz $\\hat{\\boldsymbol B}$"}
 # plota estimador beta
 plotEstimator(fit, "beta")
 ```
 
-```{r plt-gamma, echo  = FALSE, fig.cap = "Coeficientes estimados da matriz indicadora latente $\\hat{ \\boldsymbol \\Gamma}$"}
-# plota estimador gamma
-plotEstimator(fit, "gamma")
-```
-
-```{r plt-G, echo  = FALSE, fig.cap = "Esturutura aprendida de $\\hat{\\mathcal G}$ pelo modelo SSUR com priori hotspot e covariância esparsa"}
-# plota o grafo das respostas
-plotEstimator(fit,"Gy")
-```
-
-Vemos que o modelo SSUR possui uma boa recuperação do verdadeira matriz indicadora latente $\boldsymbol \Gamma$ e da estrutura das respostas representada por $\mathcal G$. Podemos comparar a verdadeira estrutura com a estimada quando limitamos a probabilidade de seleção a *posteriori* para $\boldsymbol \Gamma$ e $\mathcal G$ a 0.5, criando o grafo exibido à direita na \@ref(fig:prior-graphs).
+Vemos que o modelo SSUR possui uma boa recuperação do verdadeira matriz indicadora latente $\boldsymbol \Gamma$ e da estrutura das respostas representada por $\mathcal G$. Podemos comparar a verdadeira estrutura com a estimada quando limitamos a probabilidade de seleção a *posteriori* para $\boldsymbol \Gamma$ e $\mathcal G$ a 0.5, criando o grafo exibido à direita na Figura \@ref(fig:prior-graphs).
 
 
-```{r plt-graphs, echo=FALSE, fig.height = 6, fig.width = 12, fig.cap="Estrutura estimada das dez variáveis resposta com $\\hat{\\mathcal G}$ limitado a 0.5 (esquerda). Estrutura verdadeira de $\\mathcal G$ representada pela matriz de adjacência `Gy` (direita)."}
+```{r plt-graphs, echo=FALSE, fig.height = 4, fig.width = 10, fig.cap="Estrutura estimada das dez variáveis resposta com $\\hat{\\mathcal G}$ limitado a 0.5 (esquerda). Estrutura verdadeira de $\\mathcal G$ representada pela matriz de adjacência `Gy` (direita)."}
 # estrutura estimada vs estrutura verdadeira
 layout(matrix(1:2, ncol = 2))
 plot(fit, estimator = "Gy", type = "graph")
 plotGraph(Gy)
 ```
 
+Os plots estilo Manhattan na Figura \@ref(fig:plot-manh) mostram as probabilidades de inclusão marginal (mPIP) dos SNPs (painel superior) e o número de expressões gênicas da resposta associado com cada SNP (painel inferior). O número de respostas é baseado em $\hat{\boldsymbol \Gamma}$ limitado a 0.5.
 
-Utilizando o mesmo limiar, de $\hat{\mathcal G}$ limitado a 0.5, e $\hat{\boldsymbol \Gamma}$ limitado a 0.5, podemos visualizar a rede completa com as dez expressões gênicas e os 150 SNPs na \@ref(fig:plot-expr).
+```{r plot-manh, echo = FALSE, fig.width=8, fig.height=5, fig.cap="Plots estilo Manhattan, mostrando as probabilidades de inclusão marginal posterior (acima) e o número de expressões gênicas da resposta associada a cada SNP (abaixo)."}
+plot(fit, estimator = "gamma", type = "Manhattan")
+```
+
+Para investigarmos o comportamento do nosso amostrador MCMC, podemos utilizar os plots de diagnóstico apresentados na Figura \@ref(fig:plot-diag). Observa-se que as cadeias de Markov utilizadas aparentemente começam a amostrar da distribuição correta após aproximadamente 50.000 iterações.
+
+Os painéis inferiores da Figura \@ref(fig:plot-diag) indicam que o logarítmo da distribuição a posteriori da variável indicadora latente $\boldsymbol \Gamma$ é estável para a última metade das cadeias, após subtraído o burn-in.
+
+```{r plot-diag, echo = FALSE, fig.width=10, fig.height=5, fig.cap="Plots de diagnóstico do amostrador MCMC."}
+plot(fit, estimator = "logP", type = "diagnostics")
+```
+
+Embora não tenhamos acesso direto às cadeias simuladas, podemos também visualizar a verossimilhança das outras matrizes estimadas pelo modelo conforme mostra a Figura \@ref(fig:lik-est). Aparentemente, não há nenhuma mudança brusca de padrão conforme o aumento de iterações.
+
+```{r lik-est, echo = FALSE,  fig.width=10, fig.height=3, fig.cap="Verossimilhança dos estimadores pelo número de iterações do MCMC."}
+plotMCMCdiag(fit, HIWg = "lik")
+```
 
 
-```{r plot-expr, echo = FALSE, fig.width=10, fig.height=8, fig.cap="Representação da rede entre as expressões gênicas ($\\boldsymbol Y$), com $\\hat{\\mathcal G}$ limitado a 0.5, e os SNPs ($\\boldsymbol X$), com $\\hat{\\boldsymbol \\Gamma}$ limitado a 0.5."}
+É também possível utilizar o CPO para encontrar observações destoantes, como uma forma de validação cruzada do modelo com a amostra obtida, conforme mostra a Figura \@ref(fig:plot-cpo). Temos somente duas observações abaixo do limiar.
+
+```{r plot-cpo, echo = F,  fig.width=10, fig.height=4, fig.cap="CPOs escalonados para o modelo de regressão ajustado"}
+# CPO
+plotCPO(fit)
+```
+
+
+Utilizando o mesmo limiar, de $\hat{\mathcal G}$ limitado a 0.5, e $\hat{\boldsymbol \Gamma}$ limitado a 0.5, apresentamos a rede completa com as dez expressões gênicas e os 150 SNPs na Figura \@ref(fig:plot-expr).
+
+
+```{r plot-expr, echo = FALSE, fig.width=12, fig.height=12, fig.cap="Representação da rede entre as expressões gênicas ($\\boldsymbol Y$), com $\\hat{\\mathcal G}$ limitado a 0.5, e os SNPs ($\\boldsymbol X$), com $\\hat{\\boldsymbol \\Gamma}$ limitado a 0.5."}
 # estrutura entre X e Y
 plot(fit, estimator = c("gamma", "Gy"), type = "network",
      name.predictors = "SNPs", name.responses = "Gene expression")
 ```
 
-Além disso, os plots estilo Manhattan na Figura \@ref(fig:plot-manh) mostram as probabilidades de inclusão marginal (mPIP) dos SNPs (painel superior) e o número de expressões gênicas da resposta associado com cada SNP (painel inferior). O número de respostas é baseado em $\hat{\boldsymbol \Gamma}$ limitado a 0.5.
-
-```{r plot-manh, echo = FALSE, fig.width=8, fig.height=6, fig.cap="Plots estilo Manhattan, mostrando as probabilidades de inclusão marginal posterior (em cima) e o número de expressões gênicas da resposta associada a cada SNP (embaixo)."}
-plot(fit, estimator = "gamma", type = "Manhattan")
-```
-
-Para investigarmos o comportamento do nosso amostrador MCMC, podemos utilizar os plots de diagnóstico apresentados na \@ref(fig:plot-diag). Observa-se que as cadeias de Markov utilizadas aparentemente começam a amostrar da distribuição correta após aproximadamente 50.000 iterações.
-
-Os painéis inferiores da Figura \@ref(fig:plot-diag) indicam que o logarítmo da distribuição a posteriori da variável indicadora latente $\boldsymbol \Gamma$ é estável para a última metade das cadeias, após subtraído o burn-in.
-
-```{r plot-diag, echo = FALSE, fig.width=10, fig.height=8, fig.cap="Plots de diagnóstico do amostrador MCMC."}
-plot(fit, estimator = "logP", type = "diagnostics")
-```
-
-Embora não tenhamos acesso direto às cadeias simuladas, podemos também visualizar a verossimilhança das outras matrizes estimadas pelo modelo conforme mostra a Figura \@ref(fig:lik-est).
-
-```{r lik-est, echo = FALSE, fig.cap="Verossimilhança dos estimadores pelo número de iterações do MCMC."}
-plotMCMCdiag(fit, HIWg = "lik")
-```
-
-
-É também possível utilizar o CPO para encontrar observações destoantes, como uma forma de validação cruzada do modelo com a amostra obtida, conforme mostra a Figura \@ref(fig:plot-cpo). Temos algumas poucas observações abaixo do limiar.
-
-```{r plot-cpo, echo = F, fig.cap="CPOs escalonados para o modelo de regressão ajustado"}
-# CPO
-plotCPO(fit)
-```
 
 Finalizamos nossa análise com um sumário do modelo obtido. Após isso, desatachamos o conjunto de dados utilizado.
 
-\newpage
 
 ```{r model-summary, echo = FALSE}
 # sumario do modelo
@@ -337,7 +321,10 @@ Entretanto, foi uma oportunidade muito valiosa de conhecer modelos estado-da-art
 
 <div id="refs"></div>
 
-# Apêndice: códigos {-}
+# (APPENDIX) Apêndices {-} 
+
+# Apêndice: códigos
 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
+
